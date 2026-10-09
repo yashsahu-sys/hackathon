@@ -248,8 +248,8 @@ class PersonaGenerator:
         value = {"formal": -0.1, "neutral": 0.0, "casual": 0.1}[formality]
         d["voice.pitch"] = Decision(
             value=value, source=Source.rule, confidence=Confidence.guess,
-            reason=f"Slightly {'lower' if value < 0 else 'brighter' if value > 0 else 'neutral'} pitch for a {formality} "
-                   "register. Applied only when TTS model is bulbul:v2 (v3 has no pitch control).")
+            reason=f"{'Slightly lower' if value < 0 else 'Slightly brighter' if value > 0 else 'Neutral'} pitch for a "
+                   f"{formality} register. Applied only when TTS model is bulbul:v2 (v3 has no pitch control).")
         return value
 
     def _tone(self, ctx, pace, d) -> ToneSpec:
