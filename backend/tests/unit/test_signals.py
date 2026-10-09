@@ -108,3 +108,38 @@ def test_more_matches_raise_confidence():
     one = {s.type: s for s in det.detect("busy hoon", "hi-IN")}[T.rush].confidence
     three = {s.type: s for s in det.detect("busy hoon, baad mein, jaldi", "hi-IN")}[T.rush].confidence
     assert three > one
+
+
+@pytest.mark.parametrize("text,expected", [
+    ("be faaltu ki baat mat karo", T.frustration),          # spelling variant of faltu
+    ("mera dimaag kharab ho raha hai", T.frustration),
+    ("tum mood kharab kar rahe ho", T.frustration),
+    ("call cut kar do", T.end_call),
+    ("phone rakho yaar", T.end_call),
+    ("please cut the call", T.end_call),
+    ("aaram se batao", T.slow_down),
+    ("itni koi jaldbaazi nahin hai", T.slow_down),
+    ("aaraam se samjhaiye", T.slow_down),
+])
+def test_real_demo_phrasings(text, expected):
+    assert expected in types(text)
+
+
+@pytest.mark.parametrize("text", [
+    "call cut kar do",                              # 'kar do' is not a yes
+    "dimaag kharab mat karo, theek hai, call cut kar do",
+    "aaram se batao, theek hai",
+    "samjha nahi, theek hai",
+])
+def test_negative_turns_are_never_agreement(text):
+    assert T.agreement not in types(text)
+
+
+def test_genuine_yes_still_agreement():
+    for t in ("Haan theek hai, kal 11 baje aa jaiye", "Haan meeting fix kar do", "Okay, tomorrow 11 works"):
+        assert T.agreement in types(t), t
+
+
+def test_spelling_normalisation():
+    from vani.live.signals import norm
+    assert norm("Faaltu Dimaag Dheere Jaldbaazi Phone") == norm("faltu dimag dhire jaldbaji fone")

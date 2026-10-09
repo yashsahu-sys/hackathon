@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     sarvam_timeout_s: float = 20.0
 
     agent_tool_secret: str = "change-me"
+    llm_brain: bool = True           # one structured Sarvam LLM call per turn: understand + reply (live mode)
+    tts_transliterate: bool = False  # Roman Hinglish reply -> Devanagari via Sarvam before Bulbul (A/B by ear)
 
     raw_data_dir: Path = Path("data/private/raw/gc")
     warehouse_path: Path = Path("data/private/warehouse.duckdb")

@@ -19,6 +19,7 @@ class SignalType(str, Enum):
     identity = "identity"               # "kaun bol raha hai?"
     do_not_call = "do_not_call"         # "dubara call mat kijiye"
     slow_down = "slow_down"             # "thoda dheere boliye"
+    end_call = "end_call"               # "call cut kar do", "phone rakho"
     seller_gender = "seller_gender"     # learned from the seller's own verb forms ("bol raha hoon")
     agreement = "agreement"
     refusal = "refusal"
@@ -28,7 +29,7 @@ class SignalType(str, Enum):
 PERSONA_SIGNALS = {
     SignalType.frustration, SignalType.confusion, SignalType.interest, SignalType.language_switch,
     SignalType.rush, SignalType.human_request, SignalType.bot_question, SignalType.slow_down,
-    SignalType.seller_gender,
+    SignalType.seller_gender, SignalType.end_call,
 }
 
 

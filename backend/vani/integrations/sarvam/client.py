@@ -31,7 +31,8 @@ class SpeechAI(Protocol):
     async def stt(self, audio: bytes, filename: str = "turn.wav") -> dict: ...
     async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None,
                   temperature: float | None = None) -> str: ...
-    async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None) -> str: ...
+    async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None,
+                   response_format: dict | None = None) -> str: ...
 
 
 class SarvamClient:
@@ -97,11 +98,14 @@ class SarvamClient:
             raise SarvamError("/text-to-speech: no audio in response")
         return audios[0]
 
-    async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None) -> str:
-        data = await self._post("/v1/chat/completions", json={
-            "model": model or self.s.sarvam_chat_model, "messages": messages,
-            "max_tokens": max_tokens or self.s.sarvam_chat_max_tokens,
-            "temperature": 0.4, "reasoning_effort": "low"})
+    async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None,
+                   response_format: dict | None = None) -> str:
+        body = {"model": model or self.s.sarvam_chat_model, "messages": messages,
+                "max_tokens": max_tokens or self.s.sarvam_chat_max_tokens,
+                "temperature": 0.4, "reasoning_effort": "low"}
+        if response_format:
+            body["response_format"] = response_format   # structured outputs: json_schema / json_object
+        data = await self._post("/v1/chat/completions", json=body)
         try:
             choice = data["choices"][0]
             msg = choice["message"]
@@ -117,6 +121,17 @@ class SarvamClient:
         return text
 
 
+    async def transliterate(self, text: str, source: str, target: str, spoken_form: bool = False) -> str:
+        """Change script, keep pronunciation ('how are you' -> 'हाउ आर यू'). spoken_form writes numbers as words."""
+        data = await self._post("/transliterate", json={
+            "input": text[:1000], "source_language_code": source, "target_language_code": target,
+            "spoken_form": spoken_form, "numerals_format": "international"})
+        out = data.get("transliterated_text")
+        if not out:
+            raise SarvamError("/transliterate: empty result")
+        return out
+
+
 class OfflineSpeechAI:
     """No key / no network: the browser speaks and listens; replies come from templates."""
     enabled = False
@@ -129,3 +144,6 @@ class OfflineSpeechAI:
 
     async def chat(self, *a, **k):
         raise SarvamError("offline: no LLM")
+
+    async def transliterate(self, *a, **k):
+        raise SarvamError("offline: no transliteration")

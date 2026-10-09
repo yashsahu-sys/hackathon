@@ -26,7 +26,8 @@
 | Data | `vani/data/` | Normaliser (state→language, turnover bands, disposition parsing, missing-field flags), DuckDB warehouse, repository interface |
 | Evidence | `vani/evidence/` | Call features from AI summaries + transcripts; outcome drivers, segment risks (Bonferroni, Wilson CI), bot-version variants; EvidenceBook query API |
 | Persona | `vani/persona/` | Generator (seller history > evidence > rule > default), voices, bilingual lines, LLM/agent prompt rendering, distinctness metric |
-| Live | `vani/live/` | Signal detector calibrated on real seller turns, adapter (threshold, cooldown, priorities), offline evaluation |
+| Live | `vani/live/` | **LLM brain** (one structured Sarvam LLM call per turn: understand + reply), rule detector calibrated on real seller turns as guardrail/fallback, adapter (latest-turn strategy, audible pace/tone targets), offline evaluation |
+| Speech text | `vani/speech/` | Bulbul formatter: strips markdown/notes/emoji, Indian number commas, optional Sarvam transliteration |
 | Runtime | `vani/runtime/` | Dialogue policy, CallService, session stores (SQLite/memory) |
 | Sarvam | `vani/integrations/sarvam/` | Async client (Saaras, Bulbul, sarvam-105b), agent prompt template |
 | API | `vani/api/` | FastAPI `/api/v1/*` incl. agent tools, demo-sellers, TTS |
@@ -52,10 +53,24 @@ Other tools:
 python -m vani.live.evaluate            # detector precision/recall on real transcripts
 python -m vani.tools.export --sample 50 # persona specs + 3 contrasting demo sellers -> data/private/out
 python -m vani.tools.voice_audition     # every Bulbul voice x pace, to pick voices by ear
+python -m vani.tools.tts_compare        # Roman vs Devanagari vs transliterated text, to pick by ear
 python -m pytest -q                     # 234 tests (real-data tests auto-skip without the dataset)
 ```
 
 Sarvam agent setup: [docs/SARVAM_AGENT_SETUP.md](docs/SARVAM_AGENT_SETUP.md).
+
+## How a live turn works
+
+```
+seller audio ─> Saaras STT (translit: Roman Hinglish)
+            ─> rule detector (1 ms, guardrail + offline fallback)
+            ─> LLM brain: ONE Sarvam LLM call, json_schema output
+                 {signals, agreed_to_meeting, objection, language, reply}
+            ─> merge: LLM adds what rules missed; a meeting needs rules AND LLM to see a yes
+            ─> adapter: pace / expressiveness / strategy switch  ─> switch log
+            ─> policy: outcome lines (booked / goodbye) are fixed templates, never improvised
+            ─> reply guardrails (no false 'booked', no rude fillers) ─> Bulbul formatter ─> Bulbul TTS
+```
 
 ## What the evidence says (real data: 9,657 answered VANI calls, 11.2% meeting rate)
 

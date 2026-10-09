@@ -143,3 +143,20 @@ def test_distinctness_metric():
     assert distance(a, a) == 0 and distance(a, b) > 0 and distance(a, b) == distance(b, a)
     chosen, min_d = most_distinct([a, a.model_copy(), b, c], 3)
     assert len(chosen) == 3 and min_d > 0
+
+
+def test_latest_turn_sets_strategy_slow_down_replaces_rush(session):
+    seller_says(session)
+    A.adapt(session, [sig(T.rush)], 0)
+    assert session.persona.tone.strategy == "rush"
+    seller_says(session)
+    A.adapt(session, [sig(T.slow_down)], 0)
+    assert session.persona.tone.strategy == "clarify"
+
+
+def test_end_is_final(session):
+    seller_says(session)
+    A.adapt(session, [sig(T.end_call)], 0)
+    seller_says(session, 3)
+    A.adapt(session, [sig(T.interest)], 0)
+    assert session.persona.tone.strategy == "end"

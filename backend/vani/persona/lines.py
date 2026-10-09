@@ -54,6 +54,7 @@ LINES = {
         "close_no": "कोई बात नहीं जी, आपका समय देने के लिए धन्यवाद। ज़रूरत हो तो IndiaMART हमेशा आपके साथ है।",
         "dnc_close": "माफ़ी चाहती हूँ जी, आगे से आपको इस बारे में call नहीं आएगा। आपका समय देने के लिए धन्यवाद।",
         "callback_confirm": "ठीक है जी, मैं आपको बाद में call करवाती हूँ। धन्यवाद।",
+        "end_close": "माफ़ी चाहती हूँ जी, आपको परेशान करने का इरादा नहीं था। मैं call यहीं ख़त्म करती हूँ। धन्यवाद।",
         "playbook": {
             "busy": "समझ सकती हूँ आप busy हैं। सिर्फ़ meeting का time fix करना है, दस seconds लगेंगे।",
             "call_later": "जी ज़रूर। कब call करूँ, आज शाम 5 बजे या कल सुबह?",
@@ -94,6 +95,7 @@ LINES = {
         "close_no": "No problem at all, thank you for your time. IndiaMART is here whenever you need us.",
         "dnc_close": "I'm sorry for the trouble. You won't get further calls about this. Thank you for your time.",
         "callback_confirm": "Sure, I'll arrange a call back later. Thank you.",
+        "end_close": "I'm sorry for the trouble. I'll end the call here. Thank you for your time.",
         "playbook": {
             "busy": "I understand. I only need to fix a time, it will take ten seconds.",
             "call_later": "Of course. Shall I call you this evening at 5 or tomorrow morning?",

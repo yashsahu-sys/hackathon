@@ -36,4 +36,5 @@ class Container:
         store = SQLiteSessionStore(settings.resolve(settings.sessions_db_path))
         speech: SpeechAI = SarvamClient(settings) if settings.sarvam_enabled else OfflineSpeechAI()
         return cls(settings, repo, evidence, generator, store, speech,
-                   CallService(repo, generator, store, speech))
+                   CallService(repo, generator, store, speech, llm_brain=settings.llm_brain,
+                               tts_transliterate=settings.tts_transliterate))

@@ -76,6 +76,33 @@ async def main() -> int:
         ok = False
         if working:
             print(f"\n-> Set SARVAM_CHAT_MODEL={working[0]} in backend/.env (the configured model gave no answer)")
+    # LLM brain: one structured call that understands the turn and writes the reply
+    from vani.live.brain import SCHEMA, parse
+    brain_msgs = [{"role": "system", "content": "You are Payal from IndiaMART fixing a meeting. Understand the seller's "
+                   "last message and reply. Return ONLY JSON with keys signals, agreed_to_meeting, objection, language, reply."},
+                  {"role": "assistant", "content": "क्या कल सुबह 11 बजे executive आपसे मिल सकते हैं?"},
+                  {"role": "user", "content": "yaar dimaag kharab mat karo, theek hai, call cut kar do"}]
+    network_down = False
+    for fmt in (SCHEMA, {"type": "json_object"}):
+        try:
+            t = time.perf_counter()
+            raw = await c.chat(brain_msgs, max_tokens=400, response_format=fmt)
+            r = parse(raw)
+            took = time.perf_counter() - t
+            if r is None:
+                print(f"BRAIN FAIL {fmt['type']}: not JSON -> {raw[:120]!r}")
+                continue
+            verdict = "GOOD" if not r.agreed and r.signals else "CHECK"
+            print(f"BRAIN ok  {fmt['type']}  {took:.2f}s  signals={sorted(x.value for x in r.signals)} "
+                  f"agreed={r.agreed} [{verdict}]\n     reply -> {r.reply!r}")
+            break
+        except SarvamError as e:
+            print(f"BRAIN FAIL {fmt['type']}", e)
+            network_down = network_down or e.status is None
+    else:
+        ok = False
+        print(hint(SarvamError("x"), "") if network_down else
+              "     -> structured output not working: set LLM_BRAIN=false in .env (rules + phrasing fallback)")
     await c.aclose()
     return 0 if ok else 2
 

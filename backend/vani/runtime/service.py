@@ -16,9 +16,12 @@ from vani.domain.live import (CallSession, CallStatus, Channel, Outcome, Role, S
 from vani.domain.persona import PersonaSpec
 from vani.integrations.sarvam.client import SarvamError, SpeechAI
 from vani.live.adapter import MIN_CONFIDENCE, PersonaAdapter
+from vani.live.brain import BrainResult, LLMBrain
+from vani.live.llm_assist import LLMSignalAssist, merge
 from vani.live.signals import SignalDetector
 from vani.persona.generator import PersonaGenerator
 from vani.persona.prompt import agent_variables, system_prompt
+from vani.speech.tts_text import for_bulbul
 from vani.text.gender import detect_seller_gender
 
 from .dialogue import Move, next_move
@@ -26,6 +29,9 @@ from .store import SessionStore
 
 log = logging.getLogger(__name__)
 BANNED = re.compile(r"(?<![ऀ-ॿ])(यार|अरे|देखो)(?![ऀ-ॿ])")
+CLAIMS_BOOKED = re.compile(r"fix (है|हो गई|हो गयी|kar di|ho gayi|ho gai)|meeting (fix|pakki|confirm)\w* (है|ho|hai)|"
+                           r"confirmed|पक्की|पक्का|booked|book (kar|ho) (di|diya|gayi)", re.I)
+TEMPLATE_ONLY = {"meeting_confirm", "end_close", "dnc_close", "close_no"}   # outcome lines are never improvised
 
 
 class NotFound(LookupError):
@@ -60,8 +66,12 @@ class TurnResult:
 
 class CallService:
     def __init__(self, repo: SellerRepository, generator: PersonaGenerator, store: SessionStore, speech: SpeechAI,
-                 detector: SignalDetector | None = None, adapter: PersonaAdapter | None = None):
+                 detector: SignalDetector | None = None, adapter: PersonaAdapter | None = None,
+                 llm_brain: bool = True, tts_transliterate: bool = False):
         self.repo, self.gen, self.store, self.speech = repo, generator, store, speech
+        self.brain = LLMBrain(speech) if llm_brain else None
+        self.assist = None if llm_brain else LLMSignalAssist(speech)
+        self.tts_transliterate = tts_transliterate
         self.detector = detector or SignalDetector()
         self.adapter = adapter or PersonaAdapter()
         self._t0: dict[str, float] = {}
@@ -103,6 +113,19 @@ class CallService:
 
         seller_texts = [t.text for t in session.transcript if t.role == Role.seller]
         signals = self.detector.detect(text, session.persona.language.code, stt_lang, seller_texts[-3:])
+        brain: BrainResult | None = None
+        if self.brain is not None and self.brain.enabled:
+            profile = self.repo.get_profile(session.seller_glid)
+            brain = await self.brain.think(session, profile, text, [x.type.value for x in signals])
+            if brain is None:
+                warnings.append("LLM brain unavailable: rules only this turn")
+            else:
+                signals, notes = merge(signals, brain.signals, text)
+                warnings += notes
+        elif self.assist is not None and self.assist.enabled:
+            last_bot = next((t.text for t in reversed(session.transcript) if t.role == Role.bot), "")
+            signals, notes = merge(signals, await self.assist.classify(text, last_bot), text)
+            warnings += notes
         gender, gconf, words = detect_seller_gender(seller_texts + [text])
         if gender != "unknown" and gender != session.persona.language.seller_gender:
             signals.append(Signal(type=SignalType.seller_gender, confidence=gconf, trigger=words, detail={"gender": gender}))
@@ -120,10 +143,16 @@ class CallService:
         bot = BotUtterance(text=move.text, language_code=session.persona.language.code,
                            speaker=session.persona.voice.speaker, pace=session.persona.voice.pace,
                            temperature=session.persona.voice.temperature)
-        if session.channel == Channel.web and self.speech.enabled and move.key not in ("meeting_confirm", "dnc_close"):
-            phrased = await self._llm_phrase(session, move, warnings)
-            if phrased:
-                bot.text, bot.source = phrased, "llm"
+        if move.key not in TEMPLATE_ONLY and self.speech.enabled:
+            reply = None
+            if brain is not None:
+                reply = self._accept(brain.reply, session, warnings)
+            elif session.channel == Channel.web and self.brain is None:
+                reply = await self._llm_phrase(session, move, warnings)
+            if reply:
+                bot.text, bot.source = reply, "llm"
+        if session.channel == Channel.web and self.speech.enabled:
+            bot.text = await for_bulbul(bot.text, session.persona, self.speech, self.tts_transliterate, warnings)
         if speak and session.channel == Channel.web:
             await self._speak(session, bot, warnings)
         self._record_bot(session, bot.text)
@@ -181,6 +210,19 @@ class CallService:
     def _record_bot(self, session: CallSession, text: str) -> None:
         session.transcript.append(TurnRecord(role=Role.bot, text=text, language=session.persona.language.code,
                                              at_ms=self._now(session), persona_version=session.persona.version))
+
+    @staticmethod
+    def _accept(reply: str, session: CallSession, warnings: list[str]) -> str | None:
+        """Guardrails on an LLM-written reply; None -> use the policy's template line."""
+        if not reply or not reply.strip():
+            return None
+        if BANNED.search(reply):
+            warnings.append("LLM reply rejected by guardrail filter (banned filler); template used")
+            return None
+        if CLAIMS_BOOKED.search(reply) and session.outcome != Outcome.meeting_fixed:
+            warnings.append("LLM reply claimed a booked meeting that the policy did not confirm; template used")
+            return None
+        return reply
 
     async def _speak(self, session: CallSession, bot: BotUtterance, warnings: list[str]) -> None:
         if not self.speech.enabled:

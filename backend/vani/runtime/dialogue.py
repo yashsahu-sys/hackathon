@@ -49,11 +49,16 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
     if stage == "done":
         key = "meeting_confirm" if session.outcome == Outcome.meeting_fixed else "close_no"
         return Move(key, _line(session, key), "The call is over; say a one-line goodbye.", "done", end_call=True)
+    if T.end_call in types:
+        return Move("end_close", _line(session, "end_close"),
+                    "Seller wants to end the call. Apologise in one short sentence and say goodbye. Do not pitch.",
+                    "done", Outcome.declined, True)
     if T.do_not_call in types:
         return Move("dnc_close", _line(session, "dnc_close"),
                     "Seller asked not to be called. Apologise, confirm they won't be called about this, end.",
                     "done", Outcome.declined, True)
-    if T.agreement in types and (stage == "ask" or SLOT.search(text)):
+    blocked = types & {T.frustration, T.refusal, T.rush, T.confusion, T.slow_down, T.end_call, T.do_not_call}
+    if T.agreement in types and not blocked and (stage == "ask" or SLOT.search(text)):
         return Move("meeting_confirm", _line(session, "meeting_confirm"),
                     "Seller agreed. Confirm the meeting slot in one sentence and thank them.",
                     "done", Outcome.meeting_fixed, True)
@@ -74,7 +79,7 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
     strategy = p.tone.strategy
     if strategy != strategy_used and strategy in ("end", "handoff", "direct", "reassure", "rush", "clarify", "close"):
         if strategy == "end":
-            return Move("dnc_close", _line(session, "dnc_close"), "End the call politely.", "done", Outcome.declined, True)
+            return Move("end_close", _line(session, "end_close"), "End the call politely.", "done", Outcome.declined, True)
         key, hint, nxt = {
             "handoff": ("handoff", "Seller wants a person. Offer an executive callback at a fixed slot.", "ask"),
             "direct": ("direct", "Seller is irritated. Acknowledge in three words, then one line: free 20-minute meeting, ask for a slot.", "ask"),

@@ -32,6 +32,7 @@ REASONS = {
     T.language_switch: "Seller changed language: follow them; the meeting matters more than our script.",
     T.do_not_call: "Seller asked not to be called: stop pitching, apologise, confirm, end the call.",
     T.slow_down: "Seller asked us to slow down: drop the pace, simple words, one idea per sentence.",
+    T.end_call: "Seller wants to end the call: apologise briefly and hang up; never push for the meeting.",
     T.seller_gender: "Seller's own words show their gender: address them correctly from now on.",
 }
 ADDRESS = {("male", "hinglish"): "सर", ("female", "hinglish"): "मैडम", ("male", "english"): "Sir",
@@ -39,9 +40,10 @@ ADDRESS = {("male", "hinglish"): "सर", ("female", "hinglish"): "मैडम
 
 
 class Mutation:
-    def __init__(self, persona: PersonaSpec):
+    def __init__(self, persona: PersonaSpec, turn_state: dict):
         self.p = persona.model_copy(deep=True)
         self.changes: list[FieldChange] = []
+        self.turn = turn_state   # strategy chosen earlier in THIS turn
 
     def set(self, path: str, value) -> None:
         obj = self.p
@@ -54,8 +56,14 @@ class Mutation:
             self.changes.append(FieldChange(field=path, old=old, new=value))
 
     def strategy(self, s: str) -> None:
-        cur = self.p.tone.strategy
-        if STRATEGY_PRIORITY.index(s) <= STRATEGY_PRIORITY.index(cur):
+        """The seller's latest turn sets the strategy (a slow-down request replaces an
+        earlier rush); priority only breaks ties between signals in the same turn.
+        'end' is final."""
+        if self.p.tone.strategy == "end":
+            return
+        chosen = self.turn.get("strategy")
+        if chosen is None or STRATEGY_PRIORITY.index(s) <= STRATEGY_PRIORITY.index(chosen):
+            self.turn["strategy"] = s
             self.set("tone.strategy", s)
 
 
@@ -63,13 +71,14 @@ class PersonaAdapter:
     def adapt(self, session: CallSession, signals: list[Signal], now_ms: int) -> list[SwitchEvent]:
         turn = session.seller_turns
         events: list[SwitchEvent] = []
+        turn_state: dict = {}
         for sig in signals:
             if sig.confidence < MIN_CONFIDENCE or sig.type not in REASONS:
                 continue
             last = session.cooldowns.get(sig.type.value, -99)
-            if sig.type not in (T.language_switch, T.seller_gender, T.slow_down) and turn - last < COOLDOWN_TURNS:
+            if sig.type not in (T.language_switch, T.seller_gender, T.slow_down, T.end_call) and turn - last < COOLDOWN_TURNS:
                 continue
-            m = Mutation(session.persona)
+            m = Mutation(session.persona, turn_state)
             self._apply(m, sig, session)
             if not m.changes:
                 continue
@@ -123,7 +132,8 @@ class PersonaAdapter:
             m.set("tone.warmth", "high")
             m.set("voice.temperature", TEMP["warm"])
             m.strategy("reassure")
-        elif sig.type == T.do_not_call:
+        elif sig.type in (T.do_not_call, T.end_call):
+            m.set("voice.temperature", TEMP["calm"])
             m.strategy("end")
         elif sig.type == T.seller_gender:
             gender = sig.detail.get("gender")

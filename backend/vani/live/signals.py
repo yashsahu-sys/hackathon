@@ -19,13 +19,29 @@ from vani.text.language import detect as detect_language
 T = SignalType
 
 
+_VOWEL_RUNS = [(re.compile(r"a{2,}"), "a"), (re.compile(r"e{2,}"), "i"), (re.compile(r"o{2,}"), "u"),
+               (re.compile(r"i{2,}"), "i"), (re.compile(r"u{2,}"), "u"), (re.compile(r"z"), "j"), (re.compile(r"ph"), "f")]
+
+
+def norm(text: str) -> str:
+    """Fold Roman-Hindi spelling variants: faaltu/faltu, dimaag/dimag, dheere/dhire,
+    jaldbaazi/jaldbaji, phone/fone. Applied to the lexicon AND to the seller's text,
+    so patterns are written once. Devanagari is untouched."""
+    text = text.lower()
+    for rx, rep in _VOWEL_RUNS:
+        text = rx.sub(rep, text)
+    return text
+
+
 def _rx(*patterns: str) -> list[re.Pattern]:
-    return [re.compile(p, re.I) for p in patterns]
+    return [re.compile(norm(p), re.I) for p in patterns]
 
 
 LEXICON: dict[SignalType, list[re.Pattern]] = {
     T.slow_down: _rx(
-        r"\bdheere\b|\bdhire\b|aaram se (bol|bataiye|boliye)", r"\bslow(ly)?\b", r"itna fast|bahut fast|bahut tez|jaldi jaldi (mat|na) bol",
+        r"\bdheere\b|\bdhire\b|aaram se (bol|bata|samjha)", r"\bslow(ly)?\b", r"itna fast|bahut fast|bahut tez|jaldi jaldi (mat|na) bol",
+        r"(koi|itni|itna|ki|bhi) (jaldi|jaldbaazi|jaldbazi|hadbadi)( bhi)? (nahi|nahin|na)", r"(jaldi|jaldbaazi) (kyu|kyun|kya) (hai|kar)",
+        r"ruk ruk ke", r"thoda ruk(o|iye) ke",
         r"धीरे", r"आराम से बोल", r"(speak|talk) slower|too fast",
     ),
     T.rush: _rx(
@@ -50,6 +66,9 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
         r"zabardasti", r"\bfaltu\b", r"bakwas", r"dimag", r"time pass kar", r"jhoot", r"complain",
         r"बार बार|बार-बार", r"कितनी बार", r"परेशान", r"बस करो", r"बंद करो", r"ज़बरदस्ती|जबरदस्ती",
         r"irritat", r"annoy", r"stop calling", r"waste (of|my) time", r"too many calls",
+        r"mood kharab", r"dimaag kharab|dimaag mat", r"sar dard|sir dard|sir kha", r"pakao|pakaa rahe|paka rahe",
+        r"\bpagal\b", r"\btang\b (kar|aa)", r"\bbe faaltu|\bfaaltu", r"bewakoof|bekar ki baat",
+        r"दिमाग ख़राब|दिमाग खराब|मूड ख़राब|मूड खराब|फ़ालतू|फालतू|बकवास", r"(why|what) the hell|nonsense|useless",
     ),
     T.bot_question: _rx(
         r"\b(ai|a\.i\.)\s*(ho|hai|hain)\b", r"\bbot\b", r"robot", r"recording (hai|chal)", r"machine (hai|ho)",
@@ -72,7 +91,8 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
     ),
     T.agreement: _rx(
         r"^(haan|ha|haanji|han ji|ji haan|ji|ok|okay|theek|thik|chalo|done|sure|yes|alright|fine)\b",
-        r"(theek|thik) hai", r"chalega", r"aa (jao|jaiye|jaana)", r"fix kar (do|dijiye)", r"kar (do|dijiye)\b",
+        r"(theek|thik) hai", r"chalega", r"aa (jao|jaiye|jaana)", r"(fix|book|confirm|pakka) kar (do|dijiye|lo)",
+        r"meeting (fix|rakh|rakho|kar)", r"(haan|ha|ji) (aa|bhej) (jaiye|do|dijiye)",
         r"\b(11|gyarah|5|paanch) baje", r"mil lete", r"ठीक है", r"चलेगा", r"आ जाइए|आ जाओ", r"हाँ|हां",
         r"(that|it) works", r"sounds good", r"\bconfirm",
     ),
@@ -84,6 +104,12 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
         r"interested nahi", r"nahi (chahte|chahta|chahti)\b", r"nahi (karwani|karwana|karana|chalana)\b",
         r"(karana|karwana|chalana) nahi", r"koi plan nahi", r"(already|pehle se).{0,40}(doosri|dusri|dusre|doosre) jagah",
         r"apne aap contact", r"rehne (do|dijiye)\b(?!.*abhi)",
+    ),
+    T.end_call: _rx(
+        r"call (cut|kaat|kat|band|rakh|khatam)\w* (kar|karo|kardo|do|dijiye|de)", r"(phone|call) (rakh|rakho|rakhiye|rakhta|rakhti)",
+        r"(cut|disconnect) (the )?call", r"(cut|kaat) (do|dijiye|kar do)", r"band karo (ye|yeh)? ?(call|phone)",
+        r"baat (khatam|band) kar", r"kal baat karna,? abhi (rakh|band)", r"hang up", r"bye bye",
+        r"कॉल (काट|कट|बंद) (कर|करो|दो)", r"फ़ोन (रख|रखो)|फोन (रख|रखो)",
     ),
     T.do_not_call: _rx(
         r"(call|phone) mat (karo|kariye|kijiye|kijiyega)", r"dubara (call|phone)", r"number (block|delete|hata)",
@@ -113,8 +139,9 @@ class SignalDetector:
         if not text:
             return []
         found: dict[SignalType, Signal] = {}
+        folded = norm(text)
         for kind, patterns in LEXICON.items():
-            hits = [m.group(0) for p in patterns if (m := p.search(text))]
+            hits = [m.group(0) for p in patterns if (m := p.search(text) or p.search(folded))]
             if hits:
                 found[kind] = Signal(type=kind, confidence=round(min(0.95, BASE_CONF + STEP * (len(hits) - 1)), 2),
                                      trigger=hits[0], detail={"matches": hits})
@@ -162,13 +189,15 @@ class SignalDetector:
     @staticmethod
     def _resolve(found: dict, text: str) -> None:
         """Precedence rules learned from real turns."""
-        negative = {T.do_not_call, T.refusal, T.frustration, T.rush}
+        negative = {T.do_not_call, T.refusal, T.frustration, T.rush, T.end_call, T.slow_down, T.confusion}
         if T.agreement in found and negative & set(found):
             del found[T.agreement]                       # "thik hai, dubara call mat kijiye"
         if NEGATED_VALUE.search(text):
             found.pop(T.interest, None)                  # "fayda nahi hota" = scepticism, not interest
             found.setdefault(T.refusal, Signal(type=T.refusal, confidence=0.6, trigger="fayda nahi",
                                                detail={"objection": "value"}))
+        if T.end_call in found:
+            found.pop(T.rush, None)                       # "call cut kar do" is not a scheduling request
         if T.do_not_call in found:
             found.pop(T.rush, None)                       # "abhi nahi ... call mat karo" is not a scheduling issue
         if T.slow_down in found:
