@@ -22,7 +22,7 @@ async def test_stt_request_shape():
     assert out == {"transcript": "haan bolo", "language_code": "hi-IN", "language_probability": 0.9}
     assert seen["path"] == "/speech-to-text" and seen["key"] == "k-123"
     body = seen["body"].decode(errors="ignore")
-    for field in ('name="model"', "saaras:v3", 'name="mode"', "codemix", 'name="language_code"', "unknown", 'name="file"'):
+    for field in ('name="model"', "saaras:v3", 'name="mode"', "translit", 'name="language_code"', "unknown", 'name="file"'):
         assert field in body
 
 
@@ -127,3 +127,29 @@ async def test_tts_other_422_not_retried():
     with pytest.raises(SarvamError):
         await client(h).tts("hi", "hi-IN", "nobody", 1.0)
     assert len(calls) == 1
+
+
+async def test_stt_mode_override():
+    seen = {}
+
+    def h(req):
+        seen["body"] = req.content.decode(errors="ignore")
+        return httpx.Response(200, json={"transcript": "x"})
+    await client(h).stt(b"RIFF", mode="codemix")
+    assert "codemix" in seen["body"]
+
+
+async def test_chat_empty_answer_is_an_error_with_details():
+    def h(req):
+        assert json.loads(req.content)["max_tokens"] == 800
+        return httpx.Response(200, json={"choices": [{"finish_reason": "length",
+                                                       "message": {"content": "", "reasoning_content": "thinking..."}}]})
+    with pytest.raises(SarvamError, match="empty answer.*length.*reasoning chars=11"):
+        await client(h).chat([{"role": "user", "content": "x"}])
+
+
+async def test_chat_model_override():
+    def h(req):
+        assert json.loads(req.content)["model"] == "sarvam-105b-conversations"
+        return httpx.Response(200, json={"choices": [{"message": {"content": "ji"}}]})
+    assert await client(h).chat([], model="sarvam-105b-conversations") == "ji"

@@ -30,7 +30,7 @@ class SpeechAI(Protocol):
 
     async def stt(self, audio: bytes, filename: str = "turn.wav") -> dict: ...
     async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None) -> str: ...
-    async def chat(self, messages: list[dict], max_tokens: int = 200) -> str: ...
+    async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None) -> str: ...
 
 
 class SarvamClient:
@@ -63,11 +63,11 @@ class SarvamClient:
                 await asyncio.sleep(0.3 * (attempt + 1))
         raise last  # type: ignore[misc]
 
-    async def stt(self, audio: bytes, filename: str = "turn.wav") -> dict:
+    async def stt(self, audio: bytes, filename: str = "turn.wav", mode: str | None = None) -> dict:
         data = await self._post(
             "/speech-to-text",
             files={"file": (filename, audio, "audio/wav")},
-            data={"model": self.s.sarvam_stt_model, "mode": "codemix", "language_code": "unknown"},
+            data={"model": self.s.sarvam_stt_model, "mode": mode or self.s.sarvam_stt_mode, "language_code": "unknown"},
         )
         return {"transcript": data.get("transcript", ""), "language_code": data.get("language_code"),
                 "language_probability": data.get("language_probability")}
@@ -93,15 +93,24 @@ class SarvamClient:
             raise SarvamError("/text-to-speech: no audio in response")
         return audios[0]
 
-    async def chat(self, messages: list[dict], max_tokens: int = 200) -> str:
+    async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None) -> str:
         data = await self._post("/v1/chat/completions", json={
-            "model": self.s.sarvam_chat_model, "messages": messages, "max_tokens": max_tokens,
+            "model": model or self.s.sarvam_chat_model, "messages": messages,
+            "max_tokens": max_tokens or self.s.sarvam_chat_max_tokens,
             "temperature": 0.4, "reasoning_effort": "low"})
         try:
-            content = data["choices"][0]["message"]["content"] or ""
-        except (KeyError, IndexError, TypeError) as exc:
+            choice = data["choices"][0]
+            msg = choice["message"]
+            content = msg.get("content") or ""
+        except (KeyError, IndexError, TypeError, AttributeError) as exc:
             raise SarvamError(f"chat: unexpected response shape {str(data)[:200]}") from exc
-        return THINK.sub("", content).strip().strip('"').strip()
+        text = THINK.sub("", content).strip().strip('"').strip()
+        if not text:
+            # Reasoning models can spend the whole budget thinking and return no answer.
+            reasoning = len(msg.get("reasoning_content") or "")
+            raise SarvamError(f"chat: empty answer (finish_reason={choice.get('finish_reason')}, "
+                              f"reasoning chars={reasoning})")
+        return text
 
 
 class OfflineSpeechAI:

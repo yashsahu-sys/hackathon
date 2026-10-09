@@ -47,23 +47,35 @@ async def main() -> int:
         print("TTS  FAIL", e)
         print(hint(e, "SARVAM_TTS_MODEL (bulbul:v2 / bulbul:v3)"))
     if wav:
+        for mode in dict.fromkeys([s.sarvam_stt_mode, "translit", "codemix"]):
+            try:
+                t = time.perf_counter()
+                r = await c.stt(wav, mode=mode)
+                tag = " (configured)" if mode == s.sarvam_stt_mode else ""
+                print(f"STT  ok  {s.sarvam_stt_model} mode={mode}{tag}  {time.perf_counter() - t:.2f}s  "
+                      f"-> {r['transcript']!r} ({r['language_code']})")
+            except SarvamError as e:
+                ok = ok and mode != s.sarvam_stt_mode
+                print(f"STT  FAIL mode={mode}", e)
+                print(hint(e, "SARVAM_STT_MODE (translit / codemix / transcribe)"))
+    messages = [{"role": "system", "content": "You are a phone agent. Reply in one short Hinglish sentence."},
+                {"role": "user", "content": "Seller says: abhi busy hoon, baad mein call karna"}]
+    working = []
+    for model in dict.fromkeys([s.sarvam_chat_model, "sarvam-105b-conversations", "sarvam-105b"]):
         try:
             t = time.perf_counter()
-            r = await c.stt(wav)
-            print(f"STT  ok  {s.sarvam_stt_model}  {time.perf_counter() - t:.2f}s  -> {r['transcript']!r} ({r['language_code']})")
+            r = await c.chat(messages, model=model)
+            working.append(model)
+            tag = " (configured)" if model == s.sarvam_chat_model else ""
+            print(f"LLM  ok  {model}{tag}  {time.perf_counter() - t:.2f}s  -> {r!r}")
         except SarvamError as e:
-            ok = False
-            print("STT  FAIL", e)
-            print(hint(e, "SARVAM_STT_MODEL (saaras:v3 / saaras:v4)"))
-    try:
-        t = time.perf_counter()
-        r = await c.chat([{"role": "system", "content": "Reply in one short Hinglish sentence."},
-                          {"role": "user", "content": "Seller says: abhi busy hoon"}])
-        print(f"LLM  ok  {s.sarvam_chat_model}  {time.perf_counter() - t:.2f}s  -> {r!r}")
-    except SarvamError as e:
+            print(f"LLM  FAIL {model}", e)
+            if e.status is not None or "empty answer" not in str(e):
+                print(hint(e, "SARVAM_CHAT_MODEL"))
+    if s.sarvam_chat_model not in working:
         ok = False
-        print("LLM  FAIL", e)
-        print(hint(e, "SARVAM_CHAT_MODEL (sarvam-105b / sarvam-105b-conversations / sarvam-m)"))
+        if working:
+            print(f"\n-> Set SARVAM_CHAT_MODEL={working[0]} in backend/.env (the configured model gave no answer)")
     await c.aclose()
     return 0 if ok else 2
 
