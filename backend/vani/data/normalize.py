@@ -70,6 +70,14 @@ def to_bool(v: Any) -> bool:
     return bool(f) and f > 0
 
 
+def to_ratio(v: Any) -> float | None:
+    """Pickup ratios arrive as percentages (0-100) in the dataset; normalise to 0-1."""
+    f = to_float(v)
+    if f is None:
+        return None
+    return f / 100.0 if f > 1.0 else f
+
+
 def state_info(state: str | None) -> tuple[str, str]:
     if is_missing(state):
         return "hi-IN", "unknown"
@@ -131,7 +139,7 @@ def profile_from_row(row: dict[str, Any], reference_year: int = 2026) -> SellerP
 
     eng = Engagement(
         activity_30d=to_float(row.get("eng_activity_30d")),
-        pickup_ratio_90d=to_float(row.get("eng_pickup_ratio_90d")),
+        pickup_ratio_90d=to_ratio(row.get("eng_pickup_ratio_90d")),
         call_attempts_90d=to_float(row.get("eng_call_attempts_90d")),
         short_calls_90d=to_float(row.get("eng_short_calls_90d")),
         long_calls_90d=to_float(row.get("eng_long_calls_90d")),
@@ -148,7 +156,7 @@ def profile_from_row(row: dict[str, Any], reference_year: int = 2026) -> SellerP
     hist = BotHistory(
         attempts=to_int(row.get("bot_attempts")),
         answered=to_int(row.get("bot_answered")),
-        answer_rate=to_float(row.get("bot_answer_rate")),
+        answer_rate=to_ratio(row.get("bot_answer_rate")),
         meetings_fixed=to_int(row.get("calls_meeting_fixed")),
         not_interested=to_int(row.get("calls_not_interested")),
         call_later=to_int(row.get("calls_call_later")),

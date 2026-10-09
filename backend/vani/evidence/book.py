@@ -34,15 +34,22 @@ class EvidenceBook:
         f = self._by_id.get(fid)
         return f if f and RANK.get(f["strength"], 0) >= RANK[min_strength] else None
 
-    def elevated(self, profile: SellerProfile, metric: str, min_strength: str = "moderate") -> dict | None:
-        """Strongest finding that this seller's segment has MORE of `metric` than other sellers."""
+    def elevated(self, profile: SellerProfile, metric: str, min_strength: str = "moderate",
+                 min_ratio: float = 1.2) -> dict | None:
+        """Strongest finding that this seller's segment has meaningfully MORE of `metric`
+        than other sellers (significant AND at least `min_ratio` times the rest)."""
         best = None
         for dim, level in segments_of(profile).items():
             f = self._by_id.get(f"SEG-{dim}={level}-{metric}")
-            if not f or f["rate"] <= f["base_rate"] or RANK.get(f["strength"], 0) < RANK[min_strength]:
+            if not f or RANK.get(f["strength"], 0) < RANK[min_strength]:
                 continue
-            if best is None or (RANK[f["strength"]], f["rate"] / max(f["base_rate"], 1e-9)) > \
-                    (RANK[best["strength"]], best["rate"] / max(best["base_rate"], 1e-9)):
+            # Compare with the OVERALL rate, not "everyone else": a segment that is most of
+            # the data can differ from the rest while barely differing from the average.
+            n_all = f.get("n", 0) + f.get("base_n", 0)
+            overall = (f.get("k", 0) + f.get("base_k", 0)) / n_all if n_all else f["base_rate"]
+            if f["rate"] < overall * min_ratio:
+                continue
+            if best is None or (RANK[f["strength"]], f["rate"]) > (RANK[best["strength"]], best["rate"]):
                 best = f
         return best
 

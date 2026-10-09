@@ -56,8 +56,9 @@ def _book(findings):
     return EvidenceBook({"baseline": {}, "findings": findings})
 
 
-def _seg(fid, rate, base, strength):
-    return {"id": fid, "rate": rate, "base_rate": base, "strength": strength, "statement": fid}
+def _seg(fid, rate, base, strength, n=100, bn=400):
+    return {"id": fid, "rate": rate, "base_rate": base, "strength": strength, "statement": fid,
+            "k": round(rate * n), "n": n, "base_k": round(base * bn), "base_n": bn}
 
 
 def test_book_elevated_picks_strongest_higher_risk():
@@ -69,6 +70,13 @@ def test_book_elevated_picks_strongest_higher_risk():
     ])
     assert book.elevated(p, "busy")["id"] == "SEG-pickup=low-busy"
     assert book.elevated(p, "confused") is None
+
+
+def test_book_elevated_uses_overall_rate_not_rest():
+    # Segment is 90% of calls: 49% vs 40% for "the rest" but only ~1.02x the overall rate.
+    p = profile_from_row(seller_row("1", seller_state="Delhi"))
+    book = _book([_seg("SEG-region=north-early_drop", 0.49, 0.40, "strong", n=900, bn=100)])
+    assert book.elevated(p, "early_drop") is None
 
 
 def test_book_ignores_weak_by_default():
@@ -94,3 +102,22 @@ def test_real_evidence_headline_findings(real_repo):
     assert book.get("OUT-confused")["rate"] < book.get("OUT-confused")["base_rate"]
     f = book.get("VAR-last_met_d-early_drop")                       # real A/B-style variant
     assert f and f["causal"] and f["rate"] < f["base_rate"]
+
+
+@pytest.mark.realdata
+def test_real_generator_covers_all_sellers(real_repo):
+    from collections import Counter
+
+    from vani.persona.generator import PersonaGenerator
+    book = EvidenceBook(EvidenceMiner(real_repo).mine())
+    gen = PersonaGenerator(book)
+    labels, defaults = Counter(), 0
+    for prof in real_repo.iter_profiles():
+        p = gen.generate(real_repo.get_context(prof.glid, max_calls=5))
+        labels[p.label] += 1
+        for dec in p.decisions.values():
+            assert dec.reason
+            assert all(book.get(fid) for fid in dec.evidence_ids)
+    assert sum(labels.values()) == 5000
+    assert len(labels) >= 20                       # personas differ across seller types
+    assert max(labels.values()) / 5000 < 0.6       # no single persona dominates
