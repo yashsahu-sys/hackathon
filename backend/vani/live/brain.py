@@ -84,6 +84,9 @@ Read the WHOLE conversation, not single words. Work out what the seller means, t
   frustration -> acknowledge in 3-4 words, no pitch | rush -> one sentence with concrete times |
   confusion / slow_down -> very simple words, one idea | end_call / do_not_call -> apologise and say goodbye.
 8 slot_offered_in_reply: the day + hour you propose in your reply, or null.
+Mood calibration: a question, even a blunt one ("no no, just tell me the purpose"), is NOT frustration or rush.
+Label frustration only for complaints, insults or anger; rush only when they say they're busy or want it quick.
+LANGUAGE: {language_rule}
 Fast keyword detector heard: {hints} (it is often wrong; trust the context)."""
 
 
@@ -100,6 +103,19 @@ class BrainResult:
     language: str | None = None
     reply: str = ""
     offered: Slot | None = None
+
+
+LANG_NAMES = {"en-IN": "English", "hi-IN": "Hinglish (Hindi in Devanagari with English business words)",
+              "ta-IN": "Tamil", "te-IN": "Telugu", "kn-IN": "Kannada", "ml-IN": "Malayalam", "bn-IN": "Bengali",
+              "gu-IN": "Gujarati", "mr-IN": "Marathi", "pa-IN": "Punjabi", "od-IN": "Odia"}
+
+
+def language_rule(current: str, switch_to: str | None) -> str:
+    if switch_to and switch_to != current:
+        name = LANG_NAMES.get(switch_to, switch_to)
+        return f"The seller just switched to {name}. Write the reply ONLY in {name}, from this turn on."
+    return ("Reply in the language of the seller's LAST message. If they switch language, switch with them; "
+            f"otherwise use {LANG_NAMES.get(current, current)}.")
 
 
 def call_state_text(session: CallSession) -> tuple[str, list[Slot]]:
@@ -128,14 +144,16 @@ class LLMBrain:
     def enabled(self) -> bool:
         return bool(getattr(self.speech, "enabled", False))
 
-    def messages(self, session: CallSession, ctx: SellerContext, text: str, hints: list[str], brief: str) -> list[dict]:
+    def messages(self, session: CallSession, ctx: SellerContext, text: str, hints: list[str], brief: str,
+                 switch_to: str | None = None) -> list[dict]:
         sys = system_prompt(session.persona, ctx.profile)
         sys = sys.replace("Output only the words to speak: plain sentences, standard punctuation, no lists, no markdown, no notes.",
                           "The reply field holds only the words to speak: plain sentences, no lists, no markdown, no notes.")
         state, _ = call_state_text(session)
         sys += ("\n\nWHAT REAL VANI CALLS TELL US ABOUT SELLERS:\n" + (self.global_context or "- (no data loaded)")
                 + "\n\nTHIS SELLER:\n" + brief + "\n\nCALL STATE:\n" + state
-                + INSTRUCTIONS.replace("{hints}", ", ".join(hints) or "nothing")
+                + INSTRUCTIONS.replace("{hints}", ", ".join(hints) or "nothing").replace("{language_rule}", language_rule(
+                    session.persona.language.code, switch_to))
                 + "\nReturn ONLY the JSON object.")
         msgs = [{"role": "system", "content": sys}]
         for t in session.transcript[-14:]:
@@ -145,10 +163,10 @@ class LLMBrain:
         return msgs
 
     async def think(self, session: CallSession, ctx: SellerContext, text: str, hints: list[str],
-                    brief: str = "") -> BrainResult | None:
+                    brief: str = "", switch_to: str | None = None) -> BrainResult | None:
         if not self.enabled:
             return None
-        msgs = self.messages(session, ctx, text, hints, brief)
+        msgs = self.messages(session, ctx, text, hints, brief, switch_to)
         attempts = [self._format] + ([{"type": "json_object"}] if self._format is SCHEMA else [])
         for fmt in attempts:
             try:
@@ -207,7 +225,8 @@ def parse(raw: str) -> BrainResult | None:
 HARD_RULE_SIGNALS = {T.do_not_call, T.end_call, T.slow_down, T.seller_gender}
 
 
-def contextual_merge(rule_signals: list[Signal], brain: BrainResult | None, text: str) -> tuple[list[Signal], list[str]]:
+def contextual_merge(rule_signals: list[Signal], brain: BrainResult | None, text: str,
+                     current_language: str | None = None) -> tuple[list[Signal], list[str]]:
     """LLM context decides mood and agreement; rules keep only hard safety signals."""
     if brain is None:
         return rule_signals, []
@@ -216,7 +235,14 @@ def contextual_merge(rule_signals: list[Signal], brain: BrainResult | None, text
     dropped = sorted({s.type.value for s in rule_signals} - {s.type.value for s in keep} - {x.value for x in brain.signals})
     have = {s.type for s in keep}
     out = list(keep)
-    for t in sorted(brain.signals - have, key=lambda x: x.value):
+    lang = brain.language if brain.language in LANG_NAMES else None
+    if T.language_switch not in have and lang and (T.language_switch in brain.signals or current_language
+                                                    and lang != current_language):
+        if current_language is None or lang != current_language:
+            out.append(Signal(type=T.language_switch, confidence=0.8, trigger=text[:80],
+                              detail={"to": lang, "source": "llm"}))
+            have.add(T.language_switch)
+    for t in sorted(brain.signals - have - {T.language_switch}, key=lambda x: x.value):
         out.append(Signal(type=t, confidence=0.8, trigger=text[:80], detail={"source": "llm", "intent": brain.intent}))
     notes = []
     if dropped:

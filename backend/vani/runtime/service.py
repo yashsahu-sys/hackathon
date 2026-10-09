@@ -22,6 +22,7 @@ from vani.live.llm_assist import LLMSignalAssist, merge
 from vani.live.signals import SignalDetector
 from vani.persona.generator import PersonaGenerator
 from vani.persona.prompt import agent_variables, system_prompt
+from vani.speech.language_guard import ensure_language
 from vani.speech.tts_text import for_bulbul
 from vani.text.gender import detect_seller_gender
 from vani.text.slots import Slot, parse_slot, render, suggest, unavailable_days
@@ -120,11 +121,14 @@ class CallService:
         brain: BrainResult | None = None
         if self.brain is not None and self.brain.enabled:
             ctx = self._context(session.seller_glid)
-            brain = await self.brain.think(session, ctx, text, [x.type.value for x in signals], render_seller_brief(ctx))
+            switch_to = next((x.detail.get("to") for x in signals
+                              if x.type == SignalType.language_switch and x.confidence >= 0.75), None)
+            brain = await self.brain.think(session, ctx, text, [x.type.value for x in signals], render_seller_brief(ctx),
+                                           switch_to)
             if brain is None:
                 warnings.append("LLM brain unavailable: rules only this turn")
             else:
-                signals, notes = contextual_merge(signals, brain, text)
+                signals, notes = contextual_merge(signals, brain, text, session.persona.language.code)
                 warnings += notes
         elif self.assist is not None and self.assist.enabled:
             last_bot = next((t.text for t in reversed(session.transcript) if t.role == Role.bot), "")
@@ -161,6 +165,14 @@ class CallService:
                 reply = await self._llm_phrase(session, move, warnings)
             if reply:
                 bot.text, bot.source = reply, "llm"
+        if self.speech.enabled:
+            # The reply must be in the language the persona speaks NOW (after this turn's switch).
+            fixed = await ensure_language(bot.text, session.persona, self.speech, warnings)
+            if fixed is None:
+                bot.text, bot.source, offered = move.text, "template", move.offered
+                bot.text = await ensure_language(bot.text, session.persona, self.speech, warnings) or bot.text
+            else:
+                bot.text = fixed
         session.offered_slots += [o.to_dict() for o in offered if o.to_dict() not in session.offered_slots]
         if session.channel == Channel.web and self.speech.enabled:
             bot.text = await for_bulbul(bot.text, session.persona, self.speech, self.tts_transliterate, warnings)

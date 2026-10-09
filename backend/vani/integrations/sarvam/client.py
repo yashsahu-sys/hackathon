@@ -132,6 +132,20 @@ class SarvamClient:
         return out
 
 
+    async def translate(self, text: str, target: str, source: str = "auto", speaker_gender: str | None = None,
+                        mode: str = "modern-colloquial") -> str:
+        """Sarvam Translate (Mayura). speaker_gender keeps Hindi verb forms right for the bot's voice."""
+        body = {"input": text[:1000], "source_language_code": source, "target_language_code": target,
+                "mode": mode, "model": "mayura:v1"}
+        if speaker_gender in ("male", "female"):
+            body["speaker_gender"] = speaker_gender.capitalize()
+        data = await self._post("/translate", json=body)
+        out = data.get("translated_text")
+        if not out:
+            raise SarvamError("/translate: empty result")
+        return out
+
+
 class OfflineSpeechAI:
     """No key / no network: the browser speaks and listens; replies come from templates."""
     enabled = False
@@ -147,3 +161,6 @@ class OfflineSpeechAI:
 
     async def transliterate(self, *a, **k):
         raise SarvamError("offline: no transliteration")
+
+    async def translate(self, *a, **k):
+        raise SarvamError("offline: no translation")

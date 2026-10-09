@@ -14,10 +14,12 @@ class FakeSpeech:
     enabled = True
 
     def __init__(self, reply="जी, कल 11 बजे ठीक रहेगा?", fail_chat=False, transcript="Abhi busy hoon, baad mein",
-                 labels="none", agreed_slot=None, seller_slot=None, cannot=(), question=None):
+                 labels="none", agreed_slot=None, seller_slot=None, cannot=(), question=None,
+                 language="hi-IN", translation="Sure, shall we meet tomorrow at 11 AM?", fail_translate=False):
         self.reply, self.fail_chat, self.transcript, self.labels = reply, fail_chat, transcript, labels
         self.agreed_slot, self.seller_slot, self.cannot, self.question = agreed_slot, seller_slot, list(cannot), question
-        self.tts_calls, self.chat_calls, self.classify_calls = [], [], []
+        self.language, self.translation, self.fail_translate = language, translation, fail_translate
+        self.tts_calls, self.chat_calls, self.classify_calls, self.translate_calls = [], [], [], []
 
     async def stt(self, audio, filename="turn.wav"):
         return {"transcript": self.transcript, "language_code": "hi-IN"}
@@ -40,12 +42,18 @@ class FakeSpeech:
             return json.dumps({"intent": intent, "mood": moods, "seller_question": self.question, "objection": "none",
                                "seller_slot": self.seller_slot, "seller_cannot_days": self.cannot,
                                "agreed_to_meeting": "agreement" in labels, "agreed_slot": self.agreed_slot,
-                               "language": "hi-IN", "reply": self.reply, "slot_offered_in_reply": None})
+                               "language": self.language, "reply": self.reply, "slot_offered_in_reply": None})
         if messages[0]["content"].startswith("You label"):  # legacy signal assist
             self.classify_calls.append(messages)
             return self.labels
         self.chat_calls.append(messages)
         return self.reply
+
+    async def translate(self, text, target, source="auto", speaker_gender=None, mode="modern-colloquial"):
+        self.translate_calls.append({"text": text, "target": target, "gender": speaker_gender, "mode": mode})
+        if self.fail_translate:
+            raise SarvamError("translate down")
+        return self.translation
 
     async def transliterate(self, text, source, target, spoken_form=False):
         self.translit_calls = getattr(self, "translit_calls", []) + [text]
@@ -338,3 +346,42 @@ async def test_llm_only_yes_without_slot_never_books(repo):
     for text in ("Haan bataiye", "aaram se batao", "hmm"):
         r = await svc.seller_turn(s.session_id, text)
     assert r.session.outcome != Outcome.meeting_fixed
+
+
+async def test_regression_brain_reply_follows_seller_language_switch(repo):
+    # Screenshot: seller switched to English, LLM still answered in Hindi.
+    fake = FakeSpeech(reply="जी, कल 11 बजे मिलते हैं?", language="en-IN")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Sorry, can you please speak in English, I don't understand Hindi")
+    assert r.session.persona.language.code == "en-IN" and r.bot.language_code == "en-IN"
+    assert "switched to English" in fake.classify_calls[-1][0]["content"]
+    assert fake.translate_calls and fake.translate_calls[-1]["target"] == "en-IN"
+    assert r.bot.text.isascii() and any("translated to English" in w for w in r.warnings)
+
+
+async def test_translate_failure_falls_back_to_english_template(repo):
+    fake = FakeSpeech(reply="जी, कल 11 बजे मिलते हैं?", language="en-IN", fail_translate=True)
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Please speak in English")
+    assert r.bot.language_code == "en-IN" and r.bot.source == "template" and r.bot.text.isascii()
+    assert any("translation failed" in w for w in r.warnings)
+
+
+async def test_llm_detected_language_switch_without_rule(repo):
+    # Seller just starts talking English (no "speak English" phrase): the LLM's language field drives the switch.
+    fake = FakeSpeech(reply="Sure sir, shall we meet tomorrow at 11 AM?", language="en-IN")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Okay, what exactly is this about, tell me the benefits")
+    assert r.session.persona.language.code == "en-IN" and r.bot.text.isascii()
+    assert any(e.signal == T.language_switch for e in r.switches)
+
+
+async def test_hindi_reply_kept_when_persona_is_hindi(repo):
+    fake = FakeSpeech(reply="जी, कल 11 बजे ठीक रहेगा?")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "Haan bolo")
+    assert fake.translate_calls == []
