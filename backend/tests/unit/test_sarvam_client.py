@@ -55,7 +55,7 @@ async def test_tts_empty_audio_is_error():
 async def test_chat_strips_reasoning_and_quotes():
     def h(req):
         body = json.loads(req.content)
-        assert body["model"] == "sarvam-105b" and body["reasoning_effort"] == "low"
+        assert body["model"] == Settings().sarvam_chat_model and body["reasoning_effort"] == "low"
         return httpx.Response(200, json={"choices": [{"message": {"content": '<think>plan</think> "जी, कल 11 बजे?"'}}]})
     assert await client(h).chat([{"role": "user", "content": "x"}]) == "जी, कल 11 बजे?"
 
