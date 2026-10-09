@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from vani.domain.live import CallSession, Outcome, Role, SignalType as T
 from vani.persona.generator import _gender_forms
 from vani.persona.lines import lines_for
-from vani.text.slots import Slot, fill, render, suggest
+from vani.text.slots import Slot, fill, parse_slot, render, suggest
 
 OBJECTION_TEXT = {k: re.compile(p, re.I) for k, p in {
     "price": r"paisa|paise|पैसे|charge|kitne ka|\bcost|\bfees?\b|kharcha|खर्चा|\bpaid\b|price",
@@ -81,6 +81,12 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
                           outcome=Outcome.meeting_fixed, end_call=True)
         return c.move("ask_time", "Seller agreed but no full day/time yet. Ask which day and time suit them.", "ask")
 
+    proposed = parse_slot(text)
+    if proposed and proposed.complete and proposed.day not in set(session.unavailable_days) and not blocked:
+        # "kal nahi, somvar 11 baje rakho": take their slot and read it back; their "haan" then books it
+        c.offer = [proposed] + [o for o in c.offer if (o.day, o.hour) != (proposed.day, proposed.hour)]
+        return c.move("confirm_proposed", f"Seller proposed {render(proposed, 'english')}. Read it back and ask to fix it.",
+                      "ask")
     if new_unavailable:
         return c.move("reschedule", f"Seller can't do {', '.join(sorted(new_unavailable))}. Offer the other slots.", "ask")
 

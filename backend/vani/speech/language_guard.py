@@ -15,6 +15,7 @@ from vani.text.language import SCRIPTS, WORD, detect
 
 from .tts_text import is_roman_hindi
 
+SCRIPT_CODES = {code for _, code in SCRIPTS} | {"hi-IN"}
 DEVANAGARI = re.compile(r"[ऀ-ॿ]")
 INDIC = re.compile(r"[ऀ-෿]")
 NAMES = {"en-IN": "English", "hi-IN": "Hindi/Hinglish", "ta-IN": "Tamil", "te-IN": "Telugu", "kn-IN": "Kannada",
@@ -28,6 +29,8 @@ def language_of(text: str) -> str:
             return code
     if DEVANAGARI.search(text):
         return "hi-IN"
+    if detect(text)[0] == "gu-IN":
+        return "gu-IN"
     if is_roman_hindi(text):
         return "hi-IN"
     words = WORD.findall(text)
@@ -39,8 +42,9 @@ def matches(text: str, persona: PersonaSpec) -> bool:
     got = language_of(text)
     if target == "en-IN":
         return got == "en-IN" and not INDIC.search(text)
-    if target == "hi-IN":
-        return got == "hi-IN" or len(WORD.findall(text)) < 4     # short English fillers are fine in Hinglish
+    if target in ("hi-IN", "gu-IN"):
+        short_filler = got not in SCRIPT_CODES and len(WORD.findall(text)) < 4     # "Okay sir." is fine
+        return got == target or short_filler
     return got == target
 
 
@@ -50,7 +54,7 @@ async def ensure_language(text: str, persona: PersonaSpec, speech: SpeechAI, war
         return text
     target = persona.language.code
     try:
-        mode = "code-mixed" if target == "hi-IN" else "modern-colloquial"
+        mode = "code-mixed" if target in ("hi-IN", "gu-IN") else "modern-colloquial"
         out = await speech.translate(text, target, "auto", persona.voice.gender, mode)
     except (SarvamError, AttributeError) as exc:
         warnings.append(f"reply was in {NAMES.get(language_of(text), language_of(text))}, persona speaks "

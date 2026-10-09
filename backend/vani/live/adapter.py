@@ -37,7 +37,8 @@ REASONS = {
     T.seller_gender: "Seller's own words show their gender: address them correctly from now on.",
 }
 ADDRESS = {("male", "hinglish"): "सर", ("female", "hinglish"): "मैडम", ("male", "english"): "Sir",
-           ("female", "english"): "Ma'am", ("male", "regional"): "Sir", ("female", "regional"): "Ma'am"}
+           ("female", "english"): "Ma'am", ("male", "regional"): "Sir", ("female", "regional"): "Ma'am",
+           ("male", "gujarati"): "સર", ("female", "gujarati"): "મેડમ"}
 
 
 class Mutation:
@@ -116,7 +117,7 @@ class PersonaAdapter:
             m.set("voice.temperature", TEMP["clear"])
             m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 12))
             m.set("tone.warmth", "high")
-            if p.language.style == "hinglish":
+            if p.language.style in ("hinglish", "gujarati"):
                 m.set("language.english_mix", min(p.language.english_mix, 0.1))
             m.strategy("clarify")
         elif sig.type == T.rush:
@@ -146,13 +147,13 @@ class PersonaAdapter:
             target = sig.detail.get("to")
             if not target or target == p.language.code:
                 return
-            style = {"en-IN": "english", "hi-IN": "hinglish"}.get(target, "regional")
+            style = {"en-IN": "english", "hi-IN": "hinglish", "gu-IN": "gujarati"}.get(target, "regional")
             m.set("language.code", target)
             m.set("language.style", style)
             m.set("language.english_mix", {"english": 1.0, "hinglish": 0.3}.get(style, 0.3))
             known = p.language.seller_gender in ("male", "female")
             m.set("language.address_as", ADDRESS[(p.language.seller_gender, style)] if known else
-                  ("जी" if style == "hinglish" else ("Sir/Madam" if p.language.formality == "formal" else "you")))
+                  ("जी" if style == "hinglish" else "જી" if style == "gujarati" else ("Sir/Madam" if p.language.formality == "formal" else "you")))
             m.set("voice.accent", ACCENT.get(target, target))
             m.set("voice.speaker", speaker_for(p.voice.gender, p.language.formality, target, p.voice.model))
             L = lines_for(style)

@@ -8,6 +8,9 @@ STYLE_RULE = {
     "hinglish": "Speak natural Hinglish: Hindi in Devanagari script with common English business words in Latin "
                 "(listing, buyer, meeting). About {mix:.0%} English words.",
     "english": "Speak clear, simple Indian English.",
+    "gujarati": "Speak natural Gujarati in Gujarati script, the way Gujarati traders talk on the phone, with common "
+                "English business words in Latin (listing, buyer, meeting). Use gender-neutral first person "
+                "(બોલું છું, કરું છું) and \"તમે\" for the seller.",
     "regional": "Speak {lang} in Roman script, the way it is spoken on the phone; keep English business words "
                 "(seller, buyer, meeting, listing) as they are.",
 }

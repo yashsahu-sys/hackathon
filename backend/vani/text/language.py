@@ -29,6 +29,13 @@ what why how who when where which yes no not please sorry thank thanks okay ok c
 will shall do does did have has had to of in on for with from at by about just only also very
 speak talk understand english call later busy meeting interested sure fine right good morning sir madam
 """.split())
+# Roman Gujarati (what Saaras translit mode writes for a Gujarati speaker). Words Hindi also uses are left out.
+GUJARATI_WORDS = set("""
+che chhe chhu chu nathi kem cho tame tamne tamaru tamari tamara tamaro mane maru mari maro amne amaru amari
+su shu saru saras haa aavdtu avdtu aavde avde aavdatu vaat kaale aaje pachi pachhi atyare hamna hamnaa thai thase
+thashe joie joiye fave favse favshe favtu chalse chalshe karjo kaho kahu kevi kevu shakay sakay vage vagye savare
+bapore sanje saanje gujarati
+""".split())
 SHARED = {"ok", "okay", "sir", "madam", "hello", "hi", "yes", "no"}   # used in both, weak evidence
 
 
@@ -45,6 +52,11 @@ def detect(text: str, hint: str | None = None) -> tuple[str, float]:
         return (hint or "unknown"), 0.3 if hint else 0.0
     hi = sum(w in HINDI_WORDS for w in words)
     en = sum(w in ENGLISH_WORDS and w not in SHARED for w in words)
+    gu = sum(w in GUJARATI_WORDS for w in words)
+    if gu >= 2 and gu > hi and gu >= en:
+        return "gu-IN", min(0.95, 0.6 + 0.1 * (gu - max(hi, en)))
+    if hint and hint not in ("hi-IN", "en-IN", "unknown") and len(words) >= 3 and en <= hi + gu and hi <= 2 * gu + 1:
+        return hint, 0.8                                  # STT heard a regional language and the words don't argue
     if hi == 0 and en == 0:
         if hint and hint not in ("hi-IN", "en-IN"):
             return hint, 0.6

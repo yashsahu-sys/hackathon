@@ -168,7 +168,7 @@ def test_empty_evidence_still_works():
 
 
 def test_male_forms():
-    assert _gender_forms("मैं Payal बोल रही हूँ, बताती हूँ", "male") == "मैं Payal बोल रहा हूँ, बताता हूँ"
+    assert _gender_forms("मैं Payal बोल रही हूँ, बताती हूँ", "male") == "मैं Arjun बोल रहा हूँ, बताता हूँ"
     assert _gender_forms("बोल रही हूँ", "female") == "बोल रही हूँ"
     assert "रहा" not in line("hinglish", "rush") and line("english", "direct").startswith("To be brief")
 

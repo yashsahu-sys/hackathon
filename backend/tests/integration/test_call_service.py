@@ -385,3 +385,23 @@ async def test_hindi_reply_kept_when_persona_is_hindi(repo):
     s, _ = await svc.start("1001")
     await svc.seller_turn(s.session_id, "Haan bolo")
     assert fake.translate_calls == []
+
+
+async def test_switch_to_gujarati_mid_call_offline(svc):
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Gujarati ma vaat karo ne, Hindi nathi aavdtu")
+    assert r.session.persona.language.code == "gu-IN" and r.session.persona.language.style == "gujarati"
+    assert r.bot.language_code == "gu-IN" and any("઀" <= ch <= "૿" for ch in r.bot.text)
+    r = await svc.seller_turn(s.session_id, "kale free nathi, somvare savare 11 vage rakho")
+    assert r.move == "confirm_proposed" and "સોમવારે સવારે 11 વાગ્યે" in r.bot.text
+    r = await svc.seller_turn(s.session_id, "haa saru che")
+    assert r.session.outcome == Outcome.meeting_fixed and "સોમવારે" in r.bot.text
+
+
+async def test_brain_told_to_write_gujarati_after_switch(repo):
+    fake = FakeSpeech(reply="સારું, કાલે સવારે 11 વાગ્યે મળીએ?", language="gu-IN")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Gujarati ma vaat karo ne, Hindi nathi aavdtu")
+    assert "switched to Gujarati" in fake.classify_calls[-1][0]["content"]
+    assert r.bot.language_code == "gu-IN" and r.bot.source == "llm" and fake.translate_calls == []

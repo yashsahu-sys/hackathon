@@ -121,9 +121,26 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
 
 ENGLISH_REQUEST = re.compile(r"\b(speak|talk|baat)\w* (in )?english\b|english (please|me|mein|main|only)|अंग्रेज़ी|इंग्लिश", re.I)
 HINDI_REQUEST = re.compile(r"hindi (me|mein|main) (bolo|baat|boliye)|हिंदी में|हिन्दी में|speak (in )?hindi", re.I)
+# Gujarati (Roman, as Saaras translit writes it, and Gujarati script), added to the same signal types.
+GUJARATI_LEXICON = {
+    T.agreement: _rx(r"^(haa|ha|haji|ha ji)\b", r"(saru|saras|barabar|thik) (che|chhe)", r"(?<!nahi )(?<!nai )\bchal(se|she)\b",
+                     r"(?<!nahi )(?<!nai )\bfav(se|she)\b", r"(fix|book) kari (do|dejo|dyo)", r"^હા", r"(?<!નહીં )ચાલશે",
+                     r"(?<!નહીં )ફાવશે", r"બરાબર છે", r"સારું"),
+    T.refusal: _rx(r"nathi joi(tu|e)", r"(jarur|jaroor|zarur) nathi", r"interest nathi", r"nathi karvu", r"નથી જોઈતું",
+                   r"જરૂર નથી", r"રસ નથી"),
+    T.rush: _rx(r"busy (chu|chhu)", r"(atyare|hamna) (nahi|nai)", r"pachi vaat", r"time nathi", r"અત્યારે નહીં",
+                r"પછી વાત", r"(ટાઈમ|સમય) નથી"),
+    T.confusion: _rx(r"samaj?(atu|ayu|anu|yo) (nathi|nahi|nai)", r"fari ?thi bolo", r"સમજાતું નથી|સમજાયું નહીં", r"ફરીથી બોલો"),
+    T.frustration: _rx(r"vaar(m)? vaar", r"\bheran\b", r"\bmagaj\b", r"હેરાન", r"વારંવાર"),
+    T.end_call: _rx(r"phone (muko|mukvo|muki do)", r"call (kapo|kaapo|kaapi do|band karo)", r"ફોન મૂકો"),
+    T.do_not_call: _rx(r"(call|phone) na karta", r"(call|phone) nahi karvo", r"fari ?thi (call|phone) na", r"(ફોન|કૉલ) ના કરતા"),
+}
+for _t, _rxs in GUJARATI_LEXICON.items():
+    LEXICON[_t] = LEXICON[_t] + _rxs
+
 REGIONAL_REQUEST = {
     "ta-IN": re.compile(r"\btamil\b", re.I), "te-IN": re.compile(r"\btelugu\b", re.I),
-    "gu-IN": re.compile(r"\bgujarati\b", re.I), "mr-IN": re.compile(r"\bmarathi\b", re.I),
+    "gu-IN": re.compile(r"\bguja?r[a]?ati\b|ગુજરાતી|गुजराती", re.I), "mr-IN": re.compile(r"\bmarathi\b", re.I),
     "bn-IN": re.compile(r"\bbengali|bangla\b", re.I), "kn-IN": re.compile(r"\bkannada\b", re.I),
     "pa-IN": re.compile(r"\bpunjabi\b", re.I), "ml-IN": re.compile(r"\bmalayalam\b", re.I),
 }

@@ -73,7 +73,8 @@ class PersonaGenerator:
         plan = self._plan(ctx, style, code, formality, gender, tone, d)
 
         seller_gender = self._seller_gender(ctx, d)
-        address = "Sir/Madam" if style in ("english", "regional") and formality == "formal" else "जी"
+        address = ("Sir/Madam" if style in ("english", "regional") and formality == "formal" else
+                   "જી" if style == "gujarati" else "जी")
         if style in ("english", "regional") and formality != "formal":
             address = "you"
         if seller_gender in ("male", "female"):
@@ -88,7 +89,8 @@ class PersonaGenerator:
                    + ". Bulbul v3/v4 only.")
         label = " · ".join([
             {True: "Quick", False: "Patient" if pace < BASE_PACE else "Steady"}[pace > BASE_PACE],
-            {"hinglish": "Hinglish", "english": "English", "regional": f"{ACCENT.get(code, code)}-first"}[style],
+            {"hinglish": "Hinglish", "english": "English", "gujarati": "Gujarati",
+             "regional": f"{ACCENT.get(code, code)}-first"}[style],
             formality.capitalize(),
             {"history": "Follow-up", "enquiries": "Enquiry-led", "cold": "Category-led", "brief": "One-breath"}[
                 d["plan.opening"].value],
@@ -128,6 +130,10 @@ class PersonaGenerator:
             d["language.style"] = Decision(value="english", source=Source.seller_data, confidence=Confidence.strong,
                                            reason=f"{why}; their own history beats the regional default.")
             return "english", "en-IN"
+        if heard == "gu-IN":
+            d["language.style"] = Decision(value="gujarati", source=Source.seller_data, confidence=Confidence.strong,
+                                           reason="Seller spoke Gujarati on a past call; VANI has native Gujarati lines.")
+            return "gujarati", "gu-IN"
         if heard and heard not in ("hi-IN", "en-IN"):
             d["language.style"] = Decision(value="regional", source=Source.seller_data, confidence=Confidence.strong,
                                            reason=f"Seller spoke {ACCENT.get(heard, heard)} on a past call.")
@@ -179,7 +185,7 @@ class PersonaGenerator:
 
     def _english_mix(self, ctx, style, d) -> float:
         p = ctx.profile
-        if style in ("english", "regional"):
+        if style in ("english", "regional", "gujarati"):
             d["language.english_mix"] = Decision(value=1.0 if style == "english" else 0.3, source=Source.rule,
                                                  confidence=Confidence.guess, reason=f"Follows the {style} style.")
             return 1.0 if style == "english" else 0.3
@@ -354,10 +360,12 @@ class PersonaGenerator:
         if style == "hinglish" and p.language_code in REGIONAL_GREETING:
             greet = f"{REGIONAL_GREETING[p.language_code]}, {L['greet'][formality]}"
         ctx_vars = {
-            "greet": greet, "bot": BOT_NAME[gender], "city": p.city or "आपके शहर" if style == "hinglish" else (p.city or "your city"),
+            "greet": greet, "bot": BOT_NAME[gender],
+            "city": p.city or {"hinglish": "आपके शहर", "gujarati": "તમારા શહેર"}.get(style, "your city"),
             "category": (p.categories[0] if p.categories else ("products" if style != "hinglish" else "products")),
             "enq": enq,
             "enq_phrase": (("1 buyer enquiry आई है" if enq == 1 else f"{enq} buyer enquiries आई हैं") if style == "hinglish"
+                           else ("1 buyer enquiry આવી છે" if enq == 1 else f"{enq} buyer enquiries આવી છે") if style == "gujarati"
                            else ("1 buyer enquiry" if enq == 1 else f"{enq} buyer enquiries")),
         }
         opening = L[f"opening_{kind}"].format(**ctx_vars)
@@ -431,7 +439,8 @@ class PersonaGenerator:
 
 _MALE = [("रही हूँ", "रहा हूँ"), ("बताती हूँ", "बताता हूँ"), ("सकती हूँ", "सकता हूँ"), ("देती हूँ", "देता हूँ"),
          ("करवाती हूँ", "करवाता हूँ"), ("करती हूँ", "करता हूँ"), ("चाहती थी", "चाहता था"), ("चाहती हूँ", "चाहता हूँ"), ("लूँगी", "लूँगा"), ("करवाऊँगी", "करवाऊँगा"),
-         ("कर दूँ", "कर दूँ"), ("assistant हूँ", "assistant हूँ"), ("समझ सकती", "समझ सकता")]
+         ("कर दूँ", "कर दूँ"), ("assistant हूँ", "assistant हूँ"), ("समझ सकती", "समझ सकता"),
+         ("Payal", "Arjun")]
 
 
 def _gender_forms(text: str, gender: str) -> str:

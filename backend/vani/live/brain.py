@@ -107,7 +107,7 @@ class BrainResult:
 
 LANG_NAMES = {"en-IN": "English", "hi-IN": "Hinglish (Hindi in Devanagari with English business words)",
               "ta-IN": "Tamil", "te-IN": "Telugu", "kn-IN": "Kannada", "ml-IN": "Malayalam", "bn-IN": "Bengali",
-              "gu-IN": "Gujarati", "mr-IN": "Marathi", "pa-IN": "Punjabi", "od-IN": "Odia"}
+              "gu-IN": "Gujarati (Gujarati script with English business words in Latin)", "mr-IN": "Marathi", "pa-IN": "Punjabi", "od-IN": "Odia"}
 
 
 def language_rule(current: str, switch_to: str | None) -> str:

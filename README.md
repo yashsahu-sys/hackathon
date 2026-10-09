@@ -70,7 +70,7 @@ seller audio ─> Saaras STT (translit: Roman Hinglish)
                  call summaries + call state (slots offered, days ruled out)
             ─> merge: LLM's contextual reading decides mood & agreement; rules keep only hard safety signals
                  (do-not-call, end-call, explicit slow-down/language, seller gender) and run alone if the LLM is down
-            ─> call state: days ruled out, seller's slot (their time beats ours), agreed slot; Hinglish time parser
+            ─> call state: days ruled out, seller's slot (their time beats ours), agreed slot; Hinglish + Gujarati time parser
                  double-checks the LLM ("kal shaam paanch baje" -> tomorrow 17:00)
             ─> adapter: pace / expressiveness / strategy switch  ─> switch log
             ─> policy: outcome lines (booked / goodbye) are fixed templates, never improvised
@@ -85,6 +85,7 @@ seller audio ─> Saaras STT (translit: Roman Hinglish)
 - Calls where the seller got **confused** fixed 2.6% meetings; **busy** 5.0%; asked **"are you a bot?"** 2.7%; vs 11.3% otherwise. → these are the live switch triggers.
 - Talking **price** (19.6%) and **visit/location** (62.6%) go with meetings. → pivot to the visit.
 - 99% of transcribed sellers answer in Hinglish. → Hinglish default, switch only when the seller does.
+- Gujarat sellers (964) also answered VANI in Hinglish (0 of 456 turns in Gujarati). → They start in Hinglish with "Kem cho"; Gujarati is a full live switch: native Gujarati lines, Gujarati slots ("કાલે સવારે 11 વાગ્યે"), Roman-Gujarati detection and signals.
 
 ## Honesty about evidence (PS04 §3.4)
 

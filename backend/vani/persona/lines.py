@@ -2,7 +2,9 @@
 
 Hindi/Hinglish: Devanagari with English business words in Latin (how VANI's
 production prompt writes Hindi). Only respectful fillers (no "यार", "अरे").
-Regional languages: a native greeting, then the LLM speaks the language live.
+Gujarati: Gujarati script with English business words, gender-neutral first person
+(બોલું છું) so the same line works for Payal and Arjun. Other regional languages:
+a native greeting, then the LLM speaks the language live.
 """
 
 REGIONAL_GREETING = {
@@ -55,6 +57,7 @@ LINES = {
         "dnc_close": "माफ़ी चाहती हूँ जी, आगे से आपको इस बारे में call नहीं आएगा। आपका समय देने के लिए धन्यवाद।",
         "callback_confirm": "ठीक है जी, मैं आपको बाद में call करवाती हूँ। धन्यवाद।",
         "ask_time": "जी बढ़िया! किस दिन और किस time आपके लिए ठीक रहेगा? जैसे {slot1} या {slot2}?",
+        "confirm_proposed": "ठीक है जी, तो {slot1} fix कर दूँ?",
         "reschedule": "कोई बात नहीं जी। तो {slot1} या {slot2}, इनमें से कौन सा time ठीक रहेगा?",
         "end_close": "माफ़ी चाहती हूँ जी, आपको परेशान करने का इरादा नहीं था। मैं call यहीं ख़त्म करती हूँ। धन्यवाद।",
         "playbook": {
@@ -98,6 +101,7 @@ LINES = {
         "dnc_close": "I'm sorry for the trouble. You won't get further calls about this. Thank you for your time.",
         "callback_confirm": "Sure, I'll arrange a call back later. Thank you.",
         "ask_time": "Great! Which day and time suit you? For example {slot1} or {slot2}?",
+        "confirm_proposed": "Sure, shall I fix {slot1} then?",
         "reschedule": "No problem. Would {slot1} or {slot2} work better?",
         "end_close": "I'm sorry for the trouble. I'll end the call here. Thank you for your time.",
         "playbook": {
@@ -122,10 +126,54 @@ LINES = {
             "send_whatsapp": "Sure, I'll send the details on WhatsApp. Shall I also fix the meeting time?",
         },
     },
+    "gujarati": {
+        "greet": {"casual": "કેમ છો", "neutral": "નમસ્તે", "formal": "નમસ્કાર"},
+        "opening_history": "{greet}, હું IndiaMART થી {bot} બોલું છું. ગયા વખતે આપણી વાત થઈ હતી, એ જ સંદર્ભમાં તમારા {category} business માટે એક જરૂરી update આપવો હતો.",
+        "opening_enquiries": "{greet}, હું IndiaMART થી {bot} બોલું છું. છેલ્લા ત્રણ મહિનામાં તમને {enq_phrase}, એને orders માં ફેરવવા વિશે બે મિનિટ વાત કરવી હતી.",
+        "opening_cold": "{greet}, હું IndiaMART થી {bot} બોલું છું. {city} માં {category} ના buyers IndiaMART પર search કરી રહ્યા છે, એ વિશે તમારી સાથે વાત કરવી હતી.",
+        "opening_brief": "{greet}, IndiaMART થી {bot} બોલું છું, તમારા {category} business માટે બસ એક મિનિટ લઈશ.",
+        "pitch": "અમારા executive તમને મળીને તમારી listing અને catalog સરખી કરી આપે છે, જેથી તમને વધારે સાચા buyers મળે. આ meeting બિલકુલ free છે.",
+        "meeting_ask": "શું {slot1} અમારા executive તમને 20 મિનિટ માટે મળી શકે? ઇચ્છો તો online meeting પણ થઈ શકે.",
+        "meeting_confirm": "ખૂબ સરસ, {slot} meeting fix છે. Executive એક કલાક પહેલાં તમને call કરશે. આભાર.",
+        "direct": "સીધી વાત: free meeting, ફક્ત 20 મિનિટ, વધારે buyers. {slot1} ચાલશે?",
+        "clarify": "હું સરળ શબ્દોમાં કહું. અમારા executive તમારી પાસે આવશે, તમારા products IndiaMART પર સરખી રીતે બતાવશે, જેથી નવા buyers તમને call કરે. આનો કોઈ charge નથી.",
+        "rush": "હું સમજી શકું છું કે તમે busy છો. બસ એટલું કહો, {slot1} કે {slot2}, કયો time ફાવશે?",
+        "close": "ચોક્કસ, આ બધું executive તમને detail માં બતાવશે. {slot1} fix કરી દઉં?",
+        "handoff": "ચોક્કસ, હું અમારા executive સાથે તમારી વાત કરાવું છું. શું તેઓ {slot1} તમને call કરી શકે?",
+        "reassure": "હું IndiaMART ની virtual assistant છું, અને તમારી meeting એક સાચા executive સાથે fix કરાવું છું.",
+        "close_no": "કોઈ વાંધો નહીં, તમારો સમય આપવા બદલ આભાર. જરૂર હોય તો IndiaMART હંમેશા તમારી સાથે છે.",
+        "dnc_close": "માફ કરજો, હવેથી તમને આ વિશે call નહીં આવે. તમારો સમય આપવા બદલ આભાર.",
+        "callback_confirm": "સારું, હું તમને પછીથી call કરાવું છું. આભાર.",
+        "ask_time": "ખૂબ સરસ! કયા દિવસે અને કયા time તમને ફાવશે? જેમ કે {slot1} કે {slot2}?",
+        "confirm_proposed": "સારું, તો {slot1} fix કરી દઉં?",
+        "reschedule": "કોઈ વાંધો નહીં. તો {slot1} કે {slot2}, આમાંથી કયો time ફાવશે?",
+        "end_close": "માફ કરજો, તમને હેરાન કરવાનો ઇરાદો નહોતો. હું call અહીં જ પૂરો કરું છું. આભાર.",
+        "playbook": {
+            "busy": "સમજી શકું છું કે તમે busy છો. ફક્ત meeting નો time fix કરવો છે, દસ seconds લાગશે.",
+            "call_later": "ચોક્કસ. ક્યારે call કરું, {slot1} કે {slot2}?",
+            "not_interested": "બસ એટલું કહું: તમારી category ના sellers ને IndiaMART પરથી દર મહિને નવા buyers મળે છે. એક વાર 20 મિનિટ મળીને જોઈ લો, નિર્ણય તમારો.",
+            "engagement_drop": "હું તમારો વધારે સમય નહીં લઉં. બસ meeting નો એક time કહી દો.",
+            "audio_issue": "માફ કરજો, અવાજ બરાબર નહોતો આવતો. ફરીથી કહું, meeting માટે {slot1} ચાલશે?",
+            "already_in_touch": "સરસ કે તમે પહેલેથી જોડાયેલા છો. આ meeting તમારી listing ના review માટે છે, જેથી વધારે result મળે.",
+            "executive_gap": "ગયા વખતની તકલીફ માટે માફ કરજો. આ વખતે હું time પાકો કરીને executive પાસે જાતે confirm કરાવીશ.",
+            "wrong_contact": "માફ કરજો. શું તમે કહી શકો કે business ના નિર્ણય કોણ લે છે, જેથી હું સાચી વ્યક્તિ સાથે વાત કરું?",
+            "not_ready": "બિલકુલ, કોઈ ઉતાવળ નથી. Meeting માં બસ સમજી લો કે શરૂઆત કેવી રીતે કરવી, કોઈ commitment નથી.",
+            "mismatch": "ખોટી category દેખાઈ હોય તો માફ કરજો. Executive તમારી સાચી category set કરી આપશે, એ માટે જ આ meeting છે.",
+            "trust": "તમારી માહિતી સુરક્ષિત છે. Meeting માં executive પોતાનું ID બતાવશે, અને કોઈ payment માંગવામાં નહીં આવે.",
+            "price": "Meeting બિલકુલ free છે. કોઈ paid plan લેવો કે નહીં, એ executive ને મળીને તમે નક્કી કરો.",
+            "other_platform": "સરસ. એની સાથે IndiaMART પણ રાખો, ઘણા buyers અહીં search કરે છે. Executive તમને comparison બતાવી દેશે.",
+            "bot_question": "હું IndiaMART ની virtual assistant છું, અને meeting એક સાચા executive સાથે fix કરું છું.",
+            "identity": "હું IndiaMART થી Payal બોલું છું, તમારા seller account વિશે call કર્યો છે.",
+            "purpose": "Call એટલા માટે કર્યો છે કે તમારી listing પર વધારે buyers આવે, અને એ માટે એક free meeting fix કરવી છે.",
+            "visit_details": "Executive 20 મિનિટ માટે તમારી office આવશે, અથવા ઇચ્છો તો online meeting કરશે. કોઈ તૈયારીની જરૂર નથી.",
+            "value": "તમારી listing સરખી થવાથી સાચા buyers તમને શોધી શકશે, જેથી enquiries અને orders વધે છે.",
+            "send_whatsapp": "ચોક્કસ, details WhatsApp પર મોકલી દઉં છું. સાથે meeting નો time પણ fix કરી દઉં?",
+        },
+    },
 }
 
 
 def lines_for(style: str) -> dict:
-    """Regional styles open with a native greeting but reuse the English/Hinglish
-    structure; the LLM renders them in the regional language live."""
-    return LINES["english"] if style in ("english", "regional") else LINES["hinglish"]
+    """Hinglish, English and Gujarati have their own lines. Other regional styles open
+    with a native greeting but reuse the English structure; the LLM renders them live."""
+    return LINES.get(style) or LINES["english"]
