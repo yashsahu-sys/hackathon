@@ -15,7 +15,9 @@ class SignalType(str, Enum):
     language_switch = "language_switch"
     rush = "rush"
     human_request = "human_request"
-    bot_question = "bot_question"       # "kya aap bot ho?"
+    bot_question = "bot_question"       # "aap AI ho?"
+    identity = "identity"               # "kaun bol raha hai?"
+    do_not_call = "do_not_call"         # "dubara call mat kijiye"
     agreement = "agreement"
     refusal = "refusal"
 

@@ -121,3 +121,14 @@ def test_real_generator_covers_all_sellers(real_repo):
     assert sum(labels.values()) == 5000
     assert len(labels) >= 20                       # personas differ across seller types
     assert max(labels.values()) / 5000 < 0.6       # no single persona dominates
+
+
+@pytest.mark.realdata
+def test_real_signal_evaluation_runs(real_repo):
+    from vani.live.evaluate import evaluate
+    rep = evaluate(real_repo)
+    assert rep["calls"] > 400
+    for name in ("rush", "refusal", "frustration"):
+        s = rep["signals"][name]
+        assert s["support"] > 0 and s["recall"] is not None
+    assert rep["signals"]["refusal"]["precision"] >= 0.5
