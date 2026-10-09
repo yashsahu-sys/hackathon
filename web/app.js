@@ -188,10 +188,10 @@ function switchCard(e) {
   $("log").prepend(el);
 }
 
-function outcome(o) {
+function outcome(o, slot) {
   const el = document.createElement("div");
   el.className = "outcome " + (o === "meeting_fixed" ? "ok" : "no");
-  el.textContent = { meeting_fixed: "✅ Meeting fixed: tomorrow 11:00", declined: "Call closed politely: seller declined",
+  el.textContent = { meeting_fixed: `✅ Meeting fixed: ${slot || "slot confirmed"}`, declined: "Call closed politely: seller declined",
                      callback: "Callback requested", dropped: "Call ended" }[o] || o;
   $("log").prepend(el);
 }
@@ -212,7 +212,7 @@ async function sellerSays(text, audioBlob) {
     bubble("bot", r.bot.text, metaOf(r.bot, r.persona.version));
     $("stage").textContent = r.stage;
     r.warnings.forEach((w) => console.warn(w));
-    if (r.status === "ended") { outcome(r.outcome); setCallControls(false); }
+    if (r.status === "ended") { outcome(r.outcome, r.meeting_slot); setCallControls(false); }
     status(r.status === "ended" ? "Call ended." : "Your turn.");
     await speak(r.bot);
   } catch (e) { status("⚠ " + e.message); }

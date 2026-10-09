@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from vani.config import Settings
 from vani.data.repository import DuckDBSellerRepository, SellerRepository
 from vani.evidence.book import EvidenceBook
+from vani.evidence.global_context import render_global
 from vani.integrations.sarvam.client import OfflineSpeechAI, SarvamClient, SpeechAI
 from vani.persona.generator import PersonaGenerator
 from vani.runtime.service import CallService
@@ -37,4 +38,4 @@ class Container:
         speech: SpeechAI = SarvamClient(settings) if settings.sarvam_enabled else OfflineSpeechAI()
         return cls(settings, repo, evidence, generator, store, speech,
                    CallService(repo, generator, store, speech, llm_brain=settings.llm_brain,
-                               tts_transliterate=settings.tts_transliterate))
+                               tts_transliterate=settings.tts_transliterate, global_context=render_global(evidence)))

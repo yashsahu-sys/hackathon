@@ -16,13 +16,15 @@ from vani.domain.live import (CallSession, CallStatus, Channel, Outcome, Role, S
 from vani.domain.persona import PersonaSpec
 from vani.integrations.sarvam.client import SarvamError, SpeechAI
 from vani.live.adapter import MIN_CONFIDENCE, PersonaAdapter
-from vani.live.brain import BrainResult, LLMBrain
+from vani.evidence.global_context import render_seller_brief
+from vani.live.brain import BrainResult, LLMBrain, contextual_merge
 from vani.live.llm_assist import LLMSignalAssist, merge
 from vani.live.signals import SignalDetector
 from vani.persona.generator import PersonaGenerator
 from vani.persona.prompt import agent_variables, system_prompt
 from vani.speech.tts_text import for_bulbul
 from vani.text.gender import detect_seller_gender
+from vani.text.slots import Slot, parse_slot, render, suggest, unavailable_days
 
 from .dialogue import Move, next_move
 from .store import SessionStore
@@ -67,9 +69,10 @@ class TurnResult:
 class CallService:
     def __init__(self, repo: SellerRepository, generator: PersonaGenerator, store: SessionStore, speech: SpeechAI,
                  detector: SignalDetector | None = None, adapter: PersonaAdapter | None = None,
-                 llm_brain: bool = True, tts_transliterate: bool = False):
+                 llm_brain: bool = True, tts_transliterate: bool = False, global_context: str = ""):
         self.repo, self.gen, self.store, self.speech = repo, generator, store, speech
-        self.brain = LLMBrain(speech) if llm_brain else None
+        self.brain = LLMBrain(speech, global_context) if llm_brain else None
+        self._ctx_cache: dict = {}
         self.assist = None if llm_brain else LLMSignalAssist(speech)
         self.tts_transliterate = tts_transliterate
         self.detector = detector or SignalDetector()
@@ -113,14 +116,15 @@ class CallService:
 
         seller_texts = [t.text for t in session.transcript if t.role == Role.seller]
         signals = self.detector.detect(text, session.persona.language.code, stt_lang, seller_texts[-3:])
+        rule_agreed = any(x.type == SignalType.agreement for x in signals)
         brain: BrainResult | None = None
         if self.brain is not None and self.brain.enabled:
-            profile = self.repo.get_profile(session.seller_glid)
-            brain = await self.brain.think(session, profile, text, [x.type.value for x in signals])
+            ctx = self._context(session.seller_glid)
+            brain = await self.brain.think(session, ctx, text, [x.type.value for x in signals], render_seller_brief(ctx))
             if brain is None:
                 warnings.append("LLM brain unavailable: rules only this turn")
             else:
-                signals, notes = merge(signals, brain.signals, text)
+                signals, notes = contextual_merge(signals, brain, text)
                 warnings += notes
         elif self.assist is not None and self.assist.enabled:
             last_bot = next((t.text for t in reversed(session.transcript) if t.role == Role.bot), "")
@@ -129,6 +133,8 @@ class CallService:
         gender, gconf, words = detect_seller_gender(seller_texts + [text])
         if gender != "unknown" and gender != session.persona.language.seller_gender:
             signals.append(Signal(type=SignalType.seller_gender, confidence=gconf, trigger=words, detail={"gender": gender}))
+
+        new_unavailable = self._update_slots(session, text, signals, brain, rule_agreed)
         session.transcript.append(TurnRecord(role=Role.seller, text=text, language=stt_lang, at_ms=self._now(session),
                                              persona_version=session.persona.version, signals=signals))
         switches = self.adapter.adapt(session, signals, self._now(session))
@@ -137,20 +143,25 @@ class CallService:
             session.strategy_used = None
 
         types = {s.type for s in signals if s.confidence >= MIN_CONFIDENCE}
-        move = next_move(session, text, types, session.strategy_used)
+        move = next_move(session, text, types, session.strategy_used, new_unavailable)
         self._apply_move(session, move, types)
 
         bot = BotUtterance(text=move.text, language_code=session.persona.language.code,
                            speaker=session.persona.voice.speaker, pace=session.persona.voice.pace,
                            temperature=session.persona.voice.temperature)
+        offered = move.offered
         if move.key not in TEMPLATE_ONLY and self.speech.enabled:
             reply = None
             if brain is not None:
                 reply = self._accept(brain.reply, session, warnings)
+                if reply:
+                    said = brain.offered or parse_slot(reply)
+                    offered = [said] if said and said.complete else []
             elif session.channel == Channel.web and self.brain is None:
                 reply = await self._llm_phrase(session, move, warnings)
             if reply:
                 bot.text, bot.source = reply, "llm"
+        session.offered_slots += [o.to_dict() for o in offered if o.to_dict() not in session.offered_slots]
         if session.channel == Channel.web and self.speech.enabled:
             bot.text = await for_bulbul(bot.text, session.persona, self.speech, self.tts_transliterate, warnings)
         if speak and session.channel == Channel.web:
@@ -160,6 +171,52 @@ class CallService:
             session.status = CallStatus.ended
         self.store.save(session, switches)
         return TurnResult(session, text, signals, switches, bot, move.key, warnings)
+
+    # -------------------------------------------------------- call state
+    def _context(self, glid: str):
+        if glid not in self._ctx_cache:
+            ctx = self.repo.get_context(glid)
+            if ctx is None:
+                raise NotFound(f"seller {glid} not found")
+            self._ctx_cache[glid] = ctx
+        return self._ctx_cache[glid]
+
+    @staticmethod
+    def _update_slots(session: CallSession, text: str, signals: list[Signal], brain: BrainResult | None,
+                      rule_agreed: bool = False) -> set[str]:
+        """Track days ruled out and resolve the slot the seller agreed to (their time beats ours)."""
+        cannot = unavailable_days(text) | (brain.cannot if brain else set())
+        new = cannot - set(session.unavailable_days)
+        session.unavailable_days += sorted(new)
+        unavailable = set(session.unavailable_days)
+        offered = [Slot.from_dict(d) for d in session.offered_slots]
+        said = (brain.seller_slot if brain and brain.seller_slot else None) or parse_slot(text)
+
+        types = {s.type for s in signals}
+        if SignalType.agreement in types and brain is None and not offered and not said:
+            # rules only: "haan ji" before any slot was offered is not agreeing to a meeting
+            signals[:] = [s for s in signals if s.type != SignalType.agreement]
+            return new
+        if SignalType.agreement not in {s.type for s in signals}:
+            return new
+        cand = (brain.agreed_slot if brain and brain.agreed_slot else None) or said
+        last = offered[-1] if offered else None
+        if cand is None and last is not None and (brain is None or rule_agreed):
+            # "haan theek hai" right after an offer = that offer. With the LLM on, only when the
+            # rules ALSO heard a yes: an LLM-only "agree" with no slot never books by itself.
+            cand = Slot(last.day, last.hour)
+        if cand is not None:
+            if cand.day is None:
+                match = next((o for o in reversed(offered) if o.hour == cand.hour), None)
+                ref = match or last
+                cand.day = ref.day if ref else suggest(unavailable)[0].day   # first day they haven't ruled out
+            if cand.hour is None:
+                match = next((o for o in reversed(offered) if o.day == cand.day), None)
+                cand.hour = match.hour if match else None
+            if cand.day in unavailable:
+                cand = None
+        session.agreed_slot = cand.to_dict() if cand and cand.complete else None
+        return new
 
     def end(self, session_id: str, outcome: Outcome | None = None) -> CallSession:
         session = self._load(session_id, allow_ended=True)
@@ -178,6 +235,8 @@ class CallService:
         v["persona_version"] = str(session.persona.version)
         v["next_move"] = move or ""
         v["call_status"] = session.status.value
+        v["agreed_slot"] = render(Slot.from_dict(session.agreed_slot), "english") if session.agreed_slot else ""
+        v["seller_unavailable"] = ", ".join(session.unavailable_days)
         return v
 
     # ------------------------------------------------------------ internals
@@ -204,8 +263,8 @@ class CallService:
             session.outcome = move.outcome
         if move.key == "call_later" and session.outcome == Outcome.unknown:
             session.outcome = Outcome.callback
-        if move.outcome == Outcome.meeting_fixed:
-            session.meeting_slot = "tomorrow 11:00"
+        if move.outcome == Outcome.meeting_fixed and session.agreed_slot:
+            session.meeting_slot = render(Slot.from_dict(session.agreed_slot), "english")
 
     def _record_bot(self, session: CallSession, text: str) -> None:
         session.transcript.append(TurnRecord(role=Role.bot, text=text, language=session.persona.language.code,
@@ -221,6 +280,10 @@ class CallService:
             return None
         if CLAIMS_BOOKED.search(reply) and session.outcome != Outcome.meeting_fixed:
             warnings.append("LLM reply claimed a booked meeting that the policy did not confirm; template used")
+            return None
+        said = parse_slot(reply)
+        if said and said.day and said.day in session.unavailable_days:
+            warnings.append(f"LLM reply offered {said.day}, which the seller ruled out; template used")
             return None
         return reply
 

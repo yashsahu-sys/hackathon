@@ -15,6 +15,7 @@ from vani.domain.seller import BusinessKind, SellerContext, TurnoverBand
 from vani.evidence.book import EvidenceBook
 from vani.evidence.miner import age_band
 from vani.text.gender import detect_seller_gender
+from vani.text.slots import fill as fill_slots
 from vani.text.language import detect
 
 from .lines import DISPOSITION_KEY, LINES, OBJECTION_KEY, QUESTION_KEY, REGIONAL_GREETING, lines_for
@@ -404,7 +405,7 @@ class PersonaGenerator:
                         "other_platform", "purpose", "visit_details", "send_whatsapp", "trust", "not_ready",
                         "identity", "value", "engagement_drop", "audio_issue", "executive_gap", "wrong_contact", "mismatch"]
         order = seen + [k for k in global_order if k not in seen]
-        playbook = {k: _gender_forms(L["playbook"][k], gender) for k in order if k in L["playbook"]}
+        playbook = {k: fill_slots(_gender_forms(L["playbook"][k], gender), style) for k in order if k in L["playbook"]}
         out_ids = [f["id"] for f in (self.ev.usable(x) for x in ("OUT-busy", "OUT-not_interested", "OUT-price", "OUT-bot_question")) if f]
         d["plan.objection_playbook"] = Decision(
             value=list(playbook)[:6],

@@ -10,6 +10,7 @@ from vani.domain.persona import Confidence, Decision, PersonaSpec, Source
 from vani.persona.generator import _gender_forms
 from vani.persona.lines import REGIONAL_GREETING, lines_for
 from vani.persona.voices import ACCENT, clamp_pace, speaker_for
+from vani.text.slots import fill as fill_slots
 
 T = SignalType
 MIN_CONFIDENCE = 0.6
@@ -155,7 +156,7 @@ class PersonaAdapter:
             m.set("voice.accent", ACCENT.get(target, target))
             m.set("voice.speaker", speaker_for(p.voice.gender, p.language.formality, target, p.voice.model))
             L = lines_for(style)
-            m.p.plan.objection_playbook = {k: _gender_forms(L["playbook"][k], p.voice.gender)
+            m.p.plan.objection_playbook = {k: fill_slots(_gender_forms(L["playbook"][k], p.voice.gender), style)
                                            for k in p.plan.objection_playbook if k in L["playbook"]}
             if style == "regional" and target in REGIONAL_GREETING:
                 m.set("plan.opening", f"{REGIONAL_GREETING[target]}! " + p.plan.opening)

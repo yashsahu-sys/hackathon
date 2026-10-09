@@ -62,8 +62,13 @@ def test_sqlite_persists_across_connections(tmp_path):
 
 
 # ---------------------------------------------------------------- dialogue
-def mv(session, text, types=(), used=None):
-    return next_move(session, text, set(types), used)
+def mv(session, text, types=(), used=None, new_unavailable=None):
+    return next_move(session, text, set(types), used, new_unavailable)
+
+
+def Ctxless(session, key):
+    from vani.runtime.dialogue import Ctx
+    return Ctx(session).line(key)
 
 
 def test_opening_then_pitch_then_ask():
@@ -74,15 +79,32 @@ def test_opening_then_pitch_then_ask():
     assert mv(s, "achha").key == "meeting_ask"
 
 
-def test_agreement_after_ask_fixes_meeting():
+def test_agreement_with_agreed_slot_fixes_that_slot():
+    s = make_session()
+    s.stage, s.agreed_slot = "ask", {"day": "day_after", "hour": 17, "minute": 0}
+    m = mv(s, "haan theek hai", [T.agreement])
+    assert m.outcome == Outcome.meeting_fixed and m.end_call and "परसों शाम 5 बजे" in m.text
+
+
+def test_agreement_without_slot_asks_for_time():
     s = make_session()
     s.stage = "ask"
     m = mv(s, "haan theek hai", [T.agreement])
-    assert m.outcome == Outcome.meeting_fixed and m.end_call
+    assert m.key == "ask_time" and m.outcome is None and len(m.offered) == 2
 
 
-def test_agreement_with_slot_fixes_even_before_ask():
-    assert mv(make_session(), "kal 11 baje aa jaiye", [T.agreement]).outcome == Outcome.meeting_fixed
+def test_ruled_out_day_triggers_reschedule_without_it():
+    s = make_session()
+    s.stage, s.unavailable_days = "ask", ["tomorrow"]
+    m = mv(s, "kal free nahi hoon", [T.rush], new_unavailable={"tomorrow"})
+    assert m.key == "reschedule" and "कल" not in m.text and all(o.day != "tomorrow" for o in m.offered)
+
+
+def test_lines_never_contain_raw_placeholders():
+    s = make_session()
+    for key in ("pitch", "meeting_ask", "rush", "direct", "close", "handoff", "ask_time", "reschedule"):
+        s.persona.tone.strategy = "standard"
+        assert "{slot" not in Ctxless(s, key)
 
 
 def test_plain_haan_in_opening_is_not_a_meeting():

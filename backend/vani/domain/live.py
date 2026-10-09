@@ -105,7 +105,10 @@ class CallSession(BaseModel):
     strategy_used: str | None = None     # each switch's strategy line is spoken once
     refusals: int = 0
     outcome: Outcome = Outcome.unknown
-    meeting_slot: str | None = None
+    meeting_slot: str | None = None           # human-readable agreed slot
+    agreed_slot: dict | None = None           # Slot as dict {day, hour, minute}
+    offered_slots: list[dict] = Field(default_factory=list)   # what VANI has proposed, in order
+    unavailable_days: list[str] = Field(default_factory=list)  # days the seller ruled out
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property

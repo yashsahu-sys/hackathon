@@ -57,9 +57,9 @@ async def test_brain_falls_back_to_json_object_when_schema_rejected():
     c = ctx("1")
     p = PersonaGenerator(EvidenceBook.empty()).generate(c)
     s = CallSession(session_id="s", seller_glid="1", channel=Channel.web, persona=p, initial_persona=p)
-    r = await brain.think(s, c.profile, "busy hoon", ["rush"])
+    r = await brain.think(s, c, "busy hoon", ["rush"])
     assert r.signals == {T.rush} and r.objection == "busy" and formats == ["json_schema", "json_object"]
-    await brain.think(s, c.profile, "busy hoon", [])
+    await brain.think(s, c, "busy hoon", [])
     assert formats[-1] == "json_object"          # remembers the downgrade
 
 

@@ -64,9 +64,14 @@ Sarvam agent setup: [docs/SARVAM_AGENT_SETUP.md](docs/SARVAM_AGENT_SETUP.md).
 ```
 seller audio ─> Saaras STT (translit: Roman Hinglish)
             ─> rule detector (1 ms, guardrail + offline fallback)
-            ─> LLM brain: ONE Sarvam LLM call, json_schema output
-                 {signals, agreed_to_meeting, objection, language, reply}
-            ─> merge: LLM adds what rules missed; a meeting needs rules AND LLM to see a yes
+            ─> LLM brain: ONE Sarvam LLM call over the WHOLE conversation, json_schema output
+                 {intent, mood, seller_question, seller_slot, seller_cannot_days, agreed_to_meeting, agreed_slot, reply}
+                 prompt carries: persona + global seller context (mined from 9,657 calls) + this seller's past
+                 call summaries + call state (slots offered, days ruled out)
+            ─> merge: LLM's contextual reading decides mood & agreement; rules keep only hard safety signals
+                 (do-not-call, end-call, explicit slow-down/language, seller gender) and run alone if the LLM is down
+            ─> call state: days ruled out, seller's slot (their time beats ours), agreed slot; Hinglish time parser
+                 double-checks the LLM ("kal shaam paanch baje" -> tomorrow 17:00)
             ─> adapter: pace / expressiveness / strategy switch  ─> switch log
             ─> policy: outcome lines (booked / goodbye) are fixed templates, never improvised
             ─> reply guardrails (no false 'booked', no rude fillers) ─> Bulbul formatter ─> Bulbul TTS

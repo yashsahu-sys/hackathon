@@ -116,6 +116,35 @@ class EvidenceMiner:
             calls.append(call_features(c, turns_by_call.get(c.attempt_id, [])))
         return calls, profiles
 
+    def _global_context(self, calls: list[CallFeatures]) -> dict:
+        """Facts about Indian sellers on VANI calls, for the LLM's system prompt."""
+        import re
+        rows = self.repo._rows("SELECT lead_call_summary AS s, meeting_fixed AS m, hour(call_start_time) AS h "
+                               "FROM v_bot_calls WHERE lead_call_summary IS NOT NULL")
+        hours, days = defaultdict(int), defaultdict(int)
+        t_rx = re.compile(r"\b(\d{1,2})(?::\d{2})?\s*(am|pm|a\.m\.|p\.m\.)", re.I)
+        d_rx = re.compile(r"\b(today|tomorrow|day after tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b", re.I)
+        fixed = 0
+        for r in rows:
+            if not r["m"]:
+                continue
+            fixed += 1
+            for hh, ap in t_rx.findall(r["s"]):
+                hours[int(hh) % 12 + (12 if ap.lower().startswith("p") else 0)] += 1
+            for d in d_rx.findall(r["s"]):
+                days[d.lower()] += 1
+        by_hour = {h: (rate, n) for h, (rate, n) in _rate_by_hour(rows).items()}
+        best = sorted(by_hour.items(), key=lambda x: -x[1][0])[:3]
+        worst = sorted(by_hour.items(), key=lambda x: x[1][0])[:2]
+        top_hours = sorted(hours.items(), key=lambda x: -x[1])[:4]
+        return {
+            "meeting_fixed_calls": fixed,
+            "agreed_meeting_hours": [{"hour": h, "mentions": n} for h, n in top_hours],
+            "agreed_meeting_days": [{"day": d, "mentions": n} for d, n in sorted(days.items(), key=lambda x: -x[1])[:4]],
+            "best_call_hours": [{"hour": h, "meeting_rate": round(r, 3), "n": n} for h, (r, n) in best],
+            "worst_call_hours": [{"hour": h, "meeting_rate": round(r, 3), "n": n} for h, (r, n) in worst],
+        }
+
     def mine(self) -> dict:
         calls, profiles = self.load_features()
         n_all = len(calls)
@@ -237,8 +266,10 @@ class EvidenceMiner:
                           f"{len(en) / len(lang):.0%} in English (n={len(lang)} calls).",
                 implication="Default to Hinglish; switch only when the seller does."))
 
+        book_global = self._global_context(calls)
         book = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
+            "global": book_global,
             "source": {"calls": n_all, "sellers": len(profiles), "calls_with_transcript": sum(c.has_transcript for c in calls)},
             "baseline": {"meeting_rate": round(k_meet / n_all, 4), "early_drop_rate": round(share_drop, 4), "n": n_all},
             "caveats": [
@@ -250,6 +281,25 @@ class EvidenceMiner:
             "findings": [asdict(f) for f in findings],
         }
         return book
+
+
+def _rate_by_hour(rows):
+    agg = defaultdict(lambda: [0, 0])
+    for r in rows:
+        if r["h"] is not None:
+            agg[int(r["h"])][0] += int(bool(r["m"]))
+            agg[int(r["h"])][1] += 1
+    return {h: (m / n, n) for h, (m, n) in agg.items() if n >= MIN_SEGMENT_CALLS}
+
+
+def _rate_by(calls, key):
+    agg = defaultdict(lambda: [0, 0])
+    for c in calls:
+        k = key(c)
+        if k is not None:
+            agg[k][0] += int(c.meeting_fixed)
+            agg[k][1] += 1
+    return {k: (m / n, n) for k, (m, n) in agg.items() if n >= MIN_SEGMENT_CALLS}
 
 
 VARIANT_NOTES = {

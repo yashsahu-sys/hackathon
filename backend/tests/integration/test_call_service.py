@@ -14,8 +14,9 @@ class FakeSpeech:
     enabled = True
 
     def __init__(self, reply="जी, कल 11 बजे ठीक रहेगा?", fail_chat=False, transcript="Abhi busy hoon, baad mein",
-                 labels="none"):
+                 labels="none", agreed_slot=None, seller_slot=None, cannot=(), question=None):
         self.reply, self.fail_chat, self.transcript, self.labels = reply, fail_chat, transcript, labels
+        self.agreed_slot, self.seller_slot, self.cannot, self.question = agreed_slot, seller_slot, list(cannot), question
         self.tts_calls, self.chat_calls, self.classify_calls = [], [], []
 
     async def stt(self, audio, filename="turn.wav"):
@@ -32,8 +33,14 @@ class FakeSpeech:
         if response_format is not None:                     # LLM brain: understanding + reply, as JSON
             self.classify_calls.append(messages)
             labels = [x.strip() for x in self.labels.split(",") if x.strip() and x.strip() != "none"]
-            return json.dumps({"signals": labels, "agreed_to_meeting": "agreement" in labels,
-                               "objection": "none", "language": "hi-IN", "reply": self.reply})
+            intent = ("agree" if "agreement" in labels else "end_call" if "end_call" in labels else
+                      "do_not_call" if "do_not_call" in labels else "refuse" if "refusal" in labels else
+                      "question" if self.question else "answer")
+            moods = [x for x in labels if x not in ("agreement", "refusal", "end_call", "do_not_call")]
+            return json.dumps({"intent": intent, "mood": moods, "seller_question": self.question, "objection": "none",
+                               "seller_slot": self.seller_slot, "seller_cannot_days": self.cannot,
+                               "agreed_to_meeting": "agreement" in labels, "agreed_slot": self.agreed_slot,
+                               "language": "hi-IN", "reply": self.reply, "slot_offered_in_reply": None})
         if messages[0]["content"].startswith("You label"):  # legacy signal assist
             self.classify_calls.append(messages)
             return self.labels
@@ -102,7 +109,7 @@ async def test_end_marks_dropped(svc):
 
 
 async def test_live_path_uses_llm_and_switched_voice(repo):
-    fake = FakeSpeech()
+    fake = FakeSpeech(labels="rush")
     svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
     s, opening = await svc.start("1001")
     assert opening.audio_b64 == "QUFB"
@@ -110,7 +117,7 @@ async def test_live_path_uses_llm_and_switched_voice(repo):
     assert r.seller_text == "Abhi busy hoon, baad mein" and r.bot.source == "llm" and r.bot.audio_b64 == "QUFB"
     assert fake.tts_calls[-1]["pace"] > fake.tts_calls[0]["pace"]          # faster after the rush switch
     brain = fake.classify_calls[-1]
-    assert "TASK FOR THIS TURN" in brain[0]["content"] and "rush" in brain[0]["content"]   # rule hints passed
+    assert "YOUR JOB THIS TURN" in brain[0]["content"] and "rush" in brain[0]["content"]   # rule hints passed
     assert brain[-1]["content"] == "Abhi busy hoon, baad mein" and fake.chat_calls == []    # one call per turn
 
 
@@ -137,7 +144,7 @@ async def test_meeting_confirmation_never_paraphrased(repo):
 
 
 async def test_agent_channel_returns_directives_without_speech(repo):
-    fake = FakeSpeech()
+    fake = FakeSpeech(labels="frustration")
     svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
     s, _ = await svc.start("1001", channel=Channel.sarvam_agent)
     r = await svc.seller_turn(s.session_id, "Aap baar baar call kyun karte ho")
@@ -155,6 +162,7 @@ async def test_live_call_learns_seller_gender_and_tone_reaches_tts(repo):
     assert [e.signal for e in r.switches] == [T.seller_gender]
     assert r.session.persona.language.address_as == "सर"
     temp0 = fake.tts_calls[-1]["temperature"]
+    fake.labels = "frustration"                     # the LLM reads frustration on the next turn
     r = await svc.seller_turn(s.session_id, "Aap baar baar call kyun karte ho")
     assert "The seller is a man" in fake.classify_calls[-1][0]["content"]   # next turn's brain knows
     assert fake.tts_calls[-1]["temperature"] < temp0 and fake.tts_calls[-1]["pace"] >= 1.15
@@ -202,7 +210,7 @@ async def test_llm_vetoes_a_rule_agreement(repo):
     svc.store.save(s)
     r = await svc.seller_turn(s.session_id, "theek hai theek hai, kal 11 baje")
     assert r.session.outcome != Outcome.meeting_fixed
-    assert any("vetoed" in w for w in r.warnings)
+    assert any("context overrode keyword match" in w for w in r.warnings)
 
 
 async def test_llm_adds_a_signal_the_rules_missed(repo):
@@ -210,8 +218,8 @@ async def test_llm_adds_a_signal_the_rules_missed(repo):
     svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
     s, _ = await svc.start("1001")
     r = await svc.seller_turn(s.session_id, "aap log bhi na, hadd hai")
-    sig = [e for e in r.switches if e.signal == T.frustration]
-    assert sig and any("LLM added 'frustration'" in w for w in r.warnings)
+    sig = [x for x in r.signals if x.type == T.frustration]
+    assert sig and sig[0].detail["source"] == "llm" and any(e.signal == T.frustration for e in r.switches)
 
 
 async def test_llm_alone_never_confirms_a_meeting(repo):
@@ -261,3 +269,72 @@ async def test_regression_with_brain_never_books_frustrated_seller(repo):
     for text in SCREENSHOT_CALL:
         r = await svc.seller_turn(s.session_id, text)
     assert r.session.outcome != Outcome.meeting_fixed and r.move == "end_close"
+
+
+
+# ------------------------------------- regression: laptop call #2 (slots)
+SLOT_CALL = [
+    "Haan bataiye",
+    "Actually kal main free nahi hoon toh aap kisi doosre time par kar sakte hain matlab meetings",
+    "Nahi bhai toh us hisab se rahe toh matlab hours bolne type. Sab change karenge. Okay toh paanch baje karte hain waiting.",
+]
+
+
+async def test_regression_slot_negotiation_rules_only(repo):
+    """Laptop bug: seller ruled out tomorrow, agreed to 5 baje; bot confirmed 'kal 11 baje'."""
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), OfflineSpeechAI())
+    s, _ = await svc.start("1001", voice_gender="male")
+    await svc.seller_turn(s.session_id, SLOT_CALL[0])
+    r = await svc.seller_turn(s.session_id, SLOT_CALL[1])
+    assert r.session.unavailable_days == ["tomorrow"]
+    assert r.move == "reschedule" and "कल" not in r.bot.text           # never re-offers tomorrow
+    r = await svc.seller_turn(s.session_id, SLOT_CALL[2])
+    assert r.session.outcome == Outcome.meeting_fixed
+    assert r.session.agreed_slot["hour"] == 17 and r.session.agreed_slot["day"] != "tomorrow"
+    assert "शाम 5 बजे" in r.bot.text and "11 बजे" not in r.bot.text     # confirms THEIR time
+    assert r.session.meeting_slot.endswith("5 PM")
+
+
+async def test_regression_slot_negotiation_with_brain(repo):
+    fake = FakeSpeech(reply="ठीक है जी, तो परसों कैसा रहेगा?", cannot=["tomorrow"])
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001", voice_gender="male")
+    await svc.seller_turn(s.session_id, SLOT_CALL[0])
+    r = await svc.seller_turn(s.session_id, SLOT_CALL[1])
+    assert "tomorrow" in r.session.unavailable_days
+    fake.labels, fake.agreed_slot, fake.cannot = "agreement", {"day": None, "hour": 17}, []
+    r = await svc.seller_turn(s.session_id, SLOT_CALL[2])
+    assert r.session.outcome == Outcome.meeting_fixed and r.session.agreed_slot["hour"] == 17
+    assert r.session.agreed_slot["day"] != "tomorrow" and "शाम 5 बजे" in r.bot.text
+
+
+async def test_brain_reply_offering_a_ruled_out_day_is_rejected(repo):
+    fake = FakeSpeech(reply="तो कल सुबह 11 बजे मिलते हैं?", cannot=["tomorrow"])
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "kal free nahi hoon")
+    assert r.bot.source == "template" and "कल" not in r.bot.text
+    assert any("ruled out" in w for w in r.warnings)
+
+
+async def test_brain_gets_global_context_seller_brief_and_state(repo):
+    fake = FakeSpeech(cannot=["tomorrow"])
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake,
+                      global_context="- 46% of sellers hang up within 20 seconds")
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "kal free nahi hoon")
+    await svc.seller_turn(s.session_id, "achha")
+    sys = fake.classify_calls[-1][0]["content"]
+    assert "46% of sellers hang up" in sys                       # global context
+    assert "Past call" in sys                                     # this seller's call summaries
+    assert "Seller ruled out: tomorrow" in sys                    # call state
+    assert "answer it first" in sys                               # answer the question first
+
+
+async def test_llm_only_yes_without_slot_never_books(repo):
+    fake = FakeSpeech(labels="agreement")                         # LLM wrongly says yes, no slot, rules hear no yes
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    for text in ("Haan bataiye", "aaram se batao", "hmm"):
+        r = await svc.seller_turn(s.session_id, text)
+    assert r.session.outcome != Outcome.meeting_fixed

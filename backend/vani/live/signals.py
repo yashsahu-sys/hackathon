@@ -93,6 +93,7 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
         r"^(haan|ha|haanji|han ji|ji haan|ji|ok|okay|theek|thik|chalo|done|sure|yes|alright|fine)\b",
         r"(theek|thik) hai", r"chalega", r"aa (jao|jaiye|jaana)", r"(fix|book|confirm|pakka) kar (do|dijiye|lo)",
         r"meeting (fix|rakh|rakho|kar)", r"(haan|ha|ji) (aa|bhej) (jaiye|do|dijiye)",
+        r"baje (karte|rakh|rakhte|kar lete|kar lenge|kar lo|chalega|theek|thik|ok|fix)", r"बजे (करते|रख|चलेगा|ठीक)",
         r"\b(11|gyarah|5|paanch) baje", r"mil lete", r"ठीक है", r"चलेगा", r"आ जाइए|आ जाओ", r"हाँ|हां",
         r"(that|it) works", r"sounds good", r"\bconfirm",
     ),
