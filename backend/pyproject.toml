@@ -1,0 +1,14 @@
+[project]
+name = "vani-persona"
+version = "0.1.0"
+description = "Persona generator + live adaptation for IndiaMART's VANI voice bot (Voice AI Hackathon 2.0, PS04)"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+  "realdata: needs the private IndiaMART dataset in data/private (skipped otherwise)",
+  "live: calls the real Sarvam API (needs SARVAM_API_KEY and network)",
+]
