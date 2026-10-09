@@ -191,3 +191,15 @@ def test_enquiry_count_grammar(gen):
     assert "1 buyer enquiry आई है" in one and "7 buyer enquiries आई हैं" in many
     en = gen.generate(ctx("43", seller_state="Tamil Nadu", eng_enq_received_90d="1", bot_answered="0")).plan.opening
     assert "1 buyer enquiry in" in en
+
+
+def test_system_prompt_fixes_bot_gender_and_neutral_address(gen):
+    from vani.persona.prompt import system_prompt
+    c = ctx("50")
+    p = gen.generate(c)
+    sp = system_prompt(p, c.profile)
+    assert "feminine Hindi verb forms" in sp and "karungi" in sp
+    assert 'Never "sir", "madam"' in sp
+    male = p.model_copy(deep=True)
+    male.voice.gender = "male"
+    assert "masculine Hindi verb forms" in system_prompt(male, c.profile)

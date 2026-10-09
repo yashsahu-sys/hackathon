@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     sarvam_api_key: str = ""
     sarvam_base_url: str = "https://api.sarvam.ai"
-    sarvam_chat_model: str = "sarvam-105b"
+    sarvam_chat_model: str = "sarvam-105b-conversations"   # 0.2s vs 2.6s on the laptop smoke test
     sarvam_stt_model: str = "saaras:v3"
     # translit = Roman-script Hinglish ("abhi busy hoon"), which is what the signal
     # detector was calibrated on (real VANI transcripts). codemix/transcribe give Devanagari.

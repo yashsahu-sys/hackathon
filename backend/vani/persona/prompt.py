@@ -11,6 +11,10 @@ STYLE_RULE = {
     "regional": "Speak {lang} in Roman script, the way it is spoken on the phone; keep English business words "
                 "(seller, buyer, meeting, listing) as they are.",
 }
+GENDER_RULE = {
+    "female": "You are a woman: always use feminine Hindi verb forms (bol rahi hoon, karungi, karwa deti hoon, samajh sakti hoon).",
+    "male": "You are a man: always use masculine Hindi verb forms (bol raha hoon, karunga, karwa deta hoon, samajh sakta hoon).",
+}
 STRATEGY_RULE = {
     "standard": "Follow the normal flow: opening, value of the free meeting, ask for a slot.",
     "direct": "The seller is irritated. Acknowledge briefly, no pitch, go straight to one slot.",
@@ -33,6 +37,8 @@ def system_prompt(p: PersonaSpec, seller: SellerProfile) -> str:
 SELLER: {seller.company_name or 'the seller'}, {seller.business_kind.value} in {seller.city or 'their city'} ({seller.state or 'unknown state'}). Facts you may use: {hooks}.
 
 PERSONA ({p.label}):
+- {GENDER_RULE[p.voice.gender]}
+- Address the seller as "ji" (or "aap"). Never "sir", "madam" or "bhai": you don't know who picked up.
 - {style}
 - Formality: {p.language.formality}. Warmth: {p.tone.warmth}. Empathy: {p.tone.empathy}. Energy: {p.tone.energy}.
 - At most {p.tone.max_words_per_turn} words per turn, one question at a time. This is a phone call.
