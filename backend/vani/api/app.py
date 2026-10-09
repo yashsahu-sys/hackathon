@@ -80,8 +80,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
                 "turns": len(ctx.turns)}
 
     @app.get(f"{v1}/sellers/{{glid}}/persona")
-    def persona(glid: str, ct: Container = Depends(c)):
-        p, profile = ct.calls.persona_for(glid)
+    def persona(glid: str, voice_gender: str | None = Query(None, pattern="^(male|female)$"), ct: Container = Depends(c)):
+        p, profile = ct.calls.persona_for(glid, voice_gender)
         return {"persona": p.model_dump(mode="json"), "system_prompt": system_prompt(p, profile),
                 "agent_variables": agent_variables(p, profile)}
 
@@ -131,7 +131,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     # -------------------------------------------------------------- calls
     @app.post(f"{v1}/calls", status_code=201)
     async def start_call(body: StartCall, ct: Container = Depends(c)):
-        s, bot = await ct.calls.start(body.seller_glid, body.channel)
+        s, bot = await ct.calls.start(body.seller_glid, body.channel, voice_gender=body.voice_gender)
         return {"session_id": s.session_id, "persona": s.persona.model_dump(mode="json"), "bot": bot.__dict__,
                 "mode": "live" if ct.speech.enabled else "offline"}
 
@@ -172,7 +172,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         """Speak a line in a given persona voice (Compare view). Offline: audio_b64 is null, browser speaks."""
         if not ct.speech.enabled:
             return {"audio_b64": None, "mode": "offline"}
-        audio = await ct.speech.tts(body.text, body.language_code, body.speaker, body.pace, body.pitch)
+        audio = await ct.speech.tts(body.text, body.language_code, body.speaker, body.pace, body.pitch, body.temperature)
         return {"audio_b64": audio, "mode": "live"}
 
     # ------------------------------------------------- Sarvam agent tools
@@ -182,7 +182,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
 
     @app.post(f"{v1}/agent-tools/start_call", dependencies=[Depends(tool_auth)])
     async def agent_start(body: AgentStart, ct: Container = Depends(c)):
-        s, bot = await ct.calls.start(body.seller_glid, Channel.sarvam_agent, speak=False)
+        s, bot = await ct.calls.start(body.seller_glid, Channel.sarvam_agent, speak=False, voice_gender=body.voice_gender)
         return {"session_id": s.session_id, **ct.calls.agent_directives(s)}
 
     @app.post(f"{v1}/agent-tools/analyze_turn", dependencies=[Depends(tool_auth)])

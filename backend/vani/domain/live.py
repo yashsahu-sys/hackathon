@@ -18,6 +18,8 @@ class SignalType(str, Enum):
     bot_question = "bot_question"       # "aap AI ho?"
     identity = "identity"               # "kaun bol raha hai?"
     do_not_call = "do_not_call"         # "dubara call mat kijiye"
+    slow_down = "slow_down"             # "thoda dheere boliye"
+    seller_gender = "seller_gender"     # learned from the seller's own verb forms ("bol raha hoon")
     agreement = "agreement"
     refusal = "refusal"
 
@@ -25,7 +27,8 @@ class SignalType(str, Enum):
 # Signals that change the persona (the rest drive dialogue flow only)
 PERSONA_SIGNALS = {
     SignalType.frustration, SignalType.confusion, SignalType.interest, SignalType.language_switch,
-    SignalType.rush, SignalType.human_request, SignalType.bot_question,
+    SignalType.rush, SignalType.human_request, SignalType.bot_question, SignalType.slow_down,
+    SignalType.seller_gender,
 }
 
 

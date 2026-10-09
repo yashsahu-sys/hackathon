@@ -15,6 +15,11 @@ GENDER_RULE = {
     "female": "You are a woman: always use feminine Hindi verb forms (bol rahi hoon, karungi, karwa deti hoon, samajh sakti hoon).",
     "male": "You are a man: always use masculine Hindi verb forms (bol raha hoon, karunga, karwa deta hoon, samajh sakta hoon).",
 }
+SELLER_RULE = {
+    "male": "The seller is a man (from his own words). Address him as \"{addr}\" or \"aap\".",
+    "female": "The seller is a woman (from her own words). Address her as \"{addr}\" or \"aap\".",
+    "unknown": "You don't know the seller's gender. Address them as \"ji\" or \"aap\"; never \"sir\", \"madam\" or \"bhai\".",
+}
 STRATEGY_RULE = {
     "standard": "Follow the normal flow: opening, value of the free meeting, ask for a slot.",
     "direct": "The seller is irritated. Acknowledge briefly, no pitch, go straight to one slot.",
@@ -38,7 +43,7 @@ SELLER: {seller.company_name or 'the seller'}, {seller.business_kind.value} in {
 
 PERSONA ({p.label}):
 - {GENDER_RULE[p.voice.gender]}
-- Address the seller as "ji" (or "aap"). Never "sir", "madam" or "bhai": you don't know who picked up.
+- {SELLER_RULE.get(p.language.seller_gender, SELLER_RULE["unknown"]).format(addr=p.language.address_as)}
 - {style}
 - Formality: {p.language.formality}. Warmth: {p.tone.warmth}. Empathy: {p.tone.empathy}. Energy: {p.tone.energy}.
 - At most {p.tone.max_words_per_turn} words per turn, one question at a time. This is a phone call.
@@ -67,6 +72,10 @@ def agent_variables(p: PersonaSpec, seller: SellerProfile) -> dict[str, str]:
         "english_mix": f"{p.language.english_mix:.2f}",
         "formality": p.language.formality,
         "pace": f"{p.voice.pace:.2f}",
+        "voice_gender": p.voice.gender,
+        "temperature": f"{p.voice.temperature:.2f}",
+        "seller_gender": p.language.seller_gender,
+        "address_as": p.language.address_as,
         "speaker": p.voice.speaker,
         "max_words": str(p.tone.max_words_per_turn),
         "warmth": p.tone.warmth,

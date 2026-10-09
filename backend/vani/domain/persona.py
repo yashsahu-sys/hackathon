@@ -36,6 +36,7 @@ class VoiceSpec(BaseModel):
     speaker: str                   # Bulbul voice id
     pace: float                    # 0.5 – 2.0 (bulbul v3)
     pitch: float | None = None     # only bulbul v2 supports pitch
+    temperature: float = 0.6       # bulbul v3/v4 expressiveness: low = calm/steady, high = lively
     accent: str                    # e.g. "Hindi (North Indian)"
     model: str = "bulbul:v3"
 
@@ -46,6 +47,7 @@ class LanguageSpec(BaseModel):
     english_mix: float             # share of English words, 0 – 1
     formality: str                 # casual / neutral / formal
     address_as: str
+    seller_gender: str = "unknown"  # male / female / unknown: from the seller's own words, never guessed
 
 
 class ToneSpec(BaseModel):

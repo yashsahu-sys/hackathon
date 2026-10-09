@@ -31,14 +31,15 @@ Note the public `https://….trycloudflare.com` URL. Set `AGENT_TOOL_SECRET` in 
 2. **Instructions**: paste `backend/vani/integrations/sarvam/agent_prompt.md`.
 3. **Variables → input**: add every `{{…}}` name used in the prompt: `session_id, bot_name, seller_company,
    seller_city, persona_label, language_style, language_code, formality, english_mix, warmth, empathy,
-   max_words, personalisation, objection_playbook, opening_line, persona_mode`.
-4. **Variables → output**: `persona_mode`, `language_code`, `call_outcome`, `meeting_slot`.
+   max_words, personalisation, objection_playbook, opening_line, persona_mode, voice_gender, address_as`.
+4. **Variables → output**: `persona_mode`, `language_code`, `address_as`, `call_outcome`, `meeting_slot`.
 5. **Tools → add HTTP tool** `analyze_turn`:
    - `POST {PUBLIC_URL}/api/v1/agent-tools/analyze_turn`
    - Header `X-Tool-Secret: <your secret>`
    - Body: `{"session_id": "{{session_id}}", "seller_utterance": "<seller's exact words>"}`
    - Description: "Call after every seller turn, before replying. Returns persona_mode and language_code to follow."
-6. **Settings**: voice = the persona's `speaker` (from `/api/v1/sellers/{glid}/persona`), pace = persona `pace`,
+6. **Settings**: voice = the persona's `speaker` (for a male persona call `start_call` with `"voice_gender": "male"`
+   and pick a male Bulbul voice: rahul / shubh / aditya) (from `/api/v1/sellers/{glid}/persona`), pace = persona `pace`,
    turn on **Switch language during call**, allow Hindi + English (+ the seller's regional language).
 
 ## 3. Start a call for a seller

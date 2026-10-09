@@ -37,6 +37,13 @@
         <input id="glid" type="text" placeholder="or enter seller glid" aria-label="Seller glid">
         <button id="load">Load</button>
       </div>
+      <div class="row gap">
+        <span class="label" style="margin:0">Bot voice</span>
+        <div id="voice" class="seg" role="radiogroup" aria-label="Bot voice">
+          <button data-g="female" class="on" role="radio" aria-checked="true">Female · Payal</button>
+          <button data-g="male" role="radio" aria-checked="false">Male · Arjun</button>
+        </div>
+      </div>
       <div id="seller" class="seller-card muted small">Pick a seller.</div>
       <div id="persona"></div>
     </div>
@@ -69,6 +76,10 @@
 <main id="view-compare" class="view hidden">
   <section class="panel full">
     <h2>Same scenario, three sellers <span id="cmp-dist" class="badge ghost"></span><span class="grow"></span>
+      <div id="cmp-voice" class="seg" role="radiogroup" aria-label="Compare voice">
+        <button data-g="female" class="on" role="radio" aria-checked="true">Female</button>
+        <button data-g="male" role="radio" aria-checked="false">Male</button>
+      </div>
       <button id="play-all" class="primary">▶ Play all openings</button></h2>
     <div id="compare" class="compare scroll"><p class="empty">loading…</p></div>
   </section>

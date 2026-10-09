@@ -18,8 +18,9 @@ class FakeSpeech:
     async def stt(self, audio, filename="turn.wav"):
         return {"transcript": self.transcript, "language_code": "hi-IN"}
 
-    async def tts(self, text, language_code, speaker, pace, pitch=None):
-        self.tts_calls.append({"text": text, "lang": language_code, "speaker": speaker, "pace": pace})
+    async def tts(self, text, language_code, speaker, pace, pitch=None, temperature=None):
+        self.tts_calls.append({"text": text, "lang": language_code, "speaker": speaker, "pace": pace,
+                               "temperature": temperature})
         return "QUFB"
 
     async def chat(self, messages, max_tokens=200):
@@ -127,3 +128,22 @@ async def test_agent_channel_returns_directives_without_speech(repo):
     assert fake.tts_calls == [] and fake.chat_calls == []
     d = svc.agent_directives(r.session, r.move)
     assert d["persona_mode"] == "direct" and d["persona_version"] == "2" and float(d["pace"]) > 1.0
+
+
+async def test_live_call_learns_seller_gender_and_tone_reaches_tts(repo):
+    fake = FakeSpeech()
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Haan ji, main bol raha hoon")
+    assert [e.signal for e in r.switches] == [T.seller_gender]
+    assert r.session.persona.language.address_as == "सर"
+    assert "The seller is a man" in fake.chat_calls[-1][0]["content"]
+    temp0 = fake.tts_calls[-1]["temperature"]
+    r = await svc.seller_turn(s.session_id, "Aap baar baar call kyun karte ho")
+    assert fake.tts_calls[-1]["temperature"] < temp0 and fake.tts_calls[-1]["pace"] >= 1.15
+
+
+async def test_start_with_male_voice(repo):
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), OfflineSpeechAI())
+    s, bot = await svc.start("1001", voice_gender="male")
+    assert s.persona.voice.gender == "male" and "रहा हूँ" in bot.text

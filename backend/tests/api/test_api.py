@@ -171,3 +171,14 @@ def test_tts_endpoint(repo, api):
     assert api.post(f"{V}/tts", json={"text": "x", "pace": 3}).status_code == 422
     with make_client(repo, FakeSpeech()) as live:
         assert live.post(f"{V}/tts", json={"text": "hi", "speaker": "priya", "pace": 1.1}).json()["audio_b64"] == "QUFB"
+
+
+def test_voice_gender_via_api(api):
+    p = api.get(f"{V}/sellers/1001/persona", params={"voice_gender": "male"}).json()["persona"]
+    assert p["voice"]["gender"] == "male"
+    assert api.get(f"{V}/sellers/1001/persona", params={"voice_gender": "x"}).status_code == 422
+    r = api.post(f"{V}/calls", json={"seller_glid": "1001", "voice_gender": "male"}).json()
+    assert r["persona"]["voice"]["gender"] == "male"
+    assert api.post(f"{V}/calls", json={"seller_glid": "1001", "voice_gender": "robot"}).status_code == 422
+    a = api.post(f"{V}/agent-tools/start_call", json={"seller_glid": "1001", "voice_gender": "male"}, headers=SECRET).json()
+    assert a["voice_gender"] == "male" and a["bot_name"] == "Arjun"

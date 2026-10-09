@@ -24,12 +24,16 @@ def _rx(*patterns: str) -> list[re.Pattern]:
 
 
 LEXICON: dict[SignalType, list[re.Pattern]] = {
+    T.slow_down: _rx(
+        r"\bdheere\b|\bdhire\b|aaram se (bol|bataiye|boliye)", r"\bslow(ly)?\b", r"itna fast|bahut fast|bahut tez|jaldi jaldi (mat|na) bol",
+        r"धीरे", r"आराम से बोल", r"(speak|talk) slower|too fast",
+    ),
     T.rush: _rx(
         r"\bbusy\b", r"abhi (nahi|nahin)\b", r"baad (me|mein|main)\b", r"\bbahar (hoon|hu|hun|hai)\b",
         r"free nahi", r"meeting (me|mein|main) (hoon|hu|hun)", r"thodi der (me|mein)", r"kal baat kar",
         r"gaadi chala|driving", r"time nahi", r"\bjaldi\b", r"in a (meeting|hurry)", r"call (me )?later",
         r"बिज़ी|बिजी", r"बाद में", r"अभी (नहीं|टाइम नहीं|समय नहीं)", r"बाहर (हूँ|हूं)", r"जल्दी",
-        r"customer (aaya|hai)|grahak", r"rehne dijiye abhi",
+        r"customer (aaya|hai)|grahak", r"rehne dijiye abhi", r"jaldi (bolo|boliye|bataiye|batao)", r"(speak|talk) faster",
     ),
     T.confusion: _rx(
         r"samjh?a nahi|samajh (nahi|nahin) (aa|aaya)", r"\bmatlab\b\s*\??$", r"matlab kya", r"kya bol rah",
@@ -167,6 +171,8 @@ class SignalDetector:
                                                detail={"objection": "value"}))
         if T.do_not_call in found:
             found.pop(T.rush, None)                       # "abhi nahi ... call mat karo" is not a scheduling issue
+        if T.slow_down in found:
+            found.pop(T.rush, None)                       # "itna fast mat bolo" is a pace request, not a rush
         if T.identity in found and T.confusion in found and not re.search(r"samjh|समझ|understand|matlab", text, re.I):
             del found[T.confusion]
 

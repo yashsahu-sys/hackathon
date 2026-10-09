@@ -14,6 +14,7 @@ from vani.domain.persona import (Confidence, ConversationPlan, Decision, Languag
 from vani.domain.seller import BusinessKind, SellerContext, TurnoverBand
 from vani.evidence.book import EvidenceBook
 from vani.evidence.miner import age_band
+from vani.text.gender import detect_seller_gender
 from vani.text.language import detect
 
 from .lines import DISPOSITION_KEY, LINES, OBJECTION_KEY, QUESTION_KEY, REGIONAL_GREETING, lines_for
@@ -50,7 +51,8 @@ class PersonaGenerator:
         self.tts_model = tts_model
 
     # ------------------------------------------------------------------ public
-    def generate(self, ctx: SellerContext) -> PersonaSpec:
+    def generate(self, ctx: SellerContext, voice_gender: str | None = None) -> PersonaSpec:
+        """voice_gender: force 'male' / 'female' (operator choice, e.g. for an A/B); None = default policy."""
         p = ctx.profile
         d: dict[str, Decision] = {}
         heard = self._seller_language_heard(ctx)
@@ -59,7 +61,7 @@ class PersonaGenerator:
         formality = self._formality(ctx, d)
         english_mix = self._english_mix(ctx, style, d)
         pace = self._pace(ctx, d)
-        gender = self._voice_gender(d)
+        gender = self._voice_gender(d, voice_gender)
         speaker = speaker_for(gender, formality, code, self.tts_model)
         d["voice.speaker"] = Decision(
             value=speaker, source=Source.rule, confidence=Confidence.guess,
@@ -69,9 +71,20 @@ class PersonaGenerator:
         tone = self._tone(ctx, pace, d)
         plan = self._plan(ctx, style, code, formality, gender, tone, d)
 
+        seller_gender = self._seller_gender(ctx, d)
         address = "Sir/Madam" if style in ("english", "regional") and formality == "formal" else "जी"
         if style in ("english", "regional") and formality != "formal":
             address = "you"
+        if seller_gender in ("male", "female"):
+            from vani.live.adapter import ADDRESS
+            address = ADDRESS[(seller_gender, style)]
+        temperature = {"casual": 0.7, "neutral": 0.6, "formal": 0.5}[formality]
+        if tone.empathy == "high":
+            temperature = min(temperature, 0.55)   # steadier, softer delivery for a seller with friction history
+        d["voice.temperature"] = Decision(
+            value=temperature, source=Source.rule, confidence=Confidence.guess,
+            reason=f"Expressiveness for a {formality} register" + (" kept steady because empathy is high" if tone.empathy == "high" else "")
+                   + ". Bulbul v3/v4 only.")
         label = " · ".join([
             {True: "Quick", False: "Patient" if pace < BASE_PACE else "Steady"}[pace > BASE_PACE],
             {"hinglish": "Hinglish", "english": "English", "regional": f"{ACCENT.get(code, code)}-first"}[style],
@@ -83,8 +96,9 @@ class PersonaGenerator:
             persona_id=f"P-{p.glid}-{hashlib.sha1(label.encode()).hexdigest()[:6]}",
             seller_glid=p.glid, label=label,
             voice=VoiceSpec(gender=gender, speaker=speaker, pace=pace, pitch=pitch, accent=ACCENT.get(code, code),
-                            model=self.tts_model),
-            language=LanguageSpec(code=code, style=style, english_mix=english_mix, formality=formality, address_as=address),
+                            model=self.tts_model, temperature=temperature),
+            language=LanguageSpec(code=code, style=style, english_mix=english_mix, formality=formality, address_as=address,
+                                  seller_gender=seller_gender),
             tone=tone, plan=plan, decisions=d,
         )
 
@@ -238,13 +252,32 @@ class PersonaGenerator:
             why.append(f"answered calls average {h.avg_answered_call_sec:.0f}s (shortest 25% of sellers)")
         return why
 
-    def _voice_gender(self, d) -> str:
-        f = self.ev.get("VAR-gender")   # no such evidence in VANI data: one voice was used for everyone
+    def _voice_gender(self, d, override: str | None = None) -> str:
+        if override in ("male", "female"):
+            d["voice.gender"] = Decision(
+                value=override, source=Source.rule, confidence=Confidence.guess,
+                reason=f"{override.capitalize()} voice chosen by the operator for this call. Past VANI calls used one "
+                       "female voice, so there is no evidence either way; run both and compare meeting rates.")
+            return override
         d["voice.gender"] = Decision(
             value="female", source=Source.default, confidence=Confidence.default,
             reason="VANI's production voice is female ('Payal'); past calls used no other voice, so the data "
-                   "can't say a different gender works better. Kept for brand continuity." if not f else EvidenceBook.cite(f))
+                   "can't say a different gender works better. Kept for brand continuity; male is available per call.")
         return "female"
+
+    def _seller_gender(self, ctx, d) -> str:
+        texts = [t.text for t in ctx.turns if t.speaker == "seller"]
+        gender, conf, words = detect_seller_gender(texts)
+        if gender == "unknown":
+            d["language.seller_gender"] = Decision(
+                value="unknown", source=Source.default, confidence=Confidence.default,
+                reason="No first-person verb forms from this seller yet; stay neutral ('ji', 'aap'). "
+                       "The live call will learn it from their own words.")
+        else:
+            d["language.seller_gender"] = Decision(
+                value=gender, source=Source.seller_data, confidence=Confidence.moderate,
+                reason=f"On a past call the seller said “{words}” about themselves.")
+        return gender
 
     def _pitch(self, ctx, formality, d) -> float | None:
         # Pitch is only honoured by bulbul:v2; bulbul:v3 ignores it (see Sarvam SDK).
@@ -305,7 +338,8 @@ class PersonaGenerator:
             if last_met:
                 why += " " + EvidenceBook.cite(last_met)
         elif enq > 0:
-            kind, why = "enquiries", f"Seller received {enq} enquiries in 90 days: lead with their own numbers."
+            kind, why = "enquiries", (f"Seller received {enq} {'enquiry' if enq == 1 else 'enquiries'} in 90 days: "
+                                      "lead with their own numbers.")
         else:
             kind, why = "cold", "No call history or enquiries: open with demand for their category in their city."
         if bare and kind != "brief":

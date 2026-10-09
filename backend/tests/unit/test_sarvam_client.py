@@ -153,3 +153,14 @@ async def test_chat_model_override():
         assert json.loads(req.content)["model"] == "sarvam-105b-conversations"
         return httpx.Response(200, json={"choices": [{"message": {"content": "ji"}}]})
     assert await client(h).chat([], model="sarvam-105b-conversations") == "ji"
+
+
+async def test_tts_temperature_v3_only():
+    seen = []
+
+    def h(req):
+        seen.append(json.loads(req.content))
+        return httpx.Response(200, json={"audios": ["x"]})
+    await client(h).tts("a", "hi-IN", "ritu", 1.0, temperature=0.35)
+    await client(h, sarvam_tts_model="bulbul:v2").tts("a", "hi-IN", "anushka", 1.0, temperature=0.35)
+    assert seen[0]["temperature"] == 0.35 and "temperature" not in seen[1]

@@ -199,7 +199,7 @@ def test_system_prompt_fixes_bot_gender_and_neutral_address(gen):
     p = gen.generate(c)
     sp = system_prompt(p, c.profile)
     assert "feminine Hindi verb forms" in sp and "karungi" in sp
-    assert 'Never "sir", "madam"' in sp
+    assert 'never "sir", "madam"' in sp           # seller gender unknown: stay neutral
     male = p.model_copy(deep=True)
     male.voice.gender = "male"
     assert "masculine Hindi verb forms" in system_prompt(male, c.profile)

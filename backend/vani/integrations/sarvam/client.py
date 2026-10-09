@@ -29,7 +29,8 @@ class SpeechAI(Protocol):
     enabled: bool
 
     async def stt(self, audio: bytes, filename: str = "turn.wav") -> dict: ...
-    async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None) -> str: ...
+    async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None,
+                  temperature: float | None = None) -> str: ...
     async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None) -> str: ...
 
 
@@ -72,13 +73,16 @@ class SarvamClient:
         return {"transcript": data.get("transcript", ""), "language_code": data.get("language_code"),
                 "language_probability": data.get("language_probability")}
 
-    async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None) -> str:
+    async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None,
+                  temperature: float | None = None) -> str:
         model = self.s.sarvam_tts_model
         body = {"text": text[:2400], "language_code": language_code, "speaker": speaker,
                 "pace": max(0.5, min(2.0, pace)) if model != "bulbul:v2" else max(0.3, min(3.0, pace)),
                 "model": model}
         if pitch is not None and model == "bulbul:v2":
             body["pitch"] = max(-0.75, min(0.75, pitch))
+        if temperature is not None and model != "bulbul:v2":   # expressiveness: v3/v4 only
+            body["temperature"] = max(0.01, min(1.0, temperature))
         try:
             data = await self._post("/text-to-speech", json=body)
         except SarvamError as exc:

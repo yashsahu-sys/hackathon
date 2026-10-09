@@ -1,11 +1,17 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from vani.domain.live import Channel, Outcome
 
 
+VoiceGender = Literal["male", "female"] | None
+
+
 class StartCall(BaseModel):
     seller_glid: str
     channel: Channel = Channel.web
+    voice_gender: VoiceGender = None
 
 
 class EndCall(BaseModel):
@@ -18,6 +24,7 @@ class BatchPersonas(BaseModel):
 
 class AgentStart(BaseModel):
     seller_glid: str
+    voice_gender: VoiceGender = None
 
 
 class AgentTurn(BaseModel):
@@ -36,3 +43,4 @@ class TTSRequest(BaseModel):
     speaker: str = "ritu"
     pace: float = Field(1.0, ge=0.5, le=2.0)
     pitch: float | None = None
+    temperature: float | None = Field(None, ge=0.01, le=1.0)

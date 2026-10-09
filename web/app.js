@@ -2,11 +2,12 @@
 const API = "/api/v1";
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const S = { mode: "offline", glid: null, persona: null, session: null, busy: false, audio: null, trio: [] };
+const S = { mode: "offline", glid: null, persona: null, session: null, busy: false, audio: null, trio: [],
+            voice: "female", cmpVoice: "female", cmp: null };
 
 // Seller lines for quick testing (Roman Hinglish, how real VANI sellers talk)
 const QUICK = [
-  "Haan ji bataiye", "Abhi busy hoon, baad mein call karna", "Matlab? Samjha nahi",
+  "Haan ji, main bol raha hoon", "Abhi busy hoon, baad mein call karna", "Matlab? Samjha nahi", "Thoda dheere boliye",
   "Aap baar baar call kyun karte ho?", "Sorry, can you speak in English please", "Aap AI ho?",
   "Kitne der ki meeting hogi?", "Main already TradeIndia pe hoon", "Haan theek hai, kal 11 baje aa jaiye",
 ];
@@ -15,7 +16,17 @@ const LABELS = {
   "voice.pace": "Pace", "voice.gender": "Voice gender", "voice.speaker": "Voice", "voice.pitch": "Pitch",
   "tone.empathy": "Empathy", "tone.warmth": "Warmth", "tone.max_words_per_turn": "Max words / turn",
   "plan.opening": "Opening", "plan.objection_playbook": "Objection order", "plan.greeting": "Greeting",
+  "voice.temperature": "Expressiveness", "language.seller_gender": "Seller gender", "language.address_as": "Address as",
 };
+
+function segmented(id, onPick) {
+  $(id).querySelectorAll("button").forEach((b) => b.onclick = () => {
+    $(id).querySelectorAll("button").forEach((x) => { x.classList.toggle("on", x === b); x.setAttribute("aria-checked", x === b); });
+    onPick(b.dataset.g);
+  });
+}
+segmented("voice", (g) => { S.voice = g; if (S.glid && !S.session) loadSeller(S.glid); });
+segmented("cmp-voice", (g) => { S.cmpVoice = g; loadCompare(); });
 
 async function api(path, opts = {}) {
   const res = await fetch(API + path, opts);
@@ -45,10 +56,11 @@ async function init() {
   try {
     const d = await api("/demo-sellers?k=3");
     S.trio = d.sellers;
+    S.cmp = d;
     $("trio").innerHTML = d.sellers.map((s, i) =>
       `<button data-g="${s.glid}">${i + 1}. ${esc(s.state || "?")} · ${esc(s.business_kind)}</button>`).join("");
     $("trio").querySelectorAll("button").forEach((b) => b.onclick = () => loadSeller(b.dataset.g));
-    renderCompare(d);
+    await loadCompare();
   } catch (e) { $("trio").textContent = "Demo trio unavailable: " + e.message; }
 }
 
@@ -59,7 +71,8 @@ $("glid").onkeydown = (e) => { if (e.key === "Enter") $("load").onclick(); };
 async function loadSeller(glid) {
   try {
     status("Generating persona…");
-    const [s, p] = await Promise.all([api(`/sellers/${glid}`), api(`/sellers/${glid}/persona`)]);
+    const [s, p] = await Promise.all([api(`/sellers/${glid}`), api(`/sellers/${glid}/persona?voice_gender=${S.voice}`)]);
+    S.session = null;
     S.glid = glid;
     $("trio").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.g === glid));
     const pr = s.profile, h = pr.bot_history;
@@ -95,7 +108,8 @@ function renderPersona(p, changed = []) {
     <div class="persona-label">${esc(p.label)}</div>
     <dl class="facts">
       <dt>Language</dt><dd>${esc(p.language.code)} · ${esc(p.language.style)} · ${Math.round(p.language.english_mix * 100)}% English</dd>
-      <dt>Voice</dt><dd>${esc(p.voice.speaker)} · ${p.voice.pace}x · ${esc(p.voice.accent)}</dd>
+      <dt>Voice</dt><dd>${esc(p.voice.speaker)} (${esc(p.voice.gender)}) · ${p.voice.pace}x · expressiveness ${p.voice.temperature} · ${esc(p.voice.accent)}</dd>
+      <dt>Seller</dt><dd>${p.language.seller_gender === "unknown" ? "gender unknown → neutral" : esc(p.language.seller_gender)} · address as “${esc(p.language.address_as)}”</dd>
       <dt>Tone</dt><dd>${esc(p.language.formality)} · warmth ${esc(p.tone.warmth)} · empathy ${esc(p.tone.empathy)}</dd>
       <dt>Strategy</dt><dd>${esc(p.tone.strategy)} · ≤${p.tone.max_words_per_turn} words</dd>
     </dl>
@@ -124,7 +138,7 @@ $("start").onclick = async () => {
   stopAudio();
   try {
     status("Dialling…");
-    const r = await post("/calls", { seller_glid: S.glid });
+    const r = await post("/calls", { seller_glid: S.glid, voice_gender: S.voice });
     S.session = r.session_id;
     renderPersona(r.persona);
     $("chat").innerHTML = "";
@@ -150,7 +164,7 @@ function setCallControls(on) {
   $("quick").querySelectorAll("button").forEach((b) => b.disabled = !on);
 }
 
-const metaOf = (bot, v) => `v${v} · ${bot.speaker} · ${bot.pace}x · ${bot.language_code}${bot.source === "llm" ? " · LLM" : ""}`;
+const metaOf = (bot, v) => `v${v} · ${bot.speaker} · ${bot.pace}x · expr ${bot.temperature} · ${bot.language_code}${bot.source === "llm" ? " · LLM" : ""}`;
 
 function bubble(role, text, meta, signals = []) {
   const el = document.createElement("div");
@@ -286,6 +300,15 @@ $("mic").onpointerdown = (e) => { e.preventDefault(); startRec().catch((err) => 
 $("mic").onpointerup = $("mic").onpointerleave = () => stopRec();
 
 // ----------------------------------------------------------------- compare
+async function loadCompare() {
+  if (!S.cmp) return;
+  // Same trio, personas regenerated with the chosen bot voice.
+  const sellers = await Promise.all(S.cmp.sellers.map(async (s) =>
+    ({ ...s, persona: (await api(`/sellers/${s.glid}/persona?voice_gender=${S.cmpVoice}`)).persona })));
+  S.trio = sellers;
+  renderCompare({ ...S.cmp, sellers });
+}
+
 function renderCompare(d) {
   $("cmp-dist").textContent = `min distance ${d.min_pairwise_distance}`;
   $("compare").innerHTML = d.sellers.map((s, i) => {
@@ -309,7 +332,8 @@ function renderCompare(d) {
 async function playOpening(s) {
   const p = s.persona;
   stopAudio();
-  const r = await post("/tts", { text: p.plan.opening, language_code: p.language.code, speaker: p.voice.speaker, pace: p.voice.pace });
+  const r = await post("/tts", { text: p.plan.opening, language_code: p.language.code, speaker: p.voice.speaker,
+                                pace: p.voice.pace, temperature: p.voice.temperature });
   await speak({ audio_b64: r.audio_b64, text: p.plan.opening, language_code: p.language.code, pace: p.voice.pace });
 }
 $("play-all").onclick = async () => { for (const s of S.trio) await playOpening(s); };

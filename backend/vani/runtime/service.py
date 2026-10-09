@@ -19,6 +19,7 @@ from vani.live.adapter import MIN_CONFIDENCE, PersonaAdapter
 from vani.live.signals import SignalDetector
 from vani.persona.generator import PersonaGenerator
 from vani.persona.prompt import agent_variables, system_prompt
+from vani.text.gender import detect_seller_gender
 
 from .dialogue import Move, next_move
 from .store import SessionStore
@@ -41,6 +42,7 @@ class BotUtterance:
     language_code: str
     speaker: str
     pace: float
+    temperature: float = 0.6
     audio_b64: str | None = None
     source: str = "template"     # template | llm
 
@@ -65,20 +67,21 @@ class CallService:
         self._t0: dict[str, float] = {}
 
     # ------------------------------------------------------------ personas
-    def persona_for(self, glid: str) -> tuple[PersonaSpec, object]:
+    def persona_for(self, glid: str, voice_gender: str | None = None) -> tuple[PersonaSpec, object]:
         ctx = self.repo.get_context(glid)
         if ctx is None:
             raise NotFound(f"seller {glid} not found")
-        return self.gen.generate(ctx), ctx.profile
+        return self.gen.generate(ctx, voice_gender), ctx.profile
 
     # --------------------------------------------------------------- calls
-    async def start(self, glid: str, channel: Channel = Channel.web, speak: bool = True) -> tuple[CallSession, BotUtterance]:
-        persona, _ = self.persona_for(glid)
+    async def start(self, glid: str, channel: Channel = Channel.web, speak: bool = True,
+                    voice_gender: str | None = None) -> tuple[CallSession, BotUtterance]:
+        persona, _ = self.persona_for(glid, voice_gender)
         sid = uuid.uuid4().hex[:12]
         session = CallSession(session_id=sid, seller_glid=glid, channel=channel, persona=persona, initial_persona=persona)
         self._t0[sid] = time.monotonic()
         bot = BotUtterance(text=persona.plan.opening, language_code=persona.language.code,
-                           speaker=persona.voice.speaker, pace=persona.voice.pace)
+                           speaker=persona.voice.speaker, pace=persona.voice.pace, temperature=persona.voice.temperature)
         warnings: list[str] = []
         if speak and channel == Channel.web:
             await self._speak(session, bot, warnings)
@@ -98,8 +101,11 @@ class CallService:
         if not text:
             raise ValueError("empty seller turn")
 
-        recent = [t.text for t in session.transcript if t.role == Role.seller][-3:]
-        signals = self.detector.detect(text, session.persona.language.code, stt_lang, recent)
+        seller_texts = [t.text for t in session.transcript if t.role == Role.seller]
+        signals = self.detector.detect(text, session.persona.language.code, stt_lang, seller_texts[-3:])
+        gender, gconf, words = detect_seller_gender(seller_texts + [text])
+        if gender != "unknown" and gender != session.persona.language.seller_gender:
+            signals.append(Signal(type=SignalType.seller_gender, confidence=gconf, trigger=words, detail={"gender": gender}))
         session.transcript.append(TurnRecord(role=Role.seller, text=text, language=stt_lang, at_ms=self._now(session),
                                              persona_version=session.persona.version, signals=signals))
         switches = self.adapter.adapt(session, signals, self._now(session))
@@ -112,7 +118,8 @@ class CallService:
         self._apply_move(session, move, types)
 
         bot = BotUtterance(text=move.text, language_code=session.persona.language.code,
-                           speaker=session.persona.voice.speaker, pace=session.persona.voice.pace)
+                           speaker=session.persona.voice.speaker, pace=session.persona.voice.pace,
+                           temperature=session.persona.voice.temperature)
         if session.channel == Channel.web and self.speech.enabled and move.key not in ("meeting_confirm", "dnc_close"):
             phrased = await self._llm_phrase(session, move, warnings)
             if phrased:
@@ -137,7 +144,7 @@ class CallService:
 
     def agent_directives(self, session: CallSession, move: str | None = None) -> dict:
         """What a Sarvam agent needs after each tool call: the (possibly switched) persona as variables."""
-        _, profile = self.persona_for(session.seller_glid)
+        profile = self.repo.get_profile(session.seller_glid)
         v = agent_variables(session.persona, profile)
         v["persona_version"] = str(session.persona.version)
         v["next_move"] = move or ""
@@ -180,12 +187,13 @@ class CallService:
             return
         p = session.persona
         try:
-            bot.audio_b64 = await self.speech.tts(bot.text, p.language.code, p.voice.speaker, p.voice.pace, p.voice.pitch)
+            bot.audio_b64 = await self.speech.tts(bot.text, p.language.code, p.voice.speaker, p.voice.pace, p.voice.pitch,
+                                                  p.voice.temperature)
         except SarvamError as exc:
             warnings.append(f"TTS failed, browser voice fallback: {exc}")
 
     async def _llm_phrase(self, session: CallSession, move: Move, warnings: list[str]) -> str | None:
-        _, profile = self.persona_for(session.seller_glid)
+        profile = self.repo.get_profile(session.seller_glid)
         messages = [{"role": "system", "content": system_prompt(session.persona, profile)}]
         for t in session.transcript[-8:]:
             messages.append({"role": "assistant" if t.role == Role.bot else "user", "content": t.text})
