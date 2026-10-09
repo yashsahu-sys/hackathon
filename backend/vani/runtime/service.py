@@ -1,0 +1,204 @@
+"""CallService: one place that runs a call turn, for every channel.
+
+  web channel:          audio/text in -> STT -> signals -> adapt -> policy -> LLM -> TTS -> audio out
+  sarvam_agent channel: text in (from the agent's tool call) -> signals -> adapt -> policy -> directives out
+                        (the Sarvam agent does its own STT/LLM/TTS; we are its brain for persona switching)
+"""
+import logging
+import re
+import time
+import uuid
+from dataclasses import dataclass, field
+
+from vani.data.repository import SellerRepository
+from vani.domain.live import (CallSession, CallStatus, Channel, Outcome, Role, Signal, SignalType, SwitchEvent,
+                              TurnRecord)
+from vani.domain.persona import PersonaSpec
+from vani.integrations.sarvam.client import SarvamError, SpeechAI
+from vani.live.adapter import MIN_CONFIDENCE, PersonaAdapter
+from vani.live.signals import SignalDetector
+from vani.persona.generator import PersonaGenerator
+from vani.persona.prompt import agent_variables, system_prompt
+
+from .dialogue import Move, next_move
+from .store import SessionStore
+
+log = logging.getLogger(__name__)
+BANNED = re.compile(r"(?<![ऀ-ॿ])(यार|अरे|देखो)(?![ऀ-ॿ])")
+
+
+class NotFound(LookupError):
+    pass
+
+
+class CallClosed(RuntimeError):
+    pass
+
+
+@dataclass
+class BotUtterance:
+    text: str
+    language_code: str
+    speaker: str
+    pace: float
+    audio_b64: str | None = None
+    source: str = "template"     # template | llm
+
+
+@dataclass
+class TurnResult:
+    session: CallSession
+    seller_text: str
+    signals: list[Signal]
+    switches: list[SwitchEvent]
+    bot: BotUtterance
+    move: str
+    warnings: list[str] = field(default_factory=list)
+
+
+class CallService:
+    def __init__(self, repo: SellerRepository, generator: PersonaGenerator, store: SessionStore, speech: SpeechAI,
+                 detector: SignalDetector | None = None, adapter: PersonaAdapter | None = None):
+        self.repo, self.gen, self.store, self.speech = repo, generator, store, speech
+        self.detector = detector or SignalDetector()
+        self.adapter = adapter or PersonaAdapter()
+        self._t0: dict[str, float] = {}
+
+    # ------------------------------------------------------------ personas
+    def persona_for(self, glid: str) -> tuple[PersonaSpec, object]:
+        ctx = self.repo.get_context(glid)
+        if ctx is None:
+            raise NotFound(f"seller {glid} not found")
+        return self.gen.generate(ctx), ctx.profile
+
+    # --------------------------------------------------------------- calls
+    async def start(self, glid: str, channel: Channel = Channel.web, speak: bool = True) -> tuple[CallSession, BotUtterance]:
+        persona, _ = self.persona_for(glid)
+        sid = uuid.uuid4().hex[:12]
+        session = CallSession(session_id=sid, seller_glid=glid, channel=channel, persona=persona, initial_persona=persona)
+        self._t0[sid] = time.monotonic()
+        bot = BotUtterance(text=persona.plan.opening, language_code=persona.language.code,
+                           speaker=persona.voice.speaker, pace=persona.voice.pace)
+        warnings: list[str] = []
+        if speak and channel == Channel.web:
+            await self._speak(session, bot, warnings)
+        self._record_bot(session, bot.text)
+        self.store.save(session)
+        return session, bot
+
+    async def seller_turn(self, session_id: str, text: str | None = None, audio: bytes | None = None,
+                          speak: bool = True) -> TurnResult:
+        session = self._load(session_id)
+        warnings: list[str] = []
+        stt_lang = None
+        if audio is not None:
+            stt = await self.speech.stt(audio)          # errors propagate: the caller should ask to repeat
+            text, stt_lang = stt["transcript"], stt.get("language_code")
+        text = (text or "").strip()
+        if not text:
+            raise ValueError("empty seller turn")
+
+        recent = [t.text for t in session.transcript if t.role == Role.seller][-3:]
+        signals = self.detector.detect(text, session.persona.language.code, stt_lang, recent)
+        session.transcript.append(TurnRecord(role=Role.seller, text=text, language=stt_lang, at_ms=self._now(session),
+                                             persona_version=session.persona.version, signals=signals))
+        switches = self.adapter.adapt(session, signals, self._now(session))
+        if switches:
+            session.switch_log.extend(switches)
+            session.strategy_used = None
+
+        types = {s.type for s in signals if s.confidence >= MIN_CONFIDENCE}
+        move = next_move(session, text, types, session.strategy_used)
+        self._apply_move(session, move, types)
+
+        bot = BotUtterance(text=move.text, language_code=session.persona.language.code,
+                           speaker=session.persona.voice.speaker, pace=session.persona.voice.pace)
+        if session.channel == Channel.web and self.speech.enabled and move.key not in ("meeting_confirm", "dnc_close"):
+            phrased = await self._llm_phrase(session, move, warnings)
+            if phrased:
+                bot.text, bot.source = phrased, "llm"
+        if speak and session.channel == Channel.web:
+            await self._speak(session, bot, warnings)
+        self._record_bot(session, bot.text)
+        if move.end_call:
+            session.status = CallStatus.ended
+        self.store.save(session, switches)
+        return TurnResult(session, text, signals, switches, bot, move.key, warnings)
+
+    def end(self, session_id: str, outcome: Outcome | None = None) -> CallSession:
+        session = self._load(session_id, allow_ended=True)
+        session.status = CallStatus.ended
+        if outcome:
+            session.outcome = outcome
+        elif session.outcome == Outcome.unknown:
+            session.outcome = Outcome.dropped
+        self.store.save(session)
+        return session
+
+    def agent_directives(self, session: CallSession, move: str | None = None) -> dict:
+        """What a Sarvam agent needs after each tool call: the (possibly switched) persona as variables."""
+        _, profile = self.persona_for(session.seller_glid)
+        v = agent_variables(session.persona, profile)
+        v["persona_version"] = str(session.persona.version)
+        v["next_move"] = move or ""
+        v["call_status"] = session.status.value
+        return v
+
+    # ------------------------------------------------------------ internals
+    def _load(self, session_id: str, allow_ended: bool = False) -> CallSession:
+        s = self.store.get(session_id)
+        if s is None:
+            raise NotFound(f"session {session_id} not found")
+        if s.status == CallStatus.ended and not allow_ended:
+            raise CallClosed(f"session {session_id} has ended")
+        self._t0.setdefault(session_id, time.monotonic() - (s.transcript[-1].at_ms / 1000 if s.transcript else 0))
+        return s
+
+    def _now(self, s: CallSession) -> int:
+        return int((time.monotonic() - self._t0.get(s.session_id, time.monotonic())) * 1000)
+
+    @staticmethod
+    def _apply_move(session: CallSession, move: Move, types: set) -> None:
+        if move.key in ("handoff", "direct", "reassure", "rush", "clarify", "close"):
+            session.strategy_used = session.persona.tone.strategy
+        if SignalType.refusal in types and move.key not in ("meeting_confirm",):
+            session.refusals += 1
+        session.stage = move.stage
+        if move.outcome:
+            session.outcome = move.outcome
+        if move.key == "call_later" and session.outcome == Outcome.unknown:
+            session.outcome = Outcome.callback
+        if move.outcome == Outcome.meeting_fixed:
+            session.meeting_slot = "tomorrow 11:00"
+
+    def _record_bot(self, session: CallSession, text: str) -> None:
+        session.transcript.append(TurnRecord(role=Role.bot, text=text, language=session.persona.language.code,
+                                             at_ms=self._now(session), persona_version=session.persona.version))
+
+    async def _speak(self, session: CallSession, bot: BotUtterance, warnings: list[str]) -> None:
+        if not self.speech.enabled:
+            return
+        p = session.persona
+        try:
+            bot.audio_b64 = await self.speech.tts(bot.text, p.language.code, p.voice.speaker, p.voice.pace, p.voice.pitch)
+        except SarvamError as exc:
+            warnings.append(f"TTS failed, browser voice fallback: {exc}")
+
+    async def _llm_phrase(self, session: CallSession, move: Move, warnings: list[str]) -> str | None:
+        _, profile = self.persona_for(session.seller_glid)
+        messages = [{"role": "system", "content": system_prompt(session.persona, profile)}]
+        for t in session.transcript[-8:]:
+            messages.append({"role": "assistant" if t.role == Role.bot else "user", "content": t.text})
+        messages[-1]["content"] += f"\n\n[Next move, do not read aloud: {move.hint} Reference line: {move.text}]"
+        try:
+            out = await self.speech.chat(messages)
+        except SarvamError as exc:
+            warnings.append(f"LLM failed, template used: {exc}")
+            return None
+        out = re.sub(r"[*_#`>\[\]]", "", out).replace("\n", " ").strip()
+        if not out or BANNED.search(out):
+            warnings.append("LLM reply rejected by guardrail filter; template used")
+            return None
+        limit = session.persona.tone.max_words_per_turn * 2
+        words = out.split()
+        return " ".join(words[:limit]) if len(words) > limit else out

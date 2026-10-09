@@ -98,6 +98,7 @@ class CallSession(BaseModel):
     switch_log: list[SwitchEvent] = Field(default_factory=list)
     cooldowns: dict[str, int] = Field(default_factory=dict)   # signal -> last seller turn it fired
     stage: str = "opening"
+    strategy_used: str | None = None     # each switch's strategy line is spoken once
     refusals: int = 0
     outcome: Outcome = Outcome.unknown
     meeting_slot: str | None = None
