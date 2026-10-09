@@ -3,6 +3,7 @@
     python -m vani.tools.doctor          (run from the backend/ folder)
 """
 import importlib
+import importlib.util
 import sys
 
 from vani.tools.console import utf8_console
@@ -17,12 +18,11 @@ def check() -> list[tuple[str, str, str]]:
     v = sys.version_info
     out.append((OK if v >= (3, 10) else BAD, f"Python {v.major}.{v.minor}",
                 "" if v >= (3, 10) else "Install Python 3.10 or newer from python.org"))
-    for mod in ("fastapi", "uvicorn", "pydantic_settings", "httpx", "duckdb", "multipart", "pytest"):
-        try:
-            importlib.import_module(mod)
-            out.append((OK, f"package {mod}", ""))
-        except ImportError:
-            out.append((BAD, f"package {mod}", "Run: pip install -r requirements.txt"))
+    for mod in ("fastapi", "uvicorn", "pydantic_settings", "httpx", "duckdb", "python_multipart|multipart", "pytest"):
+        names = mod.split("|")   # python-multipart renamed its import; accept either
+        found = next((n for n in names if importlib.util.find_spec(n)), None)
+        out.append((OK, f"package {names[0]}", "") if found else
+                   (BAD, f"package {names[0]}", "Run: pip install -r requirements.txt"))
     try:
         from vani.config import REPO_ROOT, get_settings
     except Exception as exc:   # noqa: BLE001

@@ -8,7 +8,11 @@ requires-python = ">=3.10"
 pythonpath = ["."]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-filterwarnings = ["ignore::DeprecationWarning:starlette.*"]
+filterwarnings = [
+  "ignore::DeprecationWarning:starlette.*",
+  "ignore:Using `httpx` with `starlette.testclient`",
+  "ignore:Please use `import python_multipart`",
+]
 markers = [
   "realdata: needs the private IndiaMART dataset in data/private (skipped otherwise)",
   "live: calls the real Sarvam API (needs SARVAM_API_KEY and network)",
