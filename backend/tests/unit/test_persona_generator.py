@@ -171,3 +171,15 @@ def test_male_forms():
     assert _gender_forms("मैं Payal बोल रही हूँ, बताती हूँ", "male") == "मैं Payal बोल रहा हूँ, बताता हूँ"
     assert _gender_forms("बोल रही हूँ", "female") == "बोल रही हूँ"
     assert "रहा" not in line("hinglish", "rush") and line("english", "direct").startswith("To be brief")
+
+
+def test_v4_voices_when_model_is_v4():
+    from vani.persona.voices import VOICE_MAP_V4, LANGUAGE_VOICE_V4, speaker_for
+    g = PersonaGenerator(BOOK, tts_model="bulbul:v4-flash")
+    p = g.generate(ctx("40"))
+    assert p.voice.model == "bulbul:v4-flash" and p.voice.speaker in set(VOICE_MAP_V4.values())
+    assert speaker_for("female", "neutral", "gu-IN", "bulbul:v4-flash") == "pooja_gu_customer"
+    assert speaker_for("female", "neutral", "ml-IN", "bulbul:v4-flash") == "simran_enhi_customer"   # no ml voice: fallback
+    assert speaker_for("female", "neutral", "hi-IN") == "ritu"                                      # v3 unchanged
+    sdk_voices = set(VOICE_MAP_V4.values()) | set(LANGUAGE_VOICE_V4.values())
+    assert all("_" in v for v in sdk_voices)

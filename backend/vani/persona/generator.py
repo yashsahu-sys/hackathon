@@ -45,8 +45,9 @@ def _conf(strength: str) -> Confidence:
 
 
 class PersonaGenerator:
-    def __init__(self, evidence: EvidenceBook):
+    def __init__(self, evidence: EvidenceBook, tts_model: str = "bulbul:v3"):
         self.ev = evidence
+        self.tts_model = tts_model
 
     # ------------------------------------------------------------------ public
     def generate(self, ctx: SellerContext) -> PersonaSpec:
@@ -59,10 +60,11 @@ class PersonaGenerator:
         english_mix = self._english_mix(ctx, style, d)
         pace = self._pace(ctx, d)
         gender = self._voice_gender(d)
-        speaker = speaker_for(gender, formality, code)
+        speaker = speaker_for(gender, formality, code, self.tts_model)
         d["voice.speaker"] = Decision(
             value=speaker, source=Source.rule, confidence=Confidence.guess,
-            reason=f"Bulbul voice matched to {formality} register and {ACCENT.get(code, code)} accent; chosen by ear.")
+            reason=f"{self.tts_model} voice matched to {formality} register and {ACCENT.get(code, code)} accent; "
+                   "chosen by ear (python -m vani.tools.voice_audition).")
         pitch = self._pitch(ctx, formality, d)
         tone = self._tone(ctx, pace, d)
         plan = self._plan(ctx, style, code, formality, gender, tone, d)
@@ -80,7 +82,8 @@ class PersonaGenerator:
         return PersonaSpec(
             persona_id=f"P-{p.glid}-{hashlib.sha1(label.encode()).hexdigest()[:6]}",
             seller_glid=p.glid, label=label,
-            voice=VoiceSpec(gender=gender, speaker=speaker, pace=pace, pitch=pitch, accent=ACCENT.get(code, code)),
+            voice=VoiceSpec(gender=gender, speaker=speaker, pace=pace, pitch=pitch, accent=ACCENT.get(code, code),
+                            model=self.tts_model),
             language=LanguageSpec(code=code, style=style, english_mix=english_mix, formality=formality, address_as=address),
             tone=tone, plan=plan, decisions=d,
         )

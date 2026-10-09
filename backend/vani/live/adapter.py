@@ -125,7 +125,7 @@ class PersonaAdapter:
             m.set("language.address_as", "जी" if style == "hinglish" else
                   ("Sir/Madam" if p.language.formality == "formal" else "you"))
             m.set("voice.accent", ACCENT.get(target, target))
-            m.set("voice.speaker", speaker_for(p.voice.gender, p.language.formality, target))
+            m.set("voice.speaker", speaker_for(p.voice.gender, p.language.formality, target, p.voice.model))
             L = lines_for(style)
             m.p.plan.objection_playbook = {k: _gender_forms(L["playbook"][k], p.voice.gender)
                                            for k in p.plan.objection_playbook if k in L["playbook"]}

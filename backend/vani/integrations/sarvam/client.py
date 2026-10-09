@@ -79,7 +79,15 @@ class SarvamClient:
                 "model": model}
         if pitch is not None and model == "bulbul:v2":
             body["pitch"] = max(-0.75, min(0.75, pitch))
-        data = await self._post("/text-to-speech", json=body)
+        try:
+            data = await self._post("/text-to-speech", json=body)
+        except SarvamError as exc:
+            # Older API versions call the field target_language_code; retry once with that name.
+            if exc.status in (400, 422) and "target_language_code" in str(exc):
+                body["target_language_code"] = body.pop("language_code")
+                data = await self._post("/text-to-speech", json=body)
+            else:
+                raise
         audios = data.get("audios") or []
         if not audios:
             raise SarvamError("/text-to-speech: no audio in response")

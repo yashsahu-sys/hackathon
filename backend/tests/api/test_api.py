@@ -150,3 +150,24 @@ def test_agent_prompt_only_uses_provided_variables(api):
     modes = set(re.findall(r"persona_mode == '(\w+)'", prompt))
     from vani.live.adapter import STRATEGY_PRIORITY
     assert modes == set(STRATEGY_PRIORITY)          # every strategy the adapter can set has a prompt block
+
+
+def test_demo_sellers_are_distinct(api):
+    r = api.get(f"{V}/demo-sellers", params={"k": 2}).json()
+    assert len(r["sellers"]) == 2 and r["sellers"][0]["persona"]["label"]
+    assert r["pairwise"][0][0] == 0 and r["pairwise"][0][1] == r["pairwise"][1][0]
+    assert api.get(f"{V}/demo-sellers", params={"k": 9}).status_code == 422
+    assert api.get(f"{V}/demo-sellers", params={"k": 2}).json() == r          # cached
+
+
+def test_ui_is_served(api):
+    r = api.get("/")
+    assert r.status_code == 200 and "<html" in r.text.lower()
+
+
+def test_tts_endpoint(repo, api):
+    assert api.post(f"{V}/tts", json={"text": "नमस्ते"}).json() == {"audio_b64": None, "mode": "offline"}
+    assert api.post(f"{V}/tts", json={"text": ""}).status_code == 422
+    assert api.post(f"{V}/tts", json={"text": "x", "pace": 3}).status_code == 422
+    with make_client(repo, FakeSpeech()) as live:
+        assert live.post(f"{V}/tts", json={"text": "hi", "speaker": "priya", "pace": 1.1}).json()["audio_b64"] == "QUFB"

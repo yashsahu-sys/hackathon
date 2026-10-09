@@ -28,3 +28,11 @@ class AgentTurn(BaseModel):
 class AgentEnd(BaseModel):
     session_id: str
     outcome: Outcome | None = None
+
+
+class TTSRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=1500)
+    language_code: str = "hi-IN"
+    speaker: str = "ritu"
+    pace: float = Field(1.0, ge=0.5, le=2.0)
+    pitch: float | None = None

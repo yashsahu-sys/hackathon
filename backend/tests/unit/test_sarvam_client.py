@@ -103,3 +103,27 @@ async def test_offline_raises():
     for coro in (o.stt(b""), o.tts("a"), o.chat([])):
         with pytest.raises(SarvamError):
             await coro
+
+
+async def test_tts_falls_back_to_target_language_code():
+    bodies = []
+
+    def h(req):
+        body = json.loads(req.content)
+        bodies.append(body)
+        if "language_code" in body:
+            return httpx.Response(422, text='{"detail":"field target_language_code required"}')
+        return httpx.Response(200, json={"audios": ["ok"]})
+    assert await client(h).tts("hi", "hi-IN", "ritu", 1.0) == "ok"
+    assert "target_language_code" in bodies[-1] and "language_code" not in bodies[-1]
+
+
+async def test_tts_other_422_not_retried():
+    calls = []
+
+    def h(req):
+        calls.append(1)
+        return httpx.Response(422, text="speaker invalid")
+    with pytest.raises(SarvamError):
+        await client(h).tts("hi", "hi-IN", "nobody", 1.0)
+    assert len(calls) == 1

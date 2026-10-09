@@ -4,19 +4,22 @@ from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-from vani.config import Settings, get_settings
+from vani.config import REPO_ROOT, Settings, get_settings
 from vani.domain.live import CallStatus, Channel
 from vani.integrations.sarvam.client import SarvamError
+from vani.persona.distinct import distance, most_distinct
 from vani.persona.prompt import agent_variables, system_prompt
 from vani.runtime.service import CallClosed, NotFound, TurnResult
 
 from .deps import Container
-from .schemas import AgentEnd, AgentStart, AgentTurn, BatchPersonas, EndCall, StartCall
+from .schemas import AgentEnd, AgentStart, AgentTurn, BatchPersonas, EndCall, StartCall, TTSRequest
 
 log = logging.getLogger(__name__)
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
+WEB_DIR = REPO_ROOT / "web"
 
 
 def create_app(settings: Settings | None = None, container: Container | None = None) -> FastAPI:
@@ -92,6 +95,23 @@ def create_app(settings: Settings | None = None, container: Container | None = N
                 out.append({"seller_glid": g, "error": "not found"})
         return out
 
+    @app.get(f"{v1}/demo-sellers")
+    def demo_sellers(k: int = Query(3, ge=2, le=5), pool: int = Query(150, ge=5, le=1000), ct: Container = Depends(c)):
+        """The k most contrasting sellers (with call history) for a side-by-side voice demo."""
+        key = (k, pool)
+        cache = ct.__dict__.setdefault("_demo_cache", {})
+        if key not in cache:
+            profiles = {p.glid: p for p in ct.repo.search(with_transcripts=True, limit=pool)}
+            personas = [ct.calls.persona_for(g)[0] for g in profiles]
+            chosen, min_d = most_distinct(personas, k)
+            cache[key] = {
+                "min_pairwise_distance": min_d,
+                "pairwise": [[distance(a, b) for b in chosen] for a in chosen],
+                "sellers": [{**_seller_summary(profiles[p.seller_glid]), "persona": p.model_dump(mode="json")}
+                            for p in chosen],
+            }
+        return cache[key]
+
     # ----------------------------------------------------------- evidence
     @app.get(f"{v1}/evidence")
     def evidence(min_strength: str = Query("moderate", pattern="^(weak|moderate|strong)$"), kind: str | None = None,
@@ -147,6 +167,14 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     def switch_log(seller_glid: str | None = None, limit: int = Query(200, ge=1, le=2000), ct: Container = Depends(c)):
         return [e.model_dump(mode="json") for e in ct.store.switch_log(seller_glid, limit)]
 
+    @app.post(f"{v1}/tts")
+    async def tts(body: TTSRequest, ct: Container = Depends(c)):
+        """Speak a line in a given persona voice (Compare view). Offline: audio_b64 is null, browser speaks."""
+        if not ct.speech.enabled:
+            return {"audio_b64": None, "mode": "offline"}
+        audio = await ct.speech.tts(body.text, body.language_code, body.speaker, body.pace, body.pitch)
+        return {"audio_b64": audio, "mode": "live"}
+
     # ------------------------------------------------- Sarvam agent tools
     def tool_auth(x_tool_secret: str | None = Header(None), ct: Container = Depends(c)):
         if x_tool_secret != ct.settings.agent_tool_secret:
@@ -173,6 +201,13 @@ def create_app(settings: Settings | None = None, container: Container | None = N
     def agent_end(body: AgentEnd, ct: Container = Depends(c)):
         s = ct.calls.end(body.session_id, body.outcome)
         return {"session_id": s.session_id, "outcome": s.outcome.value, "switches": len(s.switch_log)}
+
+    if WEB_DIR.exists():
+        app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+        @app.get("/", include_in_schema=False)
+        def index():
+            return FileResponse(WEB_DIR / "index.html")
 
     return app
 

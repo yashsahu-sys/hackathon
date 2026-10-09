@@ -7,7 +7,7 @@ import base64
 
 from vani.config import get_settings
 from vani.integrations.sarvam.client import SarvamClient, SarvamError
-from vani.persona.voices import LANGUAGE_VOICE, VOICE_MAP
+from vani.persona.voices import LANGUAGE_VOICE, LANGUAGE_VOICE_V4, VOICE_MAP, VOICE_MAP_V4
 
 LINES = {
     "hi-IN": "नमस्ते जी, मैं IndiaMART से Payal बोल रही हूँ। क्या कल सुबह 11 बजे executive आपसे मिल सकते हैं?",
@@ -21,7 +21,10 @@ async def main():
     c = SarvamClient(s)
     out = s.resolve(s.evidence_path).parent / "out" / "voices"
     out.mkdir(parents=True, exist_ok=True)
-    speakers = sorted(set(VOICE_MAP.values()) | set(LANGUAGE_VOICE.values()) | set(EXTRA))
+    if s.sarvam_tts_model.startswith("bulbul:v4"):
+        speakers = sorted(set(VOICE_MAP_V4.values()) | set(LANGUAGE_VOICE_V4.values()))
+    else:
+        speakers = sorted(set(VOICE_MAP.values()) | set(LANGUAGE_VOICE.values()) | set(EXTRA))
     for lang, text in LINES.items():
         for sp in speakers:
             for pace in (0.9, 1.0, 1.15):
