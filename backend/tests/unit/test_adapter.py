@@ -132,3 +132,14 @@ def test_initial_persona_untouched(session):
     seller_says(session)
     A.adapt(session, [sig(T.frustration)], 0)
     assert session.initial_persona.version == 1 and session.initial_persona.tone.strategy == "standard"
+
+
+def test_distinctness_metric():
+    from vani.persona.distinct import distance, most_distinct
+    gen = PersonaGenerator(EvidenceBook.empty())
+    a = gen.generate(ctx("1"))
+    b = gen.generate(ctx("2", seller_state="Tamil Nadu", annual_turnover="25 - 100 Cr", gst_registration_year="1990"))
+    c = gen.generate(ctx("3", calls_call_later="3"))
+    assert distance(a, a) == 0 and distance(a, b) > 0 and distance(a, b) == distance(b, a)
+    chosen, min_d = most_distinct([a, a.model_copy(), b, c], 3)
+    assert len(chosen) == 3 and min_d > 0

@@ -138,3 +138,15 @@ def test_real_app_boots(real_repo, tmp_path):
         assert p["decisions"]
         sid = api.post(f"{V}/calls", json={"seller_glid": glid}).json()["session_id"]
         assert api.post(f"{V}/calls/{sid}/turns", data={"text": "Abhi busy hoon"}).json()["switches"]
+
+
+def test_agent_prompt_only_uses_provided_variables(api):
+    import re
+    from pathlib import Path
+    prompt = (Path(__file__).resolve().parents[2] / "vani/integrations/sarvam/agent_prompt.md").read_text()
+    used = set(re.findall(r"\{\{\s*(\w+)\s*\}\}", prompt)) | set(re.findall(r"\{%\s*if\s+(\w+)", prompt))
+    provided = set(api.post(f"{V}/agent-tools/start_call", json={"seller_glid": "1001"}, headers=SECRET).json())
+    assert used <= provided, used - provided
+    modes = set(re.findall(r"persona_mode == '(\w+)'", prompt))
+    from vani.live.adapter import STRATEGY_PRIORITY
+    assert modes == set(STRATEGY_PRIORITY)          # every strategy the adapter can set has a prompt block
