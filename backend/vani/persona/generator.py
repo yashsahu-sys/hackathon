@@ -322,6 +322,8 @@ class PersonaGenerator:
             "greet": greet, "bot": BOT_NAME[gender], "city": p.city or "आपके शहर" if style == "hinglish" else (p.city or "your city"),
             "category": (p.categories[0] if p.categories else ("products" if style != "hinglish" else "products")),
             "enq": enq,
+            "enq_phrase": (("1 buyer enquiry आई है" if enq == 1 else f"{enq} buyer enquiries आई हैं") if style == "hinglish"
+                           else ("1 buyer enquiry" if enq == 1 else f"{enq} buyer enquiries")),
         }
         opening = L[f"opening_{kind}"].format(**ctx_vars)
         if style == "hinglish" and p.language_code in REGIONAL_GREETING:

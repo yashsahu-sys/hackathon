@@ -39,7 +39,7 @@ LINES = {
     "hinglish": {
         "greet": {"casual": "नमस्ते जी", "neutral": "नमस्ते जी", "formal": "नमस्कार जी"},
         "opening_history": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। पिछली बार आपसे बात हुई थी, उसी सिलसिले में आपके {category} business के लिए एक ज़रूरी update देना था।",
-        "opening_enquiries": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। पिछले तीन महीने में आपको {enq} buyer enquiries आई हैं, उन्हें orders में बदलने के बारे में दो मिनट बात करनी थी।",
+        "opening_enquiries": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। पिछले तीन महीने में आपको {enq_phrase}, उन्हें orders में बदलने के बारे में दो मिनट बात करनी थी।",
         "opening_cold": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। {city} में {category} के buyers IndiaMART पर search कर रहे हैं, उसी बारे में आपसे बात करनी थी।",
         "opening_brief": "{greet}, IndiaMART से {bot} बोल रही हूँ, आपके {category} business के लिए बस एक मिनट लूँगी।",
         "pitch": "हमारे executive आपसे मिलकर आपकी listing और catalog ठीक करते हैं, ताकि आपको ज़्यादा सही buyers मिलें। यह meeting बिल्कुल free है।",
@@ -79,7 +79,7 @@ LINES = {
     "english": {
         "greet": {"casual": "Hello", "neutral": "Hello", "formal": "Good day"},
         "opening_history": "{greet}, this is {bot} from IndiaMART. We spoke last time, and I have a quick update for your {category} business.",
-        "opening_enquiries": "{greet}, this is {bot} from IndiaMART. You received {enq} buyer enquiries in the last three months, and I'd like two minutes on turning them into orders.",
+        "opening_enquiries": "{greet}, this is {bot} from IndiaMART. You received {enq_phrase} in the last three months, and I'd like two minutes on turning them into orders.",
         "opening_cold": "{greet}, this is {bot} from IndiaMART. Buyers in {city} are searching for {category} on IndiaMART, and I wanted to talk to you about that.",
         "opening_brief": "{greet}, {bot} from IndiaMART, I'll take just one minute about your {category} business.",
         "pitch": "Our executive meets you and fixes your listing and catalogue, so the right buyers find you. The meeting is completely free.",

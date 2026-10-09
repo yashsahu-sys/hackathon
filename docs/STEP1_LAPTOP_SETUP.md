@@ -144,7 +144,9 @@ Expected: `... passed` (about 1 minute; real-data tests run because the data is 
 ```
 python -m uvicorn vani.api.app:app --port 8000
 ```
-Browser me kholo: **http://localhost:8000/docs**. Saari APIs yahan try kar sakte ho:
+Browser me kholo:
+- **http://localhost:8000**: demo UI (Live call / Compare personas / Evidence). Mic ke liye Chrome use karo aur microphone permission allow karo.
+- **http://localhost:8000/docs**: saari APIs yahan try kar sakte ho:
 - `GET /api/v1/health` → `"mode": "live"` hona chahiye (key sahi hai toh)
 - `GET /api/v1/sellers?with_transcripts=true` → koi glid copy karo
 - `GET /api/v1/sellers/{glid}/persona` → us seller ka persona, har field ke reason ke saath

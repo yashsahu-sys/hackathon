@@ -183,3 +183,11 @@ def test_v4_voices_when_model_is_v4():
     assert speaker_for("female", "neutral", "hi-IN") == "ritu"                                      # v3 unchanged
     sdk_voices = set(VOICE_MAP_V4.values()) | set(LANGUAGE_VOICE_V4.values())
     assert all("_" in v for v in sdk_voices)
+
+
+def test_enquiry_count_grammar(gen):
+    one = gen.generate(ctx("41", eng_enq_received_90d="1", bot_answered="0")).plan.opening
+    many = gen.generate(ctx("42", eng_enq_received_90d="7", bot_answered="0")).plan.opening
+    assert "1 buyer enquiry आई है" in one and "7 buyer enquiries आई हैं" in many
+    en = gen.generate(ctx("43", seller_state="Tamil Nadu", eng_enq_received_90d="1", bot_answered="0")).plan.opening
+    assert "1 buyer enquiry in" in en

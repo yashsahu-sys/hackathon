@@ -29,7 +29,8 @@
 | Live | `vani/live/` | Signal detector calibrated on real seller turns, adapter (threshold, cooldown, priorities), offline evaluation |
 | Runtime | `vani/runtime/` | Dialogue policy, CallService, session stores (SQLite/memory) |
 | Sarvam | `vani/integrations/sarvam/` | Async client (Saaras, Bulbul, sarvam-105b), agent prompt template |
-| API | `vani/api/` | FastAPI `/api/v1/*` incl. agent tools |
+| API | `vani/api/` | FastAPI `/api/v1/*` incl. agent tools, demo-sellers, TTS |
+| UI | `web/` | Plain HTML/JS (no build step): Live call, Compare personas, Evidence |
 
 Scaling: the API is stateless (state lives in the session store); repository, store and speech client sit behind interfaces, so DuckDB→Postgres, SQLite→Redis or a second STT/TTS vendor are drop-in. Evidence mining is a batch job; persona generation is pure and fast (~5k sellers/40 s including DB reads).
 
@@ -43,7 +44,7 @@ cp .env.example .env                    # add SARVAM_API_KEY
 python -m vani.data.warehouse           # CSV -> DuckDB
 python -m vani.evidence.miner           # -> data/private/evidence.json
 python -m vani.tools.smoke              # check Sarvam STT/TTS/LLM with your key
-python -m uvicorn vani.api.app:app --port 8000   # API docs: http://localhost:8000/docs
+python -m uvicorn vani.api.app:app --port 8000   # UI: http://localhost:8000   API docs: /docs
 ```
 
 Other tools:
@@ -51,7 +52,7 @@ Other tools:
 python -m vani.live.evaluate            # detector precision/recall on real transcripts
 python -m vani.tools.export --sample 50 # persona specs + 3 contrasting demo sellers -> data/private/out
 python -m vani.tools.voice_audition     # every Bulbul voice x pace, to pick voices by ear
-python -m pytest -q                     # 220 tests (real-data tests auto-skip without the dataset)
+python -m pytest -q                     # 234 tests (real-data tests auto-skip without the dataset)
 ```
 
 Sarvam agent setup: [docs/SARVAM_AGENT_SETUP.md](docs/SARVAM_AGENT_SETUP.md).
