@@ -64,6 +64,8 @@ def main(sample: int = 50) -> None:
 
 
 if __name__ == "__main__":
+    from vani.tools.console import utf8_console
+    utf8_console()
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", type=int, default=50)
     main(ap.parse_args().sample)

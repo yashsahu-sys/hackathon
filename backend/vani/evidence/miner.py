@@ -279,6 +279,8 @@ def save(book: dict, path: Path) -> None:
 
 
 if __name__ == "__main__":
+    from vani.tools.console import utf8_console
+    utf8_console()
     logging.basicConfig(level=logging.INFO)
     s = get_settings()
     repo = DuckDBSellerRepository(s.resolve(s.warehouse_path))

@@ -62,6 +62,8 @@ def evaluate(repo: DuckDBSellerRepository) -> dict:
 
 
 if __name__ == "__main__":
+    from vani.tools.console import utf8_console
+    utf8_console()
     s = get_settings()
     rep = evaluate(DuckDBSellerRepository(s.resolve(s.warehouse_path)))
     out = s.resolve(s.evidence_path).with_name("signal_eval.json")

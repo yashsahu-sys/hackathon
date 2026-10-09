@@ -57,6 +57,8 @@ def build(raw_dir: Path, warehouse_path: Path) -> dict[str, int]:
 
 
 if __name__ == "__main__":
+    from vani.tools.console import utf8_console
+    utf8_console()
     logging.basicConfig(level=logging.INFO)
     s = get_settings()
     print(build(s.resolve(s.raw_data_dir), s.resolve(s.warehouse_path)))

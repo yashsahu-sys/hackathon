@@ -13,6 +13,18 @@ from vani.config import get_settings
 from vani.integrations.sarvam.client import SarvamClient, SarvamError
 
 
+def hint(e: SarvamError, model_env: str) -> str:
+    if e.status is None:
+        return "     -> network: this machine can't reach api.sarvam.ai (proxy/firewall/VPN?)"
+    if e.status in (401, 403):
+        return "     -> key rejected: check SARVAM_API_KEY in backend/.env"
+    if e.status in (400, 404, 422):
+        return f"     -> request/model rejected: try another {model_env} in backend/.env"
+    if e.status == 429:
+        return "     -> rate limited / out of credits"
+    return "     -> Sarvam server error, retry in a minute"
+
+
 async def main() -> int:
     s = get_settings()
     if not s.sarvam_enabled:
@@ -33,6 +45,7 @@ async def main() -> int:
         ok = False
         wav = None
         print("TTS  FAIL", e)
+        print(hint(e, "SARVAM_TTS_MODEL (bulbul:v2 / bulbul:v3)"))
     if wav:
         try:
             t = time.perf_counter()
@@ -41,6 +54,7 @@ async def main() -> int:
         except SarvamError as e:
             ok = False
             print("STT  FAIL", e)
+            print(hint(e, "SARVAM_STT_MODEL (saaras:v3 / saaras:v4)"))
     try:
         t = time.perf_counter()
         r = await c.chat([{"role": "system", "content": "Reply in one short Hinglish sentence."},
@@ -48,10 +62,13 @@ async def main() -> int:
         print(f"LLM  ok  {s.sarvam_chat_model}  {time.perf_counter() - t:.2f}s  -> {r!r}")
     except SarvamError as e:
         ok = False
-        print("LLM  FAIL", e, "\n     (try SARVAM_CHAT_MODEL=sarvam-m or sarvam-105b-conversations in .env)")
+        print("LLM  FAIL", e)
+        print(hint(e, "SARVAM_CHAT_MODEL (sarvam-105b / sarvam-105b-conversations / sarvam-m)"))
     await c.aclose()
     return 0 if ok else 2
 
 
 if __name__ == "__main__":
+    from vani.tools.console import utf8_console
+    utf8_console()
     sys.exit(asyncio.run(main()))

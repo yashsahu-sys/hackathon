@@ -35,4 +35,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    from vani.tools.console import utf8_console
+    utf8_console()
     asyncio.run(main())
