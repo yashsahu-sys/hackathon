@@ -1,0 +1,23 @@
+{
+  "synthetic_data": true,
+  "train_calls": 4200,
+  "test_calls": 1800,
+  "generator_matched": {
+    "calls": 154,
+    "meeting_rate": 0.545
+  },
+  "default_matched": {
+    "calls": 173,
+    "meeting_rate": 0.22
+  },
+  "absolute_lift": 0.326,
+  "relative_lift": 1.483,
+  "lift_95ci": [
+    0.228,
+    0.429
+  ],
+  "calls_per_meeting": {
+    "generator": 1.83,
+    "default": 4.55
+  }
+}

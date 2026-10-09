@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# Real IndiaMART seller data must never leave the laptop. Put it here.
+data/private/*
+!data/private/README.md

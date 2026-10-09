@@ -1,0 +1,39 @@
+{
+  "seller_id": "S102",
+  "name": "R. Senthil Kumar",
+  "salutation": "Mr",
+  "company": "Sri Murugan Textile Machines",
+  "city": "Coimbatore",
+  "state": "Tamil Nadu",
+  "region": "south",
+  "business_type": "manufacturer",
+  "age": 58,
+  "annual_turnover": "10Cr-25Cr",
+  "categories": [
+    "Textile Machinery",
+    "Spinning Machine Parts"
+  ],
+  "languages_known": [
+    "ta",
+    "en"
+  ],
+  "engagement": {
+    "logins_last_30d": 1,
+    "enquiries_received_30d": 6,
+    "enquiry_response_rate": 0.5
+  },
+  "past_calls": [
+    {
+      "date": "2026-09-18",
+      "duration_s": 52,
+      "outcome": "not_interested",
+      "summary": "Bot spoke Hindi; seller could not follow and asked for English, bot continued in Hindi.",
+      "seller_quotes": [
+        "Hindi I am not following, please speak in English"
+      ],
+      "objections": [
+        "language"
+      ]
+    }
+  ]
+}

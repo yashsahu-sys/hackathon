@@ -1,0 +1,27 @@
+{
+  "seller_id": "S104",
+  "name": "Gurpreet Kaur",
+  "salutation": "Ms",
+  "company": "GK Cycle Components",
+  "city": "Ludhiana",
+  "state": "Punjab",
+  "region": "north",
+  "business_type": "manufacturer",
+  "age": 39,
+  "annual_turnover": "1Cr-5Cr",
+  "categories": [
+    "Bicycle Parts",
+    "Cycle Chains"
+  ],
+  "languages_known": [
+    "pa",
+    "hi",
+    "en"
+  ],
+  "engagement": {
+    "logins_last_30d": 0,
+    "enquiries_received_30d": 0,
+    "enquiry_response_rate": 0.0
+  },
+  "past_calls": []
+}
