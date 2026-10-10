@@ -107,3 +107,8 @@ through the web UI (rush, frustration, confusion, interest, English and Gujarati
 human request, do-not-call, end call, slot negotiation, two refusals, a multi-switch call, male voice + seller gender),
 checks the switch log, persona fields, language, outcome and the human acknowledgement, and saves screenshots
 to `tests_e2e/out/`.
+
+## Live demo
+
+A public demo runs on Vercel with fictional sellers and aggregate evidence only (no customer data):
+see `docs/DEPLOY_VERCEL.md` for the demo glids and how it is deployed.
