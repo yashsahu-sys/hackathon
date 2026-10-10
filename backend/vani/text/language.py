@@ -34,7 +34,7 @@ GUJARATI_WORDS = set("""
 che chhe chhu chu nathi kem cho tame tamne tamaru tamari tamara tamaro mane maru mari maro amne amaru amari
 su shu saru saras haa aavdtu avdtu aavde avde aavdatu vaat kaale aaje pachi pachhi atyare hamna hamnaa thai thase
 thashe joie joiye fave favse favshe favtu chalse chalshe karjo kaho kahu kevi kevu shakay sakay vage vagye savare
-bapore sanje saanje gujarati
+bapore sanje saanje gujarati rite karone
 """.split())
 SHARED = {"ok", "okay", "sir", "madam", "hello", "hi", "yes", "no"}   # used in both, weak evidence
 

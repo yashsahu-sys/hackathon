@@ -60,5 +60,8 @@ async def ensure_language(text: str, persona: PersonaSpec, speech: SpeechAI, war
         warnings.append(f"reply was in {NAMES.get(language_of(text), language_of(text))}, persona speaks "
                         f"{NAMES.get(target, target)}; translation failed ({exc}); template used")
         return None
+    if not out or not matches(out, persona):
+        warnings.append(f"translation to {NAMES.get(target, target)} came back in the wrong language; template used")
+        return None
     warnings.append(f"reply translated to {NAMES.get(target, target)} to follow the seller's language")
     return out

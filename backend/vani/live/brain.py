@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from vani.domain.live import CallSession, Role, Signal, SignalType as T
 from vani.domain.seller import SellerContext
 from vani.integrations.sarvam.client import SarvamError, SpeechAI
+from vani.live.signals import requested_language
 from vani.persona.prompt import system_prompt
 from vani.text.slots import DAYS, Slot, render, suggest
 
@@ -111,7 +112,8 @@ real numbers given; never invent buyer counts or say you are "watching" enquirie
 Mood calibration: a question, even a blunt one ("no no, just tell me the purpose"), is NOT frustration or rush.
 Label frustration only for complaints, insults or anger; rush only when they say they're busy or want it quick.
 LANGUAGE: {language_rule} The "language" field is the language the SELLER used in their last message
-(Roman Hinglish like "abhi busy hoon" = hi-IN), not the language you were speaking.
+(Roman Hinglish like "abhi busy hoon" = hi-IN; Roman Gujarati with che / chhe / nathi / kem / tame / vaat /
+kevi rite = gu-IN), not the language you were speaking. If the seller asks for a language, that is the language.
 Fast keyword detector heard: {hints} (it is often wrong; trust the context). voice_fast / voice_slow / voice_raised
 are measured from the seller's audio: match a fast talker with a shorter, quicker reply and a slow one with a calmer
 reply; a raised voice means irritation only when the words agree.
@@ -275,6 +277,10 @@ def contextual_merge(rule_signals: list[Signal], brain: BrainResult | None, text
     have = {s.type for s in keep}
     out = list(keep)
     lang = brain.language if brain.language in LANG_NAMES else None
+    asked = requested_language(text)
+    if asked and lang != asked:
+        # "Gujarati mein vaat karo" written in Roman reads like Hindi to the LLM; the seller's own request wins
+        lang = asked if asked != current_language else None
     if T.language_switch not in have and lang and (T.language_switch in brain.signals or current_language
                                                     and lang != current_language):
         if current_language is None or lang != current_language:

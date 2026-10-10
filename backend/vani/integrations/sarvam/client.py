@@ -28,7 +28,8 @@ class SarvamError(RuntimeError):
 class SpeechAI(Protocol):
     enabled: bool
 
-    async def stt(self, audio: bytes, filename: str = "turn.wav") -> dict: ...
+    async def stt(self, audio: bytes, filename: str = "turn.wav", mode: str | None = None,
+                  language: str | None = None) -> dict: ...
     async def tts(self, text: str, language_code: str, speaker: str, pace: float, pitch: float | None = None,
                   temperature: float | None = None) -> str: ...
     async def chat(self, messages: list[dict], max_tokens: int | None = None, model: str | None = None,
@@ -65,11 +66,14 @@ class SarvamClient:
                 await asyncio.sleep(0.3 * (attempt + 1))
         raise last  # type: ignore[misc]
 
-    async def stt(self, audio: bytes, filename: str = "turn.wav", mode: str | None = None) -> dict:
+    async def stt(self, audio: bytes, filename: str = "turn.wav", mode: str | None = None,
+                  language: str | None = None) -> dict:
+        """language: a BCP-47 hint (gu-IN...) once the call is in a regional language; None = auto-detect."""
         data = await self._post(
             "/speech-to-text",
             files={"file": (filename, audio, "audio/wav")},
-            data={"model": self.s.sarvam_stt_model, "mode": mode or self.s.sarvam_stt_mode, "language_code": "unknown"},
+            data={"model": self.s.sarvam_stt_model, "mode": mode or self.s.sarvam_stt_mode,
+                  "language_code": language or "unknown"},
         )
         return {"transcript": data.get("transcript", ""), "language_code": data.get("language_code"),
                 "language_probability": data.get("language_probability")}
@@ -150,7 +154,7 @@ class OfflineSpeechAI:
     """No key / no network: the browser speaks and listens; replies come from templates."""
     enabled = False
 
-    async def stt(self, audio, filename="turn.wav"):
+    async def stt(self, audio, filename="turn.wav", mode=None, language=None):
         raise SarvamError("offline: send text instead of audio")
 
     async def tts(self, *a, **k):

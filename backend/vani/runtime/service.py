@@ -117,7 +117,12 @@ class CallService:
         warnings: list[str] = []
         stt_lang = None
         if audio is not None:
-            stt = await self.speech.stt(audio)          # errors propagate: the caller should ask to repeat
+            # Hinglish/English: auto-detect, Roman transliteration (how VANI's sellers mostly talk). Once the call is
+            # in a regional language, hint Saaras with it and keep the native script: Roman Gujarati is where
+            # "buyers kevi rite" came back as "bias kevi rite".
+            regional = session.persona.language.code if session.persona.language.code not in ("hi-IN", "en-IN") else None
+            stt = await (self.speech.stt(audio, mode="transcribe", language=regional) if regional
+                         else self.speech.stt(audio))       # errors propagate: the caller should ask to repeat
             text, stt_lang = stt["transcript"], stt.get("language_code")
             text, doubled = collapse_doubled(text)
             if doubled:

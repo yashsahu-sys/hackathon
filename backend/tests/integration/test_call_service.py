@@ -21,8 +21,9 @@ class FakeSpeech:
         self.language, self.translation, self.fail_translate = language, translation, fail_translate
         self.tts_calls, self.chat_calls, self.classify_calls, self.translate_calls = [], [], [], []
 
-    async def stt(self, audio, filename="turn.wav"):
-        return {"transcript": self.transcript, "language_code": "hi-IN"}
+    async def stt(self, audio, filename="turn.wav", mode=None, language=None):
+        self.stt_calls = getattr(self, "stt_calls", []) + [{"mode": mode, "language": language}]
+        return {"transcript": self.transcript, "language_code": language or "hi-IN"}
 
     async def tts(self, text, language_code, speaker, pace, pitch=None, temperature=None):
         self.tts_calls.append({"text": text, "lang": language_code, "speaker": speaker, "pace": pace,
@@ -526,3 +527,17 @@ async def test_regression_llm_cannot_veto_a_counted_language_switch(repo):
     r = await svc.seller_turn(s.session_id, "Abhi busy hoon, baad mein call karna")
     assert r.session.persona.language.code == "hi-IN" and r.bot.language_code == "hi-IN"
     assert not r.bot.text.isascii()                                   # the English LLM reply was translated
+
+
+async def test_gujarati_call_hints_saaras_and_llm_cannot_switch_back_to_hindi(repo):
+    # Screenshot: in a Gujarati call, Roman "Gujarati mein vaat karone" read as Hindi to the LLM, which switched
+    # the call back to Hindi; and Saaras, left on auto-detect, heard "buyers" as "bias".
+    fake = FakeSpeech(reply="જી, executive તમને બતાવશે.", language="hi-IN",
+                      transcript="Gujarati mein vaat karone Hindi nathi aavdtu")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Gujarati ma vaat karo ne, Hindi nathi aavdtu")
+    assert r.session.persona.language.code == "gu-IN"
+    r = await svc.seller_turn(s.session_id, audio=b"RIFF")
+    assert fake.stt_calls[-1] == {"mode": "transcribe", "language": "gu-IN"}
+    assert r.session.persona.language.code == "gu-IN" and r.bot.language_code == "gu-IN"

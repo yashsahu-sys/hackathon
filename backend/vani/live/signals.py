@@ -125,8 +125,9 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
     ),
 }
 
-ENGLISH_REQUEST = re.compile(r"\b(speak|talk|baat)\w* (in )?english\b|english (please|me|mein|main|only)|अंग्रेज़ी|इंग्लिश", re.I)
-HINDI_REQUEST = re.compile(r"hindi (me|mein|main) (bolo|baat|boliye)|हिंदी में|हिन्दी में|speak (in )?hindi", re.I)
+ENGLISH_REQUEST = re.compile(r"\b(speak|talk|baat)\w* (in )?english\b|english (please|me|mein|main|only|ma)|अंग्रेज़ी|इंग्लिश|"
+                             r"અંગ્રેજી|ઇંગ્લિશ", re.I)
+HINDI_REQUEST = re.compile(r"hindi (me|mein|main|ma) (bolo|baat|boliye|vaat)|हिंदी में|हिन्दी में|speak (in )?hindi|હિન્દી(માં| મા)", re.I)
 # Gujarati (Roman, as Saaras translit writes it, and Gujarati script), added to the same signal types.
 GUJARATI_LEXICON = {
     T.agreement: _rx(r"^(haa|ha|haji|ha ji)\b", r"(saru|saras|barabar|thik) (che|chhe)", r"(?<!nahi )(?<!nai )\bchal(se|she)\b",
@@ -239,3 +240,12 @@ class SignalDetector:
 
 
 LEXICON_CONFUSION_LIGHT = re.compile(r"samjh|matlab|समझ|मतलब|understand", re.I)
+
+
+def requested_language(text: str) -> str | None:
+    """The language the seller explicitly ASKED for ("Gujarati ma vaat karo"), if any. Authoritative."""
+    if ENGLISH_REQUEST.search(text):
+        return "en-IN"
+    if HINDI_REQUEST.search(text):
+        return "hi-IN"
+    return next((code for code, rx in REGIONAL_REQUEST.items() if rx.search(text)), None)

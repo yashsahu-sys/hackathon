@@ -18,7 +18,7 @@ class _Speech:
         self.calls.append((target, speaker_gender, mode))
         if self.fail:
             raise SarvamError("down")
-        return "translated"
+        return {"en-IN": "Sure, shall we meet tomorrow?", "hi-IN": "जी, कल मिलते हैं?"}.get(target, "translated")
 
 
 def test_language_of():
@@ -37,7 +37,7 @@ def test_matches():
 
 async def test_ensure_language_translates_with_gender_and_mode():
     sp, w = _Speech(), []
-    assert await ensure_language("जी, कल 11 बजे मिलते हैं?", _P("en-IN", "male"), sp, w) == "translated"
+    assert await ensure_language("जी, कल 11 बजे मिलते हैं?", _P("en-IN", "male"), sp, w) == "Sure, shall we meet tomorrow?"
     assert sp.calls == [("en-IN", "male", "modern-colloquial")] and "translated" in w[0]
     await ensure_language("Sure, shall we meet tomorrow at eleven in the morning?", _P("hi-IN"), sp, [])
     assert sp.calls[-1][2] == "code-mixed"
@@ -49,3 +49,12 @@ async def test_ensure_language_noop_and_failure():
     w = []
     assert await ensure_language("जी, कल 11 बजे मिलते हैं?", _P("en-IN"), sp, w) is None
     assert "translation failed" in w[0]
+
+
+async def test_translation_in_the_wrong_language_is_rejected():
+    class Bad(_Speech):
+        async def translate(self, text, target, *a, **k):
+            return "जी, कल मिलते हैं, executive आएँगे"           # Hindi back, asked for Gujarati
+    w = []
+    assert await ensure_language("जी, कल 11 बजे मिलते हैं, executive आएँगे?", _P("gu-IN"), Bad(), w) is None
+    assert "wrong language" in w[0]
