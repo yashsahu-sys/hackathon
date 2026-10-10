@@ -1,6 +1,7 @@
-data/
-tests_e2e/
-backend/tests/
-docs/*.pptx
-**/__pycache__/
-**/node_modules/
+# Leading "/" = only at the repo root (a bare "data/" would also drop backend/vani/data/, the code package)
+/data/
+/tests_e2e/
+/backend/tests/
+/docs/*.pptx
+__pycache__/
+node_modules/
