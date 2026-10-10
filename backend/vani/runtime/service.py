@@ -20,7 +20,8 @@ from vani.evidence.global_context import render_seller_brief
 from vani.live.brain import BrainResult, LLMBrain, contextual_merge
 from vani.live.llm_assist import LLMSignalAssist, merge
 from vani.live.signals import SignalDetector
-from vani.persona.generator import PersonaGenerator
+from vani.persona.expressions import with_expression
+from vani.persona.generator import PersonaGenerator, _gender_forms
 from vani.persona.prompt import agent_variables, system_prompt
 from vani.speech.language_guard import ensure_language
 from vani.speech.tts_text import for_bulbul
@@ -173,6 +174,14 @@ class CallService:
                 bot.text = await ensure_language(bot.text, session.persona, self.speech, warnings) or bot.text
             else:
                 bot.text = fixed
+        if bot.source == "template":
+            first_pitch = sum(t.role == Role.bot for t in session.transcript) == 1      # only the opening so far
+            switched = [e.signal for e in switches]
+            text_ack, ack = with_expression(bot.text, session.persona.language.style, switched, move.key,
+                                            session.expressions_used, first_pitch)
+            if ack:
+                bot.text = _gender_forms(text_ack, session.persona.voice.gender)
+                session.expressions_used.append(ack)
         session.offered_slots += [o.to_dict() for o in offered if o.to_dict() not in session.offered_slots]
         if session.channel == Channel.web and self.speech.enabled:
             bot.text = await for_bulbul(bot.text, session.persona, self.speech, self.tts_transliterate, warnings)

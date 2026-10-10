@@ -99,3 +99,11 @@ Every persona field carries `source` (seller_data / evidence / rule / default / 
 ## Data privacy
 
 Raw data, the warehouse, evidence, sessions and exports live in `data/private/` (gitignored). Test fixtures use the real column headers with invented rows; test phrases are paraphrased.
+
+## UI scenario test (PS04 persona switches, in a real browser)
+
+With the server running: `node tests_e2e/ui_scenarios.js http://127.0.0.1:8001`. It plays 15 seller scenarios
+through the web UI (rush, frustration, confusion, interest, English and Gujarati switches, slow down, bot question,
+human request, do-not-call, end call, slot negotiation, two refusals, a multi-switch call, male voice + seller gender),
+checks the switch log, persona fields, language, outcome and the human acknowledgement, and saves screenshots
+to `tests_e2e/out/`.

@@ -42,6 +42,9 @@ NEG = re.compile(r"(free nahi|nahi ho (paye|payega|sakta|sakti)|nahi (aa|mil) (s
                  re.I)
 
 
+REFUSED_TIME = re.compile(r"\s*(baje|bje|बजे|vage|વાગ્યે)?\s*(nahi|nahin|nai|not|no\b|nathi|नहीं|નહીં|નથી|mat\b|मत)", re.I)
+
+
 @dataclass
 class Slot:
     day: str | None = None      # today / tomorrow / day_after / monday ...
@@ -104,7 +107,9 @@ def parse_slot(text: str) -> Slot | None:
     text = text or ""
     day = _find_day(text, unavailable_days(text)) or _find_day(text)   # "kal nahi, somvar rakho" -> Monday
     hour = minute = None
-    for m in TIME.finditer(text):
+    matches = list(TIME.finditer(text))
+    open_ = [m for m in matches if not REFUSED_TIME.match(text, m.end())]
+    for m in open_ or []:                 # "11 baje nahi, 5 baje karte hai" -> 5, never the refused 11
         raw, mins, unit = m.group(1), m.group(2), m.group(3)
         if not unit and not raw.isdigit():
             continue          # bare number words ("do", "ek") are too ambiguous without "baje"

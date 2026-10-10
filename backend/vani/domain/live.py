@@ -109,6 +109,7 @@ class CallSession(BaseModel):
     agreed_slot: dict | None = None           # Slot as dict {day, hour, minute}
     offered_slots: list[dict] = Field(default_factory=list)   # what VANI has proposed, in order
     unavailable_days: list[str] = Field(default_factory=list)  # days the seller ruled out
+    expressions_used: list[str] = Field(default_factory=list)  # acknowledgements already spoken (never twice)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property

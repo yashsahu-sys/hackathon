@@ -405,3 +405,21 @@ async def test_brain_told_to_write_gujarati_after_switch(repo):
     r = await svc.seller_turn(s.session_id, "Gujarati ma vaat karo ne, Hindi nathi aavdtu")
     assert "switched to Gujarati" in fake.classify_calls[-1][0]["content"]
     assert r.bot.language_code == "gu-IN" and r.bot.source == "llm" and fake.translate_calls == []
+
+
+async def test_human_acknowledgements_follow_the_situation(svc):
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Haan bolo")
+    assert r.bot.text.startswith("जी, शुक्रिया")
+    r = await svc.seller_turn(s.session_id, "Kitni baar call karoge, pareshan kar diya")
+    assert r.bot.text.startswith("माफ़ी चाहती हूँ")
+    r = await svc.seller_turn(s.session_id, "Please speak in English")
+    assert r.bot.text.startswith("Sure, I'll speak in English")
+
+
+async def test_regression_counter_proposed_time_books_their_time(svc):
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "Haan bolo")
+    await svc.seller_turn(s.session_id, "Theek hai")
+    r = await svc.seller_turn(s.session_id, "11 baje nahi, 5 baje karte hai")
+    assert r.session.outcome != Outcome.meeting_fixed or "5 PM" in r.session.meeting_slot
