@@ -49,17 +49,22 @@ class SarvamClient:
     async def aclose(self) -> None:
         await self.http.aclose()
 
+    def _redact(self, message: str) -> str:
+        """Errors reach the browser: never let the API key appear in one (httpx quotes bad header values)."""
+        key = self.s.sarvam_api_key
+        return message.replace(key, "sk_***") if key else message
+
     async def _post(self, path: str, retries: int = 1, **kw) -> dict:
         last: Exception | None = None
         for attempt in range(retries + 1):
             try:
                 r = await self.http.post(path, **kw)
             except httpx.HTTPError as exc:
-                last = SarvamError(f"{path}: {exc.__class__.__name__}: {exc}")
+                last = SarvamError(self._redact(f"{path}: {exc.__class__.__name__}: {exc}"))
             else:
                 if r.status_code < 400:
                     return r.json()
-                last = SarvamError(f"{path}: HTTP {r.status_code}: {r.text[:300]}", r.status_code)
+                last = SarvamError(self._redact(f"{path}: HTTP {r.status_code}: {r.text[:300]}"), r.status_code)
                 if r.status_code < 500 and r.status_code != 429:
                     break   # client errors won't fix themselves
             if attempt < retries:

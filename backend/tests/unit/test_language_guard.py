@@ -58,3 +58,20 @@ async def test_translation_in_the_wrong_language_is_rejected():
     w = []
     assert await ensure_language("जी, कल 11 बजे मिलते हैं, executive आएँगे?", _P("gu-IN"), Bad(), w) is None
     assert "wrong language" in w[0]
+
+
+def test_api_key_is_stripped_and_never_in_errors():
+    import asyncio
+    import httpx
+    from vani.config import Settings
+    from vani.integrations.sarvam.client import SarvamClient
+    s = Settings(sarvam_api_key="sk_secret123\n")
+    assert s.sarvam_api_key == "sk_secret123"
+
+    def boom(request):
+        raise httpx.LocalProtocolError("Illegal header value b'sk_secret123'")
+    client = SarvamClient(s, transport=httpx.MockTransport(boom))
+    try:
+        asyncio.run(client._post("/x", retries=0))
+    except SarvamError as exc:
+        assert "sk_secret123" not in str(exc) and "sk_***" in str(exc)

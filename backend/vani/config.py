@@ -2,6 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -10,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=(REPO_ROOT / "backend" / ".env", REPO_ROOT / ".env"), extra="ignore")
 
-    sarvam_api_key: str = ""
+    sarvam_api_key: str = ""   # stripped: a pasted key often carries a trailing newline
     sarvam_base_url: str = "https://api.sarvam.ai"
     sarvam_chat_model: str = "sarvam-105b-conversations"   # 0.2s vs 2.6s on the laptop smoke test
     sarvam_stt_model: str = "saaras:v3"
@@ -33,6 +34,11 @@ class Settings(BaseSettings):
     demand_path: Path | None = None   # precomputed category benchmarks (the public demo ships these as aggregates)
 
     reference_year: int = 2026   # dataset window ends Oct 2026
+
+    @field_validator("sarvam_api_key", "agent_tool_secret", mode="before")
+    @classmethod
+    def _strip(cls, v):
+        return v.strip() if isinstance(v, str) else v
 
     def resolve(self, p: Path) -> Path:
         return p if p.is_absolute() else REPO_ROOT / p
