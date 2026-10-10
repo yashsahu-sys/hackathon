@@ -110,7 +110,8 @@ benefit and a next step: "बहुत अच्छा सवाल! Meeting म
 real numbers given; never invent buyer counts or say you are "watching" enquiries.
 Mood calibration: a question, even a blunt one ("no no, just tell me the purpose"), is NOT frustration or rush.
 Label frustration only for complaints, insults or anger; rush only when they say they're busy or want it quick.
-LANGUAGE: {language_rule}
+LANGUAGE: {language_rule} The "language" field is the language the SELLER used in their last message
+(Roman Hinglish like "abhi busy hoon" = hi-IN), not the language you were speaking.
 Fast keyword detector heard: {hints} (it is often wrong; trust the context). voice_fast / voice_slow / voice_raised
 are measured from the seller's audio: match a fast talker with a shorter, quicker reply and a slow one with a calmer
 reply; a raised voice means irritation only when the words agree.
@@ -266,8 +267,10 @@ def contextual_merge(rule_signals: list[Signal], brain: BrainResult | None, text
     """LLM context decides mood and agreement; rules keep only hard safety signals."""
     if brain is None:
         return rule_signals, []
+    # Which language the seller spoke is a fact about their words (counted, >= 4 words or two turns), not an
+    # interpretation: the LLM must not veto it (it tends to answer "en-IN" because the persona was English).
     keep = [s for s in rule_signals if s.type in HARD_RULE_SIGNALS
-            or (s.type == T.language_switch and s.confidence >= 0.9)]
+            or (s.type == T.language_switch and s.confidence >= 0.75)]
     dropped = sorted({s.type.value for s in rule_signals} - {s.type.value for s in keep} - {x.value for x in brain.signals})
     have = {s.type for s in keep}
     out = list(keep)

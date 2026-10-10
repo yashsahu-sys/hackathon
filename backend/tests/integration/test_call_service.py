@@ -513,3 +513,16 @@ async def test_who_are_you_gets_name_and_bot_question_gets_honest_answer(repo):
     assert "Arjun" in r.bot.text and "assistant" not in r.bot.text.lower()
     r = await svc.seller_turn(s.session_id, "Aap manager ho ya assistant?")
     assert "AI assistant Arjun" in r.bot.text and "का AI" in r.bot.text
+
+
+async def test_regression_llm_cannot_veto_a_counted_language_switch(repo):
+    # Screenshot: English persona, seller answered "Abhi busy hoon, baad mein call karna" and the bot stayed
+    # in English because the LLM said language=en-IN (it echoed the persona) and the rule switch was dropped.
+    fake = FakeSpeech(reply="Okay, I can understand. Would you prefer a call back at 11 AM tomorrow?", language="en-IN",
+                      translation="जी, समझ सकती हूँ। कल सुबह 11 बजे call करूँ?")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "Please speak in English")
+    r = await svc.seller_turn(s.session_id, "Abhi busy hoon, baad mein call karna")
+    assert r.session.persona.language.code == "hi-IN" and r.bot.language_code == "hi-IN"
+    assert not r.bot.text.isascii()                                   # the English LLM reply was translated

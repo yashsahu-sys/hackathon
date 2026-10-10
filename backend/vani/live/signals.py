@@ -184,6 +184,14 @@ class SignalDetector:
 
         # Language switch: explicit request beats detected language
         lang_sig = self._language(text, current_language, stt_language)
+        if lang_sig is None and recent_seller_turns and len(text.split()) < 4:
+            # short turn ("Matlab? Samjha nahi"): judge it together with the previous one, both must agree
+            prev = recent_seller_turns[-1]
+            both = self._language(f"{prev} {text}", current_language, stt_language)
+            mine = detect_language(text, stt_language)[0]
+            if both and mine == both.detail["to"] and detect_language(prev, stt_language)[0] == mine:
+                both.trigger = text[:60]
+                lang_sig = both
         if lang_sig:
             found[T.language_switch] = lang_sig
 
