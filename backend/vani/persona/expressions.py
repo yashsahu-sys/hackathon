@@ -8,6 +8,7 @@ in English" when they switch language. Each variant is used once per call, so
 VANI never sounds like a loop. No fillers like "यार"/"अरे", no fake laughs.
 """
 import re
+import zlib
 
 from vani.domain.live import SignalType as T
 
@@ -58,7 +59,7 @@ def situation(switched: list[T], move_key: str, first_pitch: bool) -> str | None
 
 
 def with_expression(text: str, style: str, switched: list[T], move_key: str, used: list[str],
-                    first_pitch: bool = False) -> tuple[str, str | None]:
+                    first_pitch: bool = False, seed: str = "") -> tuple[str, str | None]:
     """(text with an acknowledgement in front, the acknowledgement used) or the text unchanged."""
     bank = EXPRESSIONS.get(style)
     if bank is None or move_key in OWN_FEELING and T.language_switch not in switched:
@@ -69,5 +70,5 @@ def with_expression(text: str, style: str, switched: list[T], move_key: str, use
     fresh = [e for e in bank[sit] if e not in used]
     if not fresh:
         return text, None
-    ack = fresh[0]
+    ack = fresh[zlib.crc32(f"{seed}:{sit}".encode()) % len(fresh)] if seed else fresh[0]   # differs per seller
     return f"{ack} {LEADING_ACK.sub('', text, count=1)}", ack   # drop our own "let me put it simply" too

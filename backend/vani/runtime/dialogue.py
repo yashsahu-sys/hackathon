@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from vani.domain.live import CallSession, Outcome, Role, SignalType as T
 from vani.persona.generator import _gender_forms
-from vani.persona.lines import lines_for
+from vani.persona.lines import lines_for, variant
 from vani.text.slots import Slot, fill, parse_slot, render, suggest
 
 OBJECTION_TEXT = {k: re.compile(p, re.I) for k, p in {
@@ -43,7 +43,8 @@ class Ctx:
 
     def raw(self, key: str) -> str:
         L = lines_for(self.style)
-        return L["playbook"][key] if key in L["playbook"] else L[key]
+        base = L["playbook"][key] if key in L["playbook"] else L[key]
+        return variant(self.style, key, base, self.s.seller_glid, self.s.line_uses.get(key, 0))
 
     def line(self, key: str) -> str:
         return fill(_gender_forms(self.raw(key), self.gender), self.style, self.offer, self.agreed)

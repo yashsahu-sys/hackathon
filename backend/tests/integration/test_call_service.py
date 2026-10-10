@@ -409,12 +409,14 @@ async def test_brain_told_to_write_gujarati_after_switch(repo):
 
 async def test_human_acknowledgements_follow_the_situation(svc):
     s, _ = await svc.start("1001")
+    from vani.persona.expressions import EXPRESSIONS
+    starts = lambda text, style, sit: any(text.startswith(e) for e in EXPRESSIONS[style][sit])
     r = await svc.seller_turn(s.session_id, "Haan bolo")
-    assert r.bot.text.startswith("जी, शुक्रिया")
+    assert starts(r.bot.text, "hinglish", "thanks")
     r = await svc.seller_turn(s.session_id, "Kitni baar call karoge, pareshan kar diya")
-    assert r.bot.text.startswith("माफ़ी चाहती हूँ")
+    assert starts(r.bot.text, "hinglish", "frustration")
     r = await svc.seller_turn(s.session_id, "Please speak in English")
-    assert r.bot.text.startswith("Sure, I'll speak in English")
+    assert starts(r.bot.text, "english", "language_switch")
 
 
 async def test_regression_counter_proposed_time_books_their_time(svc):
@@ -423,3 +425,19 @@ async def test_regression_counter_proposed_time_books_their_time(svc):
     await svc.seller_turn(s.session_id, "Theek hai")
     r = await svc.seller_turn(s.session_id, "11 baje nahi, 5 baje karte hai")
     assert r.session.outcome != Outcome.meeting_fixed or "5 PM" in r.session.meeting_slot
+
+
+async def test_seller_voice_speed_switches_persona(repo):
+    import io, math, struct, wave
+    frames = [int(8000 * math.sin(i / 5)) for i in range(16000)] + [0] * 8000     # 1 s of speech
+    b = io.BytesIO()
+    with wave.open(b, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+        w.writeframes(struct.pack(f"<{len(frames)}h", *frames))
+    fake = FakeSpeech(transcript="haan ji bolo kya kaam hai aapko")                 # 7 words in 1 s = fast talker
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, audio=b.getvalue())
+    assert r.voice["band"] == "fast" and r.voice["words_per_s"] >= 3.4
+    assert any(e.signal == T.seller_pace for e in r.switches) and r.session.persona.voice.pace >= 1.15
+    assert "voice_fast" in fake.classify_calls[-1][0]["content"]

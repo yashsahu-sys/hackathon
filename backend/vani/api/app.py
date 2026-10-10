@@ -225,7 +225,7 @@ def _turn_json(r: TurnResult) -> dict:
             "switches": [x.model_dump(mode="json") for x in r.switches],
             "persona": s.persona.model_dump(mode="json"), "bot": r.bot.__dict__, "move": r.move,
             "stage": s.stage, "status": s.status.value, "outcome": s.outcome.value,
-            "meeting_slot": s.meeting_slot, "warnings": r.warnings}
+            "meeting_slot": s.meeting_slot, "warnings": r.warnings, "voice": r.voice}
 
 
 app = create_app()

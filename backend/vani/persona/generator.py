@@ -16,9 +16,10 @@ from vani.evidence.book import EvidenceBook
 from vani.evidence.miner import age_band
 from vani.text.gender import detect_seller_gender
 from vani.text.slots import fill as fill_slots
+from vani.speech.voice_cues import FAST_WPS, SLOW_WPS
 from vani.text.language import detect
 
-from .lines import DISPOSITION_KEY, LINES, OBJECTION_KEY, QUESTION_KEY, REGIONAL_GREETING, lines_for
+from .lines import HISTORY_OPENINGS, DISPOSITION_KEY, LINES, OBJECTION_KEY, QUESTION_KEY, REGIONAL_GREETING, lines_for
 from .voices import ACCENT, BOT_NAME, clamp_pace, speaker_for
 
 SOUTH_NON_HINDI = {"ta-IN", "te-IN", "kn-IN", "ml-IN"}
@@ -229,6 +230,13 @@ class PersonaGenerator:
             ids.append(confused["id"])
         if age_band(p.business_age_years) == "veteran":
             slow_reasons.append(f"{p.business_age_years}-year-old business: unhurried delivery")
+        wps = self._seller_speech_rate(ctx)
+        if wps is not None and wps >= FAST_WPS:
+            pace += 0.06
+            reasons.append(f"seller spoke {wps:.1f} words/s on past calls (fast; real median 2.6): match their speed")
+            source, conf = Source.seller_data, Confidence.moderate
+        elif wps is not None and wps <= SLOW_WPS:
+            slow_reasons.append(f"seller spoke {wps:.1f} words/s on past calls (slow, deliberate; real median 2.6)")
         if slow_reasons:
             pace -= 0.1
             reasons += slow_reasons
@@ -240,6 +248,32 @@ class PersonaGenerator:
             reason=("; ".join(reasons) if reasons else "No rush or confusion signals for this seller; normal pace.") +
                    f" -> {pace}x.")
         return pace
+
+    @staticmethod
+    def _last_call_hook(ctx) -> tuple[str | None, str]:
+        """How the most recent past call ended, as a hook for the opening."""
+        calls = sorted((c for c in ctx.calls if c.started_at), key=lambda c: c.started_at)
+        if not calls:
+            return None, ""
+        last = calls[-1]
+        label = (last.disposition or "").lower()
+        if last.meeting_fixed or "meeting fixed" in label:
+            return "met", "the last call fixed a meeting"
+        if last.duration_s is not None and last.duration_s < 15:
+            return "dropped", f"the last call lasted only {last.duration_s:.0f}s"
+        if "call later" in label or "busy" in label:
+            return "callback", "they asked for a call back last time"
+        if "not interested" in label:
+            return "not_interested", "they said not interested last time"
+        return None, ""
+
+    @staticmethod
+    def _seller_speech_rate(ctx) -> float | None:
+        """Median words per second over the seller's timed turns on past VANI calls (>= 2 usable turns)."""
+        rates = sorted(len(t.text.split()) / (t.end_s - t.start_s) for t in ctx.turns
+                       if t.speaker == "seller" and t.start_s is not None and t.end_s is not None
+                       and t.end_s - t.start_s >= 0.8 and len(t.text.split()) >= 3)
+        return rates[len(rates) // 2] if len(rates) >= 2 else None
 
     @staticmethod
     def _rush_reasons(ctx) -> list[str]:
@@ -337,11 +371,15 @@ class PersonaGenerator:
         last_met = self.ev.usable("VAR-last_met_d-early_drop", "moderate")
         bare = self.ev.usable("TRN-opening_length", "moderate")
         ids = [f["id"] for f in (last_met, bare) if f]
+        hist = None
         if rushy and not talked_before:
             kind, why = "brief", "Rush-prone seller: one-breath opening that still says who and why."
         elif talked_before:
             kind = "history"
             why = "Seller has spoken to VANI before: reference the last conversation."
+            hist, hist_why = self._last_call_hook(ctx)
+            if hist:
+                why = f"Seller has spoken to VANI before; {hist_why}, so the opening picks up from there."
             if last_met:
                 why += " " + EvidenceBook.cite(last_met)
         elif enq > 0:
@@ -368,7 +406,8 @@ class PersonaGenerator:
                            else ("1 buyer enquiry આવી છે" if enq == 1 else f"{enq} buyer enquiries આવી છે") if style == "gujarati"
                            else ("1 buyer enquiry" if enq == 1 else f"{enq} buyer enquiries")),
         }
-        opening = L[f"opening_{kind}"].format(**ctx_vars)
+        template = HISTORY_OPENINGS.get(style, {}).get(hist) if kind == "history" and hist else None
+        opening = (template or L[f"opening_{kind}"]).format(**ctx_vars)
         if style == "hinglish" and p.language_code in REGIONAL_GREETING:
             d["plan.greeting"] = Decision(value=greet, source=Source.seller_data, confidence=Confidence.guess,
                                           reason=f"Native greeting for a seller in {p.state} before switching to Hinglish.")
@@ -440,7 +479,8 @@ class PersonaGenerator:
 _MALE = [("रही हूँ", "रहा हूँ"), ("बताती हूँ", "बताता हूँ"), ("सकती हूँ", "सकता हूँ"), ("देती हूँ", "देता हूँ"),
          ("करवाती हूँ", "करवाता हूँ"), ("करती हूँ", "करता हूँ"), ("चाहती थी", "चाहता था"), ("चाहती हूँ", "चाहता हूँ"), ("लूँगी", "लूँगा"), ("करवाऊँगी", "करवाऊँगा"),
          ("कर दूँ", "कर दूँ"), ("assistant हूँ", "assistant हूँ"), ("समझ सकती", "समझ सकता"),
-         ("Payal", "Arjun"), ("बोल गई", "बोल गया"), ("समझा नहीं पाई", "समझा नहीं पाया")]
+         ("Payal", "Arjun"), ("बोल गई", "बोल गया"), ("समझा नहीं पाई", "समझा नहीं पाया"),
+         ("समझ गई", "समझ गया"), ("रखती हूँ", "रखता हूँ")]
 
 
 def _gender_forms(text: str, gender: str) -> str:

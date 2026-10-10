@@ -25,6 +25,7 @@ from vani.persona.generator import PersonaGenerator, _gender_forms
 from vani.persona.prompt import agent_variables, system_prompt
 from vani.speech.language_guard import ensure_language
 from vani.speech.tts_text import for_bulbul
+from vani.speech.voice_cues import analyze as analyze_voice, raised
 from vani.text.gender import detect_seller_gender
 from vani.text.slots import Slot, parse_slot, render, suggest, unavailable_days
 
@@ -66,6 +67,7 @@ class TurnResult:
     bot: BotUtterance
     move: str
     warnings: list[str] = field(default_factory=list)
+    voice: dict | None = None        # how the seller sounded this turn (rate, loudness), when there was audio
 
 
 class CallService:
@@ -118,14 +120,16 @@ class CallService:
 
         seller_texts = [t.text for t in session.transcript if t.role == Role.seller]
         signals = self.detector.detect(text, session.persona.language.code, stt_lang, seller_texts[-3:])
+        cues = analyze_voice(audio, text) if audio is not None else None
+        voice_hints = self._voice_signals(session, cues, signals)
         rule_agreed = any(x.type == SignalType.agreement for x in signals)
         brain: BrainResult | None = None
         if self.brain is not None and self.brain.enabled:
             ctx = self._context(session.seller_glid)
             switch_to = next((x.detail.get("to") for x in signals
                               if x.type == SignalType.language_switch and x.confidence >= 0.75), None)
-            brain = await self.brain.think(session, ctx, text, [x.type.value for x in signals], render_seller_brief(ctx),
-                                           switch_to)
+            brain = await self.brain.think(session, ctx, text, [x.type.value for x in signals] + voice_hints,
+                                           render_seller_brief(ctx), switch_to)
             if brain is None:
                 warnings.append("LLM brain unavailable: rules only this turn")
             else:
@@ -150,6 +154,7 @@ class CallService:
         types = {s.type for s in signals if s.confidence >= MIN_CONFIDENCE}
         move = next_move(session, text, types, session.strategy_used, new_unavailable)
         self._apply_move(session, move, types)
+        session.line_uses[move.key] = session.line_uses.get(move.key, 0) + 1
 
         bot = BotUtterance(text=move.text, language_code=session.persona.language.code,
                            speaker=session.persona.voice.speaker, pace=session.persona.voice.pace,
@@ -178,7 +183,7 @@ class CallService:
             first_pitch = sum(t.role == Role.bot for t in session.transcript) == 1      # only the opening so far
             switched = [e.signal for e in switches]
             text_ack, ack = with_expression(bot.text, session.persona.language.style, switched, move.key,
-                                            session.expressions_used, first_pitch)
+                                            session.expressions_used, first_pitch, session.seller_glid)
             if ack:
                 bot.text = _gender_forms(text_ack, session.persona.voice.gender)
                 session.expressions_used.append(ack)
@@ -191,7 +196,29 @@ class CallService:
         if move.end_call:
             session.status = CallStatus.ended
         self.store.save(session, switches)
-        return TurnResult(session, text, signals, switches, bot, move.key, warnings)
+        return TurnResult(session, text, signals, switches, bot, move.key, warnings,
+                          cues.as_dict() | {"raised": "voice_raised" in voice_hints} if cues else None)
+
+    @staticmethod
+    def _voice_signals(session: CallSession, cues, signals: list[Signal]) -> list[str]:
+        """Speaking rate -> seller_pace signal; a raised voice backs up (never replaces) a frustration the words show."""
+        if cues is None:
+            return []
+        hints = []
+        if cues.band in ("fast", "slow"):
+            signals.append(Signal(type=SignalType.seller_pace, confidence=0.7,
+                                  trigger=f"{cues.words_per_s:.1f} words/s ({cues.band})",
+                                  detail={"band": cues.band, "words_per_s": round(cues.words_per_s, 2)}))
+            hints.append(f"voice_{cues.band}")
+        if raised(cues.rms_db, session.voice_baseline):
+            hints.append("voice_raised")
+            for sig in signals:
+                if sig.type == SignalType.frustration:
+                    sig.confidence = min(0.95, sig.confidence + 0.15)
+                    sig.detail = {**sig.detail, "voice": "raised"}
+        elif len(session.voice_baseline) < 3:
+            session.voice_baseline.append(round(cues.rms_db, 1))
+        return hints
 
     # -------------------------------------------------------- call state
     def _context(self, glid: str):

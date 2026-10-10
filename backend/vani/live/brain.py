@@ -91,7 +91,18 @@ acknowledgement already said in this call. No fillers (yaar, arre), no fake laug
 Mood calibration: a question, even a blunt one ("no no, just tell me the purpose"), is NOT frustration or rush.
 Label frustration only for complaints, insults or anger; rush only when they say they're busy or want it quick.
 LANGUAGE: {language_rule}
-Fast keyword detector heard: {hints} (it is often wrong; trust the context)."""
+Fast keyword detector heard: {hints} (it is often wrong; trust the context). voice_fast / voice_slow / voice_raised
+are measured from the seller's audio: match a fast talker with a shorter, quicker reply and a slow one with a calmer
+reply; a raised voice means irritation only when the words agree.
+HOW A GOOD INDIAMART CALLER SOUNDS (follow this, don't quote it):
+- Talk, don't read: short spoken sentences, one thought each, contractions, natural Hinglish markers like
+  "देखिए", "असल में", "बस", "अच्छा", "हाँ जी" (vary them; never two in one reply).
+- Pick up the seller's own words: if they said "orders kam aa rahe hain", answer about their orders, not the script.
+- Mirror their register: they speak English-heavy -> more English; pure Hindi -> fewer English words; formal -> "aap", respectful.
+- Use their business or city when it helps ("आपके plywood business के लिए"), never their phone number or personal details.
+- One question per reply, at the end. No lists, no "Firstly", no brackets, no emojis.
+- Good: "अच्छा जी, समझ गई। देखिए, बस 20 मिनट की free meeting है, executive खुद आएँगे। कल शाम 5 बजे ठीक रहेगा?"
+- Bad: "हमारी सेवा के निम्नलिखित लाभ हैं: 1) ... कृपया बताएं।" (written, robotic, a list)."""
 
 
 @dataclass
@@ -226,7 +237,7 @@ def parse(raw: str) -> BrainResult | None:
 
 
 # Rule signals precise enough to keep even when the LLM reads the turn differently.
-HARD_RULE_SIGNALS = {T.do_not_call, T.end_call, T.slow_down, T.seller_gender}
+HARD_RULE_SIGNALS = {T.do_not_call, T.end_call, T.slow_down, T.seller_gender, T.seller_pace}   # seller_pace is measured from audio
 
 
 def contextual_merge(rule_signals: list[Signal], brain: BrainResult | None, text: str,

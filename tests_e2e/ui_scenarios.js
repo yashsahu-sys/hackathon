@@ -12,12 +12,12 @@ const OUT = require('path').join(__dirname, 'out'); require('fs').mkdirSync(OUT,
 const G = '241920440';
 const SC = [
   { name: 'S1 rush -> faster pace, 2 slots', turns: ['Haan bolo', 'Abhi busy hoon, jaldi bolo'], expect: { signal: 'rush', field: 'voice.pace' } },
-  { name: 'S2 frustration -> calm, direct, never booked', turns: ['Haan bolo', 'Kitni baar call karoge, pareshan kar diya, theek hai kal 11 baje'], expect: { ack: 'माफ़ी', signal: 'frustration', notBooked: true } },
-  { name: 'S3 confusion -> slower, simpler', turns: ['Haan bolo', 'Samajh nahi aaya, kya bol rahe ho'], expect: { ack: 'माफ़ कीजिए', signal: 'confusion', field: 'voice.pace' } },
-  { name: 'S4 interest -> close', turns: ['Haan bolo', 'Accha, interesting hai, aur batao kitne buyers milenge'], expect: { ack: 'बहुत बढ़िया', signal: 'interest' } },
-  { name: 'S5 language -> English', turns: ['Sorry, can you speak in English please'], expect: { ack: 'in English', signal: 'language_switch', lang: 'en-IN' } },
-  { name: 'S6 language -> Gujarati + slot', turns: ['Gujarati ma vaat karo ne, Hindi nathi aavdtu', 'kale free nathi, somvare savare 11 vage rakho', 'haa saru che'], expect: { ack: 'ગુજરાતીમાં', signal: 'language_switch', lang: 'gu-IN', booked: true } },
-  { name: 'S7 slow down', turns: ['Haan bolo', 'Thoda dheere boliye please'], expect: { ack: 'आराम से', signal: 'slow_down', field: 'voice.pace' } },
+  { name: 'S2 frustration -> calm, direct, never booked', turns: ['Haan bolo', 'Kitni baar call karoge, pareshan kar diya, theek hai kal 11 baje'], expect: { ack: ['माफ़ी', 'माफ़ कीजिए', 'समझ सकती'], signal: 'frustration', notBooked: true } },
+  { name: 'S3 confusion -> slower, simpler', turns: ['Haan bolo', 'Samajh nahi aaya, kya bol rahe ho'], expect: { ack: ['माफ़ कीजिए', 'ओह', 'फिर से'], signal: 'confusion', field: 'voice.pace' } },
+  { name: 'S4 interest -> close', turns: ['Haan bolo', 'Accha, interesting hai, aur batao kitne buyers milenge'], expect: { ack: ['बढ़िया', 'वाह'], signal: 'interest' } },
+  { name: 'S5 language -> English', turns: ['Sorry, can you speak in English please'], expect: { ack: ['in English'], signal: 'language_switch', lang: 'en-IN' } },
+  { name: 'S6 language -> Gujarati + slot', turns: ['Gujarati ma vaat karo ne, Hindi nathi aavdtu', 'kale free nathi, somvare savare 11 vage rakho', 'haa saru che'], expect: { ack: ['ગુજરાતીમાં'], signal: 'language_switch', lang: 'gu-IN', booked: true } },
+  { name: 'S7 slow down', turns: ['Haan bolo', 'Thoda dheere boliye please'], expect: { ack: ['आराम से', 'धीरे-धीरे'], signal: 'slow_down', field: 'voice.pace' } },
   { name: 'S8 bot question', turns: ['Aap robot ho kya?'], expect: { signal: 'bot_question' } },
   { name: 'S9 human request', turns: ['Haan bolo', 'Kisi insaan se baat karao'], expect: { signal: 'human_request' } },
   { name: 'S10 do not call', turns: ['Dubara call mat kijiye'], expect: { ended: 'declined' } },
@@ -59,7 +59,7 @@ const SC = [
     if (e.booked && last.outcome !== 'meeting_fixed') fails.push(`not booked (${last.outcome})`);
     if (e.notBooked && resps.some((r) => r.outcome === 'meeting_fixed')) fails.push('BOOKED');
     if (e.slot && !(last.meeting_slot || '').includes(e.slot)) fails.push(`slot ${last.meeting_slot}`);
-    if (e.ack && !resps.some((r) => r.bot.text.includes(e.ack))) fails.push(`no ack '${e.ack}'`);
+    if (e.ack && !resps.some((r) => e.ack.some((w) => r.bot.text.includes(w)))) fails.push(`no ack ${e.ack}`);
     if (e.ended && last.outcome !== e.ended) fails.push(`outcome ${last.outcome}`);
     if (e.minSwitches && resps.flatMap((r) => r.switches).length < e.minSwitches) fails.push('too few switches');
     const logCards = await p.$$eval('#log .event', (x) => x.length);

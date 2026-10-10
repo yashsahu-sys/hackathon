@@ -160,4 +160,5 @@ def test_repeated_ask_is_rephrased():
 
 def test_english_persona_speaks_english():
     s = make_session(seller_state="Tamil Nadu")
-    assert mv(s, "yes").text.startswith("Our executive")
+    t = mv(s, "yes").text
+    assert t.isascii() and "executive" in t.lower()

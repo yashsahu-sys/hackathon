@@ -21,6 +21,7 @@ class SignalType(str, Enum):
     slow_down = "slow_down"             # "thoda dheere boliye"
     end_call = "end_call"               # "call cut kar do", "phone rakho"
     seller_gender = "seller_gender"     # learned from the seller's own verb forms ("bol raha hoon")
+    seller_pace = "seller_pace"         # how fast the seller actually speaks (words per voiced second, from audio)
     agreement = "agreement"
     refusal = "refusal"
 
@@ -29,7 +30,7 @@ class SignalType(str, Enum):
 PERSONA_SIGNALS = {
     SignalType.frustration, SignalType.confusion, SignalType.interest, SignalType.language_switch,
     SignalType.rush, SignalType.human_request, SignalType.bot_question, SignalType.slow_down,
-    SignalType.seller_gender, SignalType.end_call,
+    SignalType.seller_gender, SignalType.end_call, SignalType.seller_pace,
 }
 
 
@@ -110,6 +111,8 @@ class CallSession(BaseModel):
     offered_slots: list[dict] = Field(default_factory=list)   # what VANI has proposed, in order
     unavailable_days: list[str] = Field(default_factory=list)  # days the seller ruled out
     expressions_used: list[str] = Field(default_factory=list)  # acknowledgements already spoken (never twice)
+    line_uses: dict[str, int] = Field(default_factory=dict)    # how often each line key was spoken (rotates variants)
+    voice_baseline: list[float] = Field(default_factory=list)  # seller's loudness on their first turns (dBFS)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property

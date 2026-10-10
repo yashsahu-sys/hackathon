@@ -177,3 +177,77 @@ def lines_for(style: str) -> dict:
     """Hinglish, English and Gujarati have their own lines. Other regional styles open
     with a native greeting but reuse the English structure; the LLM renders them live."""
     return LINES.get(style) or LINES["english"]
+
+
+# Openings that pick up where the LAST call ended (its disposition), instead of a generic "we spoke last time".
+HISTORY_OPENINGS = {
+    "hinglish": {
+        "callback": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। पिछली बार आपने कहा था बाद में बात करेंगे, तो आज call किया। आपके {category} business के लिए बस दो मिनट चाहिए।",
+        "dropped": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। पिछली बार हमारी call बीच में कट गई थी, तो दोबारा call किया, आपके {category} business के बारे में।",
+        "not_interested": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। पिछली बार आपने कहा था अभी ज़रूरत नहीं, बस आपके {category} business के लिए एक नई बात बतानी थी, एक मिनट लूँगी।",
+        "met": "{greet}, मैं IndiaMART से {bot} बोल रही हूँ। हमारे executive पिछली बार आपसे मिले थे, उसी के follow-up में आपके {category} business के लिए call किया है।",
+    },
+    "english": {
+        "callback": "{greet}, this is {bot} from IndiaMART. Last time you asked us to call back later, so here I am. I just need two minutes about your {category} business.",
+        "dropped": "{greet}, this is {bot} from IndiaMART. Our call got cut last time, so I'm calling back about your {category} business.",
+        "not_interested": "{greet}, this is {bot} from IndiaMART. Last time you said you didn't need it right now; I have one new thing for your {category} business, just a minute.",
+        "met": "{greet}, this is {bot} from IndiaMART. Our executive met you last time, and I'm following up on that for your {category} business.",
+    },
+    "gujarati": {
+        "callback": "{greet}, હું IndiaMART થી {bot} બોલું છું. ગયા વખતે તમે કહ્યું હતું પછી વાત કરીએ, એટલે આજે call કર્યો. તમારા {category} business માટે બસ બે મિનિટ જોઈએ.",
+        "dropped": "{greet}, હું IndiaMART થી {bot} બોલું છું. ગયા વખતે આપણો call વચ્ચે કપાઈ ગયો હતો, એટલે ફરી call કર્યો, તમારા {category} business વિશે.",
+        "not_interested": "{greet}, હું IndiaMART થી {bot} બોલું છું. ગયા વખતે તમે કહ્યું હતું હમણાં જરૂર નથી, બસ તમારા {category} business માટે એક નવી વાત કહેવી હતી, એક મિનિટ લઈશ.",
+        "met": "{greet}, હું IndiaMART થી {bot} બોલું છું. અમારા executive ગયા વખતે તમને મળ્યા હતા, એના follow-up માટે તમારા {category} business વિશે call કર્યો છે.",
+    },
+}
+
+# Extra phrasings for the lines VANI says most. A real caller never says a sentence the same way to every
+# seller: the variant is picked per seller and rotates if the same move comes back in a call.
+VARIANTS = {
+    "hinglish": {
+        "pitch": ["देखिए, हमारे executive आपसे मिलकर आपकी listing ठीक करते हैं, ताकि सही buyers सीधे आपको call करें। Meeting बिल्कुल free है।",
+                  "असल में call इसलिए किया कि आपके products IndiaMART पर और अच्छे से दिखें। हमारे executive 20 मिनट मिलकर ये कर देते हैं, कोई charge नहीं।"],
+        "meeting_ask": ["तो {slot1} executive आपसे 20 मिनट के लिए मिल लें? Online भी हो सकता है।",
+                        "आप बताइए, {slot1} ठीक रहेगा? बस 20 मिनट लगेंगे।"],
+        "clarify": ["सीधी सी बात है जी: हमारे executive आपके पास आएँगे और आपके products IndiaMART पर अच्छे से लगा देंगे, ताकि नए buyers आपको ढूँढ सकें। पैसे कुछ नहीं लगते।",
+                    "देखिए, बस इतना है: executive आएँगे, आपकी listing ठीक करेंगे, और आपको ज़्यादा enquiries मिलेंगी। ये free है।"],
+        "rush": ["बस दस seconds जी। {slot1} या {slot2}, कौन सा ठीक है?",
+                 "जी, समझ गई, छोटा रखती हूँ। {slot1} या {slot2}?"],
+        "close": ["हाँ जी, ये सब executive आपको खुद दिखा देंगे। {slot1} रख दूँ?", "बढ़िया! तो {slot1} meeting fix कर दूँ?"],
+        "ask_time": ["अच्छा जी! तो आपके लिए कौन सा दिन और time ठीक रहेगा, {slot1} या {slot2}?"],
+        "reschedule": ["ठीक है जी, कोई दिक्कत नहीं। फिर {slot1} या {slot2} कैसा रहेगा?"],
+        "direct": ["जी, एक line में: free meeting, 20 मिनट, ज़्यादा buyers। {slot1} चलेगा?"],
+        "not_interested": ["समझ सकती हूँ जी। बस एक बात: आपकी category में sellers को हर महीने नए buyers मिल रहे हैं। एक बार 20 मिनट मिल के देख लीजिए, फिर आप तय करना।"],
+        "busy": ["जी, बस दस seconds, सिर्फ़ time fix करना है।"],
+        "call_later": ["ज़रूर जी, तो {slot1} या {slot2}, कब call करूँ?"],
+    },
+    "english": {
+        "pitch": ["Basically, our executive meets you and sets up your listing properly, so the right buyers call you directly. It's completely free.",
+                  "I'm calling so your products show up better on IndiaMART. Our executive does that in a free twenty-minute meeting."],
+        "meeting_ask": ["So, could our executive drop by {slot1}? Just twenty minutes, or online if you prefer.",
+                        "Would {slot1} work for you? It takes only twenty minutes."],
+        "clarify": ["Simply put: our executive visits, puts your products up properly on IndiaMART, and new buyers find you. No charge."],
+        "rush": ["Just ten seconds. {slot1} or {slot2}, which one?"],
+        "close": ["Great! The executive will show you all of that. Shall I book {slot1}?"],
+        "ask_time": ["Lovely! Which day and time suit you, {slot1} or {slot2}?"],
+        "reschedule": ["That's fine. How about {slot1} or {slot2} then?"],
+        "direct": ["In one line: free meeting, twenty minutes, more buyers. Does {slot1} work?"],
+        "not_interested": ["I understand. Just one thing: sellers in your category get new buyers here every month. Meet once for twenty minutes, then decide."],
+    },
+    "gujarati": {
+        "pitch": ["જુઓ, અમારા executive તમને મળીને listing સરખી કરી આપે છે, જેથી સાચા buyers સીધા તમને call કરે. આ meeting free છે."],
+        "meeting_ask": ["તો {slot1} executive તમને 20 મિનિટ મળી લે? Online પણ ચાલશે."],
+        "clarify": ["સીધી વાત છે: executive આવશે, તમારા products IndiaMART પર સરખા મૂકશે, અને નવા buyers તમને શોધશે. કોઈ પૈસા નથી."],
+        "rush": ["બસ દસ seconds. {slot1} કે {slot2}, કયું ફાવશે?"],
+        "close": ["સરસ! તો {slot1} meeting fix કરી દઉં?"],
+        "ask_time": ["સરસ! તો કયો દિવસ અને time ફાવશે, {slot1} કે {slot2}?"],
+        "reschedule": ["વાંધો નહીં. તો {slot1} કે {slot2} કેવું રહેશે?"],
+    },
+}
+
+
+def variant(style: str, key: str, base: str, seed: str, uses: int = 0) -> str:
+    """The base line or one of its variants: stable per seller, rotating when the move repeats in a call."""
+    import zlib
+    options = [base] + VARIANTS.get(style, {}).get(key, [])
+    return options[(zlib.crc32(f"{seed}:{key}".encode()) + uses) % len(options)]

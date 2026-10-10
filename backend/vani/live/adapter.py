@@ -35,6 +35,8 @@ REASONS = {
     T.slow_down: "Seller asked us to slow down: drop the pace, simple words, one idea per sentence.",
     T.end_call: "Seller wants to end the call: apologise briefly and hang up; never push for the meeting.",
     T.seller_gender: "Seller's own words show their gender: address them correctly from now on.",
+    T.seller_pace: "Mirror the seller's own speed (measured from their voice): a fast talker gets a quicker, shorter "
+                   "VANI; a slow, deliberate speaker gets a calmer one. Real sellers speak 2.6 words/s on median.",
 }
 ADDRESS = {("male", "hinglish"): "सर", ("female", "hinglish"): "मैडम", ("male", "english"): "Sir",
            ("female", "english"): "Ma'am", ("male", "regional"): "Sir", ("female", "regional"): "Ma'am",
@@ -137,6 +139,14 @@ class PersonaAdapter:
         elif sig.type in (T.do_not_call, T.end_call):
             m.set("voice.temperature", TEMP["calm"])
             m.strategy("end")
+        elif sig.type == T.seller_pace:
+            band = sig.detail.get("band")
+            if band == "fast":
+                m.set("voice.pace", clamp_pace(min(PACE_CAP, max(p.voice.pace, 1.15))))
+                m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 14))
+            elif band == "slow":
+                m.set("voice.pace", clamp_pace(max(PACE_FLOOR, min(p.voice.pace, 0.9))))
+                m.set("tone.warmth", "high")
         elif sig.type == T.seller_gender:
             gender = sig.detail.get("gender")
             if gender not in ("male", "female") or gender == p.language.seller_gender:

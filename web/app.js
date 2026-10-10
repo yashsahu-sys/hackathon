@@ -205,7 +205,9 @@ async function sellerSays(text, audioBlob) {
   if (audioBlob) fd.append("audio", audioBlob, "turn.wav"); else fd.append("text", text);
   try {
     const r = await api(`/calls/${S.session}/turns`, { method: "POST", body: fd });
-    bubble("seller", r.seller_text, "", r.signals);
+    const v = r.voice;
+    const voiceMeta = v && v.words_per_s ? `🎙 ${v.words_per_s} words/s · ${v.band}${v.raised ? " · voice raised" : ""}` : "";
+    bubble("seller", r.seller_text, voiceMeta, r.signals);
     r.switches.forEach(switchCard);
     if (r.switches.length) renderPersona(r.persona, r.switches.flatMap((s) => s.changes.map((c) => c.field)));
     else S.persona = r.persona;
