@@ -40,6 +40,11 @@ class CategoryDemand:
         return cls(groups)
 
     @classmethod
+    def load(cls, path) -> "CategoryDemand":
+        import json
+        return cls(json.loads(open(path, encoding="utf-8").read()))
+
+    @classmethod
     def empty(cls) -> "CategoryDemand":
         return cls({})
 

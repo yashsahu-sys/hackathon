@@ -1,0 +1,3441 @@
+{
+ "generated_at": "2026-10-09T10:36:26.283740+00:00",
+ "global": {
+  "meeting_fixed_calls": 1078,
+  "agreed_meeting_hours": [
+   {
+    "hour": 11,
+    "mentions": 370
+   },
+   {
+    "hour": 12,
+    "mentions": 345
+   },
+   {
+    "hour": 14,
+    "mentions": 191
+   },
+   {
+    "hour": 17,
+    "mentions": 184
+   }
+  ],
+  "agreed_meeting_days": [
+   {
+    "day": "tomorrow",
+    "mentions": 573
+   },
+   {
+    "day": "monday",
+    "mentions": 247
+   },
+   {
+    "day": "saturday",
+    "mentions": 66
+   },
+   {
+    "day": "day after tomorrow",
+    "mentions": 48
+   }
+  ],
+  "best_call_hours": [
+   {
+    "hour": 15,
+    "meeting_rate": 0.151,
+    "n": 852
+   },
+   {
+    "hour": 20,
+    "meeting_rate": 0.144,
+    "n": 334
+   },
+   {
+    "hour": 17,
+    "meeting_rate": 0.142,
+    "n": 699
+   }
+  ],
+  "worst_call_hours": [
+   {
+    "hour": 11,
+    "meeting_rate": 0.061,
+    "n": 1439
+   },
+   {
+    "hour": 12,
+    "meeting_rate": 0.086,
+    "n": 974
+   }
+  ]
+ },
+ "source": {
+  "calls": 9657,
+  "sellers": 5000,
+  "calls_with_transcript": 455
+ },
+ "baseline": {
+  "meeting_rate": 0.1116,
+  "early_drop_rate": 0.4645,
+  "n": 9657
+ },
+ "caveats": [
+  "VANI used one persona for everyone, so persona-option effects are inferred from behaviours and segments, not measured directly.",
+  "Summary tags come from AI-written summaries matched with keywords; expect some noise.",
+  "Only variant (bot_version) findings compare scripts side by side; all other findings are correlational.",
+  "Turn-level transcripts exist for 455 of 9657 calls; transcript findings are directional."
+ ],
+ "findings": [
+  {
+   "id": "OUT-early_drop",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'early_drop' happens",
+   "statement": "Calls tagged 'early_drop' fixed 0.0% meetings (n=4486) vs 20.8% without (n=5171).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "early_drop"
+   },
+   "rate": 0.0004,
+   "k": 2,
+   "n": 4486,
+   "base_rate": 0.2081,
+   "base_k": 1076,
+   "base_n": 5171,
+   "ci95": [
+    0.0001,
+    0.0016
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "The first 20 seconds decide the call: personalise the opening and keep it short for drop-prone sellers.",
+   "causal": false
+  },
+  {
+   "id": "OUT-busy",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'busy' happens",
+   "statement": "Calls tagged 'busy' fixed 5.0% meetings (n=905) vs 11.8% without (n=8752).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "busy"
+   },
+   "rate": 0.0497,
+   "k": 45,
+   "n": 905,
+   "base_rate": 0.118,
+   "base_k": 1033,
+   "base_n": 8752,
+   "ci95": [
+    0.0374,
+    0.0659
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "Detect rush live; skip the pitch and offer two concrete slots.",
+   "causal": false
+  },
+  {
+   "id": "OUT-confused",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'confused' happens",
+   "statement": "Calls tagged 'confused' fixed 2.6% meetings (n=154) vs 11.3% without (n=9503).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "confused"
+   },
+   "rate": 0.026,
+   "k": 4,
+   "n": 154,
+   "base_rate": 0.113,
+   "base_k": 1074,
+   "base_n": 9503,
+   "ci95": [
+    0.0101,
+    0.0649
+   ],
+   "p_value": 0.007341,
+   "strength": "strong",
+   "implication": "Detect confusion live; slow down, simplify, one idea per sentence.",
+   "causal": false
+  },
+  {
+   "id": "OUT-frustrated",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'frustrated' happens",
+   "statement": "Calls tagged 'frustrated' fixed 7.7% meetings (n=78) vs 11.2% without (n=9579).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "frustrated"
+   },
+   "rate": 0.0769,
+   "k": 6,
+   "n": 78,
+   "base_rate": 0.1119,
+   "base_k": 1072,
+   "base_n": 9579,
+   "ci95": [
+    0.0357,
+    0.1578
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Detect frustration live; acknowledge, cut length, go straight to the ask.",
+   "causal": false
+  },
+  {
+   "id": "OUT-bot_question",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'bot_question' happens",
+   "statement": "Calls tagged 'bot_question' fixed 2.7% meetings (n=149) vs 11.3% without (n=9508).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "bot_question"
+   },
+   "rate": 0.0268,
+   "k": 4,
+   "n": 149,
+   "base_rate": 0.113,
+   "base_k": 1074,
+   "base_n": 9508,
+   "ci95": [
+    0.0105,
+    0.067
+   ],
+   "p_value": 0.010188,
+   "strength": "moderate",
+   "implication": "Answer 'are you a bot?' honestly and warmly, then continue; reassure strategy.",
+   "causal": false
+  },
+  {
+   "id": "OUT-price",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'price' happens",
+   "statement": "Calls tagged 'price' fixed 19.6% meetings (n=1354) vs 9.8% without (n=8303).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "price"
+   },
+   "rate": 0.1957,
+   "k": 265,
+   "n": 1354,
+   "base_rate": 0.0979,
+   "base_k": 813,
+   "base_n": 8303,
+   "ci95": [
+    0.1755,
+    0.2177
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "Price questions signal engagement: answer that the visit is free, then ask for the slot.",
+   "causal": false
+  },
+  {
+   "id": "OUT-visit",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'visit' happens",
+   "statement": "Calls tagged 'visit' fixed 62.6% meetings (n=804) vs 6.5% without (n=8853).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "visit"
+   },
+   "rate": 0.6256,
+   "k": 503,
+   "n": 804,
+   "base_rate": 0.0649,
+   "base_k": 575,
+   "base_n": 8853,
+   "ci95": [
+    0.5916,
+    0.6584
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "Talking about the visit/location goes with meetings: bring the visit up early.",
+   "causal": false
+  },
+  {
+   "id": "OUT-whatsapp",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'whatsapp' happens",
+   "statement": "Calls tagged 'whatsapp' fixed 83.3% meetings (n=84) vs 10.5% without (n=9573).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "whatsapp"
+   },
+   "rate": 0.8333,
+   "k": 70,
+   "n": 84,
+   "base_rate": 0.1053,
+   "base_k": 1008,
+   "base_n": 9573,
+   "ci95": [
+    0.7395,
+    0.898
+   ],
+   "p_value": 0.0,
+   "strength": "moderate",
+   "implication": "Offering WhatsApp confirmation goes with fixed meetings.",
+   "causal": false
+  },
+  {
+   "id": "OUT-not_interested",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'not_interested' happens",
+   "statement": "Calls tagged 'not_interested' fixed 3.8% meetings (n=1051) vs 12.1% without (n=8606).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "not_interested"
+   },
+   "rate": 0.0381,
+   "k": 40,
+   "n": 1051,
+   "base_rate": 0.1206,
+   "base_k": 1038,
+   "base_n": 8606,
+   "ci95": [
+    0.0281,
+    0.0514
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "First 'not interested' needs one value line, not a repeat of the pitch.",
+   "causal": false
+  },
+  {
+   "id": "OUT-already_in_touch",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'already_in_touch' happens",
+   "statement": "Calls tagged 'already_in_touch' fixed 3.7% meetings (n=81) vs 11.2% without (n=9576).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "already_in_touch"
+   },
+   "rate": 0.037,
+   "k": 3,
+   "n": 81,
+   "base_rate": 0.1123,
+   "base_k": 1075,
+   "base_n": 9576,
+   "ci95": [
+    0.0127,
+    0.1033
+   ],
+   "p_value": 0.355186,
+   "strength": "weak",
+   "implication": "Sellers already in touch with an executive need a different hook (review, not intro).",
+   "causal": false
+  },
+  {
+   "id": "OUT-language_issue",
+   "kind": "outcome_driver",
+   "title": "Meeting rate when 'language_issue' happens",
+   "statement": "Calls tagged 'language_issue' fixed 8.6% meetings (n=35) vs 11.2% without (n=9622).",
+   "metric": "meeting",
+   "segment": {
+    "call_tag": "language_issue"
+   },
+   "rate": 0.0857,
+   "k": 3,
+   "n": 35,
+   "base_rate": 0.1117,
+   "base_k": 1075,
+   "base_n": 9622,
+   "ci95": [
+    0.0296,
+    0.2238
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Language trouble is a live switch trigger: follow the seller's language.",
+   "causal": false
+  },
+  {
+   "id": "OUT-early_drop_share",
+   "kind": "descriptive",
+   "title": "Share of answered calls over within 20s",
+   "statement": "46% of answered VANI calls end within 20 seconds; only 2 of those 4486 fixed a meeting.",
+   "metric": "early_drop",
+   "segment": {},
+   "rate": 0.4645,
+   "k": 4486,
+   "n": 9657,
+   "base_rate": 0.4645,
+   "base_k": 0,
+   "base_n": 0,
+   "ci95": [
+    0.4546,
+    0.4745
+   ],
+   "p_value": null,
+   "strength": "strong",
+   "implication": "The first 20 seconds decide the call: personalise the opening and keep it short for drop-prone sellers.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for region=north",
+   "statement": "region=north: early_drop in 48.7% of calls (n=5274) vs 43.8% for other sellers (n=4383).",
+   "metric": "early_drop",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.4869,
+   "k": 2568,
+   "n": 5274,
+   "base_rate": 0.4376,
+   "base_k": 1918,
+   "base_n": 4383,
+   "ci95": [
+    0.4734,
+    0.5004
+   ],
+   "p_value": 0.000156,
+   "strength": "strong",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for region=north",
+   "statement": "region=north: busy in 8.9% of calls (n=5274) vs 9.9% for other sellers (n=4383).",
+   "metric": "busy",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.0889,
+   "k": 469,
+   "n": 5274,
+   "base_rate": 0.0995,
+   "base_k": 436,
+   "base_n": 4383,
+   "ci95": [
+    0.0815,
+    0.0969
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for region=north",
+   "statement": "region=north: confused in 1.5% of calls (n=5274) vs 1.7% for other sellers (n=4383).",
+   "metric": "confused",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.0154,
+   "k": 81,
+   "n": 5274,
+   "base_rate": 0.0167,
+   "base_k": 73,
+   "base_n": 4383,
+   "ci95": [
+    0.0124,
+    0.019
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for region=north",
+   "statement": "region=north: frustrated in 0.8% of calls (n=5274) vs 0.8% for other sellers (n=4383).",
+   "metric": "frustrated",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.0082,
+   "k": 43,
+   "n": 5274,
+   "base_rate": 0.008,
+   "base_k": 35,
+   "base_n": 4383,
+   "ci95": [
+    0.0061,
+    0.011
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for region=north",
+   "statement": "region=north: bot_question in 1.7% of calls (n=5274) vs 1.4% for other sellers (n=4383).",
+   "metric": "bot_question",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.0167,
+   "k": 88,
+   "n": 5274,
+   "base_rate": 0.0139,
+   "base_k": 61,
+   "base_n": 4383,
+   "ci95": [
+    0.0136,
+    0.0205
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Segment asks if it's a bot: warmer, more human delivery; honest answer ready.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for region=north",
+   "statement": "region=north: not_interested in 9.6% of calls (n=5274) vs 12.4% for other sellers (n=4383).",
+   "metric": "not_interested",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.0959,
+   "k": 506,
+   "n": 5274,
+   "base_rate": 0.1243,
+   "base_k": 545,
+   "base_n": 4383,
+   "ci95": [
+    0.0883,
+    0.1042
+   ],
+   "p_value": 0.000967,
+   "strength": "strong",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=north-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for region=north",
+   "statement": "region=north: meeting in 11.5% of calls (n=5274) vs 10.7% for other sellers (n=4383).",
+   "metric": "meeting",
+   "segment": {
+    "region": "north"
+   },
+   "rate": 0.1155,
+   "k": 609,
+   "n": 5274,
+   "base_rate": 0.107,
+   "base_k": 469,
+   "base_n": 4383,
+   "ci95": [
+    0.1071,
+    0.1244
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: early_drop in 47.6% of calls (n=2142) vs 46.1% for other sellers (n=7515).",
+   "metric": "early_drop",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.4757,
+   "k": 1019,
+   "n": 2142,
+   "base_rate": 0.4613,
+   "base_k": 3467,
+   "base_n": 7515,
+   "ci95": [
+    0.4546,
+    0.4969
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: busy in 8.5% of calls (n=2142) vs 9.6% for other sellers (n=7515).",
+   "metric": "busy",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.085,
+   "k": 182,
+   "n": 2142,
+   "base_rate": 0.0962,
+   "base_k": 723,
+   "base_n": 7515,
+   "ci95": [
+    0.0739,
+    0.0975
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: confused in 2.1% of calls (n=2142) vs 1.4% for other sellers (n=7515).",
+   "metric": "confused",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.0215,
+   "k": 46,
+   "n": 2142,
+   "base_rate": 0.0144,
+   "base_k": 108,
+   "base_n": 7515,
+   "ci95": [
+    0.0161,
+    0.0285
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: frustrated in 1.1% of calls (n=2142) vs 0.7% for other sellers (n=7515).",
+   "metric": "frustrated",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.0112,
+   "k": 24,
+   "n": 2142,
+   "base_rate": 0.0072,
+   "base_k": 54,
+   "base_n": 7515,
+   "ci95": [
+    0.0075,
+    0.0166
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: bot_question in 1.2% of calls (n=2142) vs 1.6% for other sellers (n=7515).",
+   "metric": "bot_question",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.0121,
+   "k": 26,
+   "n": 2142,
+   "base_rate": 0.0164,
+   "base_k": 123,
+   "base_n": 7515,
+   "ci95": [
+    0.0083,
+    0.0177
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: not_interested in 10.7% of calls (n=2142) vs 10.9% for other sellers (n=7515).",
+   "metric": "not_interested",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.1074,
+   "k": 230,
+   "n": 2142,
+   "base_rate": 0.1092,
+   "base_k": 821,
+   "base_n": 7515,
+   "ci95": [
+    0.095,
+    0.1212
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=wholesaler-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for business_kind=wholesaler",
+   "statement": "business_kind=wholesaler: meeting in 10.0% of calls (n=2142) vs 11.5% for other sellers (n=7515).",
+   "metric": "meeting",
+   "segment": {
+    "business_kind": "wholesaler"
+   },
+   "rate": 0.1004,
+   "k": 215,
+   "n": 2142,
+   "base_rate": 0.1148,
+   "base_k": 863,
+   "base_n": 7515,
+   "ci95": [
+    0.0884,
+    0.1138
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for turnover_band=micro",
+   "statement": "turnover_band=micro: early_drop in 45.6% of calls (n=5974) vs 47.8% for other sellers (n=3683).",
+   "metric": "early_drop",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.4565,
+   "k": 2727,
+   "n": 5974,
+   "base_rate": 0.4776,
+   "base_k": 1759,
+   "base_n": 3683,
+   "ci95": [
+    0.4439,
+    0.4691
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for turnover_band=micro",
+   "statement": "turnover_band=micro: busy in 10.0% of calls (n=5974) vs 8.3% for other sellers (n=3683).",
+   "metric": "busy",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.1003,
+   "k": 599,
+   "n": 5974,
+   "base_rate": 0.0831,
+   "base_k": 306,
+   "base_n": 3683,
+   "ci95": [
+    0.0929,
+    0.1081
+   ],
+   "p_value": 0.581539,
+   "strength": "weak",
+   "implication": "Rush-prone segment: shorter turns, faster pace, offer slots early.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for turnover_band=micro",
+   "statement": "turnover_band=micro: confused in 1.5% of calls (n=5974) vs 1.7% for other sellers (n=3683).",
+   "metric": "confused",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.0152,
+   "k": 91,
+   "n": 5974,
+   "base_rate": 0.0171,
+   "base_k": 63,
+   "base_n": 3683,
+   "ci95": [
+    0.0124,
+    0.0187
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for turnover_band=micro",
+   "statement": "turnover_band=micro: frustrated in 0.9% of calls (n=5974) vs 0.7% for other sellers (n=3683).",
+   "metric": "frustrated",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.0087,
+   "k": 52,
+   "n": 5974,
+   "base_rate": 0.0071,
+   "base_k": 26,
+   "base_n": 3683,
+   "ci95": [
+    0.0066,
+    0.0114
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for turnover_band=micro",
+   "statement": "turnover_band=micro: bot_question in 1.6% of calls (n=5974) vs 1.4% for other sellers (n=3683).",
+   "metric": "bot_question",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.0162,
+   "k": 97,
+   "n": 5974,
+   "base_rate": 0.0141,
+   "base_k": 52,
+   "base_n": 3683,
+   "ci95": [
+    0.0133,
+    0.0198
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Segment asks if it's a bot: warmer, more human delivery; honest answer ready.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for turnover_band=micro",
+   "statement": "turnover_band=micro: not_interested in 11.2% of calls (n=5974) vs 10.3% for other sellers (n=3683).",
+   "metric": "not_interested",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.1125,
+   "k": 672,
+   "n": 5974,
+   "base_rate": 0.1029,
+   "base_k": 379,
+   "base_n": 3683,
+   "ci95": [
+    0.1047,
+    0.1208
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=micro-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for turnover_band=micro",
+   "statement": "turnover_band=micro: meeting in 10.9% of calls (n=5974) vs 11.6% for other sellers (n=3683).",
+   "metric": "meeting",
+   "segment": {
+    "turnover_band": "micro"
+   },
+   "rate": 0.1086,
+   "k": 649,
+   "n": 5974,
+   "base_rate": 0.1165,
+   "base_k": 429,
+   "base_n": 3683,
+   "ci95": [
+    0.101,
+    0.1168
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for business_age=established",
+   "statement": "business_age=established: early_drop in 47.4% of calls (n=4775) vs 45.5% for other sellers (n=4882).",
+   "metric": "early_drop",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.4741,
+   "k": 2264,
+   "n": 4775,
+   "base_rate": 0.4551,
+   "base_k": 2222,
+   "base_n": 4882,
+   "ci95": [
+    0.46,
+    0.4883
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for business_age=established",
+   "statement": "business_age=established: busy in 9.8% of calls (n=4775) vs 9.0% for other sellers (n=4882).",
+   "metric": "busy",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.098,
+   "k": 468,
+   "n": 4775,
+   "base_rate": 0.0895,
+   "base_k": 437,
+   "base_n": 4882,
+   "ci95": [
+    0.0899,
+    0.1068
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Rush-prone segment: shorter turns, faster pace, offer slots early.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for business_age=established",
+   "statement": "business_age=established: confused in 1.7% of calls (n=4775) vs 1.5% for other sellers (n=4882).",
+   "metric": "confused",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.0168,
+   "k": 80,
+   "n": 4775,
+   "base_rate": 0.0152,
+   "base_k": 74,
+   "base_n": 4882,
+   "ci95": [
+    0.0135,
+    0.0208
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for business_age=established",
+   "statement": "business_age=established: frustrated in 0.8% of calls (n=4775) vs 0.9% for other sellers (n=4882).",
+   "metric": "frustrated",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.0075,
+   "k": 36,
+   "n": 4775,
+   "base_rate": 0.0086,
+   "base_k": 42,
+   "base_n": 4882,
+   "ci95": [
+    0.0055,
+    0.0104
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for business_age=established",
+   "statement": "business_age=established: bot_question in 1.6% of calls (n=4775) vs 1.5% for other sellers (n=4882).",
+   "metric": "bot_question",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.0157,
+   "k": 75,
+   "n": 4775,
+   "base_rate": 0.0152,
+   "base_k": 74,
+   "base_n": 4882,
+   "ci95": [
+    0.0125,
+    0.0196
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Segment asks if it's a bot: warmer, more human delivery; honest answer ready.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for business_age=established",
+   "statement": "business_age=established: not_interested in 11.6% of calls (n=4775) vs 10.1% for other sellers (n=4882).",
+   "metric": "not_interested",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.1164,
+   "k": 556,
+   "n": 4775,
+   "base_rate": 0.1014,
+   "base_k": 495,
+   "base_n": 4882,
+   "ci95": [
+    0.1076,
+    0.1258
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=established-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for business_age=established",
+   "statement": "business_age=established: meeting in 9.8% of calls (n=4775) vs 12.5% for other sellers (n=4882).",
+   "metric": "meeting",
+   "segment": {
+    "business_age": "established"
+   },
+   "rate": 0.098,
+   "k": 468,
+   "n": 4775,
+   "base_rate": 0.1249,
+   "base_k": 610,
+   "base_n": 4882,
+   "ci95": [
+    0.0899,
+    0.1068
+   ],
+   "p_value": 0.003136,
+   "strength": "strong",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for pickup=mid",
+   "statement": "pickup=mid: early_drop in 38.0% of calls (n=644) vs 47.1% for other sellers (n=9013).",
+   "metric": "early_drop",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.3804,
+   "k": 245,
+   "n": 644,
+   "base_rate": 0.4705,
+   "base_k": 4241,
+   "base_n": 9013,
+   "ci95": [
+    0.3438,
+    0.4185
+   ],
+   "p_value": 0.001125,
+   "strength": "strong",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for pickup=mid",
+   "statement": "pickup=mid: busy in 8.4% of calls (n=644) vs 9.4% for other sellers (n=9013).",
+   "metric": "busy",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.0839,
+   "k": 54,
+   "n": 644,
+   "base_rate": 0.0944,
+   "base_k": 851,
+   "base_n": 9013,
+   "ci95": [
+    0.0648,
+    0.1078
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for pickup=mid",
+   "statement": "pickup=mid: confused in 2.0% of calls (n=644) vs 1.6% for other sellers (n=9013).",
+   "metric": "confused",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.0202,
+   "k": 13,
+   "n": 644,
+   "base_rate": 0.0156,
+   "base_k": 141,
+   "base_n": 9013,
+   "ci95": [
+    0.0118,
+    0.0342
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for pickup=mid",
+   "statement": "pickup=mid: frustrated in 0.5% of calls (n=644) vs 0.8% for other sellers (n=9013).",
+   "metric": "frustrated",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.0047,
+   "k": 3,
+   "n": 644,
+   "base_rate": 0.0083,
+   "base_k": 75,
+   "base_n": 9013,
+   "ci95": [
+    0.0016,
+    0.0136
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for pickup=mid",
+   "statement": "pickup=mid: bot_question in 1.6% of calls (n=644) vs 1.5% for other sellers (n=9013).",
+   "metric": "bot_question",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.0155,
+   "k": 10,
+   "n": 644,
+   "base_rate": 0.0154,
+   "base_k": 139,
+   "base_n": 9013,
+   "ci95": [
+    0.0085,
+    0.0283
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Segment asks if it's a bot: warmer, more human delivery; honest answer ready.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for pickup=mid",
+   "statement": "pickup=mid: not_interested in 9.2% of calls (n=644) vs 11.0% for other sellers (n=9013).",
+   "metric": "not_interested",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.0916,
+   "k": 59,
+   "n": 644,
+   "base_rate": 0.1101,
+   "base_k": 992,
+   "base_n": 9013,
+   "ci95": [
+    0.0717,
+    0.1164
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=mid-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for pickup=mid",
+   "statement": "pickup=mid: meeting in 15.8% of calls (n=644) vs 10.8% for other sellers (n=9013).",
+   "metric": "meeting",
+   "segment": {
+    "pickup": "mid"
+   },
+   "rate": 0.1584,
+   "k": 102,
+   "n": 644,
+   "base_rate": 0.1083,
+   "base_k": 976,
+   "base_n": 9013,
+   "ci95": [
+    0.1322,
+    0.1886
+   ],
+   "p_value": 0.011439,
+   "strength": "moderate",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for region=west",
+   "statement": "region=west: early_drop in 43.7% of calls (n=3317) vs 47.9% for other sellers (n=6340).",
+   "metric": "early_drop",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.4374,
+   "k": 1451,
+   "n": 3317,
+   "base_rate": 0.4787,
+   "base_k": 3035,
+   "base_n": 6340,
+   "ci95": [
+    0.4206,
+    0.4544
+   ],
+   "p_value": 0.013446,
+   "strength": "moderate",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for region=west",
+   "statement": "region=west: busy in 10.0% of calls (n=3317) vs 9.0% for other sellers (n=6340).",
+   "metric": "busy",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.1004,
+   "k": 333,
+   "n": 3317,
+   "base_rate": 0.0902,
+   "base_k": 572,
+   "base_n": 6340,
+   "ci95": [
+    0.0906,
+    0.1111
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Rush-prone segment: shorter turns, faster pace, offer slots early.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for region=west",
+   "statement": "region=west: confused in 1.7% of calls (n=3317) vs 1.6% for other sellers (n=6340).",
+   "metric": "confused",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.0166,
+   "k": 55,
+   "n": 3317,
+   "base_rate": 0.0156,
+   "base_k": 99,
+   "base_n": 6340,
+   "ci95": [
+    0.0128,
+    0.0215
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for region=west",
+   "statement": "region=west: frustrated in 0.9% of calls (n=3317) vs 0.7% for other sellers (n=6340).",
+   "metric": "frustrated",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.0093,
+   "k": 31,
+   "n": 3317,
+   "base_rate": 0.0074,
+   "base_k": 47,
+   "base_n": 6340,
+   "ci95": [
+    0.0066,
+    0.0132
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for region=west",
+   "statement": "region=west: bot_question in 1.5% of calls (n=3317) vs 1.5% for other sellers (n=6340).",
+   "metric": "bot_question",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.0154,
+   "k": 51,
+   "n": 3317,
+   "base_rate": 0.0155,
+   "base_k": 98,
+   "base_n": 6340,
+   "ci95": [
+    0.0117,
+    0.0202
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for region=west",
+   "statement": "region=west: not_interested in 13.2% of calls (n=3317) vs 9.7% for other sellers (n=6340).",
+   "metric": "not_interested",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.1323,
+   "k": 439,
+   "n": 3317,
+   "base_rate": 0.0965,
+   "base_k": 612,
+   "base_n": 6340,
+   "ci95": [
+    0.1212,
+    0.1443
+   ],
+   "p_value": 1e-05,
+   "strength": "strong",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=west-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for region=west",
+   "statement": "region=west: meeting in 10.1% of calls (n=3317) vs 11.7% for other sellers (n=6340).",
+   "metric": "meeting",
+   "segment": {
+    "region": "west"
+   },
+   "rate": 0.101,
+   "k": 335,
+   "n": 3317,
+   "base_rate": 0.1172,
+   "base_k": 743,
+   "base_n": 6340,
+   "ci95": [
+    0.0912,
+    0.1117
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for turnover_band=large",
+   "statement": "turnover_band=large: early_drop in 51.4% of calls (n=138) vs 46.4% for other sellers (n=9519).",
+   "metric": "early_drop",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.5145,
+   "k": 71,
+   "n": 138,
+   "base_rate": 0.4638,
+   "base_k": 4415,
+   "base_n": 9519,
+   "ci95": [
+    0.4318,
+    0.5964
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for turnover_band=large",
+   "statement": "turnover_band=large: busy in 10.1% of calls (n=138) vs 9.4% for other sellers (n=9519).",
+   "metric": "busy",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.1014,
+   "k": 14,
+   "n": 138,
+   "base_rate": 0.0936,
+   "base_k": 891,
+   "base_n": 9519,
+   "ci95": [
+    0.0614,
+    0.1631
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Rush-prone segment: shorter turns, faster pace, offer slots early.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for turnover_band=large",
+   "statement": "turnover_band=large: confused in 1.4% of calls (n=138) vs 1.6% for other sellers (n=9519).",
+   "metric": "confused",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.0145,
+   "k": 2,
+   "n": 138,
+   "base_rate": 0.016,
+   "base_k": 152,
+   "base_n": 9519,
+   "ci95": [
+    0.004,
+    0.0513
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for turnover_band=large",
+   "statement": "turnover_band=large: frustrated in 0.0% of calls (n=138) vs 0.8% for other sellers (n=9519).",
+   "metric": "frustrated",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.0,
+   "k": 0,
+   "n": 138,
+   "base_rate": 0.0082,
+   "base_k": 78,
+   "base_n": 9519,
+   "ci95": [
+    0.0,
+    0.0271
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for turnover_band=large",
+   "statement": "turnover_band=large: bot_question in 1.4% of calls (n=138) vs 1.5% for other sellers (n=9519).",
+   "metric": "bot_question",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.0145,
+   "k": 2,
+   "n": 138,
+   "base_rate": 0.0154,
+   "base_k": 147,
+   "base_n": 9519,
+   "ci95": [
+    0.004,
+    0.0513
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for turnover_band=large",
+   "statement": "turnover_band=large: not_interested in 7.2% of calls (n=138) vs 10.9% for other sellers (n=9519).",
+   "metric": "not_interested",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.0725,
+   "k": 10,
+   "n": 138,
+   "base_rate": 0.1094,
+   "base_k": 1041,
+   "base_n": 9519,
+   "ci95": [
+    0.0398,
+    0.1283
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=large-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for turnover_band=large",
+   "statement": "turnover_band=large: meeting in 10.1% of calls (n=138) vs 11.2% for other sellers (n=9519).",
+   "metric": "meeting",
+   "segment": {
+    "turnover_band": "large"
+   },
+   "rate": 0.1014,
+   "k": 14,
+   "n": 138,
+   "base_rate": 0.1118,
+   "base_k": 1064,
+   "base_n": 9519,
+   "ci95": [
+    0.0614,
+    0.1631
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: early_drop in 45.1% of calls (n=2419) vs 46.9% for other sellers (n=7238).",
+   "metric": "early_drop",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.4514,
+   "k": 1092,
+   "n": 2419,
+   "base_rate": 0.4689,
+   "base_k": 3394,
+   "base_n": 7238,
+   "ci95": [
+    0.4317,
+    0.4713
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: busy in 10.6% of calls (n=2419) vs 9.0% for other sellers (n=7238).",
+   "metric": "busy",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.1062,
+   "k": 257,
+   "n": 2419,
+   "base_rate": 0.0895,
+   "base_k": 648,
+   "base_n": 7238,
+   "ci95": [
+    0.0946,
+    0.1192
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Rush-prone segment: shorter turns, faster pace, offer slots early.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: confused in 1.5% of calls (n=2419) vs 1.6% for other sellers (n=7238).",
+   "metric": "confused",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.0149,
+   "k": 36,
+   "n": 2419,
+   "base_rate": 0.0163,
+   "base_k": 118,
+   "base_n": 7238,
+   "ci95": [
+    0.0108,
+    0.0205
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: frustrated in 1.2% of calls (n=2419) vs 0.7% for other sellers (n=7238).",
+   "metric": "frustrated",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.012,
+   "k": 29,
+   "n": 2419,
+   "base_rate": 0.0068,
+   "base_k": 49,
+   "base_n": 7238,
+   "ci95": [
+    0.0084,
+    0.0172
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: bot_question in 1.3% of calls (n=2419) vs 1.6% for other sellers (n=7238).",
+   "metric": "bot_question",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.0128,
+   "k": 31,
+   "n": 2419,
+   "base_rate": 0.0163,
+   "base_k": 118,
+   "base_n": 7238,
+   "ci95": [
+    0.009,
+    0.0181
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: not_interested in 12.2% of calls (n=2419) vs 10.4% for other sellers (n=7238).",
+   "metric": "not_interested",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.122,
+   "k": 295,
+   "n": 2419,
+   "base_rate": 0.1044,
+   "base_k": 756,
+   "base_n": 7238,
+   "ci95": [
+    0.1095,
+    0.1356
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=manufacturer-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for business_kind=manufacturer",
+   "statement": "business_kind=manufacturer: meeting in 10.3% of calls (n=2419) vs 11.5% for other sellers (n=7238).",
+   "metric": "meeting",
+   "segment": {
+    "business_kind": "manufacturer"
+   },
+   "rate": 0.1029,
+   "k": 249,
+   "n": 2419,
+   "base_rate": 0.1145,
+   "base_k": 829,
+   "base_n": 7238,
+   "ci95": [
+    0.0914,
+    0.1157
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for turnover_band=mid",
+   "statement": "turnover_band=mid: early_drop in 52.7% of calls (n=1119) vs 45.6% for other sellers (n=8538).",
+   "metric": "early_drop",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.5273,
+   "k": 590,
+   "n": 1119,
+   "base_rate": 0.4563,
+   "base_k": 3896,
+   "base_n": 8538,
+   "ci95": [
+    0.498,
+    0.5564
+   ],
+   "p_value": 0.000913,
+   "strength": "strong",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for turnover_band=mid",
+   "statement": "turnover_band=mid: busy in 8.7% of calls (n=1119) vs 9.5% for other sellers (n=8538).",
+   "metric": "busy",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.0867,
+   "k": 97,
+   "n": 1119,
+   "base_rate": 0.0946,
+   "base_k": 808,
+   "base_n": 8538,
+   "ci95": [
+    0.0716,
+    0.1046
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for turnover_band=mid",
+   "statement": "turnover_band=mid: confused in 2.5% of calls (n=1119) vs 1.5% for other sellers (n=8538).",
+   "metric": "confused",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.025,
+   "k": 28,
+   "n": 1119,
+   "base_rate": 0.0148,
+   "base_k": 126,
+   "base_n": 8538,
+   "ci95": [
+    0.0174,
+    0.0359
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for turnover_band=mid",
+   "statement": "turnover_band=mid: frustrated in 0.9% of calls (n=1119) vs 0.8% for other sellers (n=8538).",
+   "metric": "frustrated",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.0089,
+   "k": 10,
+   "n": 1119,
+   "base_rate": 0.008,
+   "base_k": 68,
+   "base_n": 8538,
+   "ci95": [
+    0.0049,
+    0.0164
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for turnover_band=mid",
+   "statement": "turnover_band=mid: bot_question in 0.7% of calls (n=1119) vs 1.7% for other sellers (n=8538).",
+   "metric": "bot_question",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.0071,
+   "k": 8,
+   "n": 1119,
+   "base_rate": 0.0165,
+   "base_k": 141,
+   "base_n": 8538,
+   "ci95": [
+    0.0036,
+    0.014
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for turnover_band=mid",
+   "statement": "turnover_band=mid: not_interested in 11.1% of calls (n=1119) vs 10.9% for other sellers (n=8538).",
+   "metric": "not_interested",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.1108,
+   "k": 124,
+   "n": 1119,
+   "base_rate": 0.1086,
+   "base_k": 927,
+   "base_n": 8538,
+   "ci95": [
+    0.0937,
+    0.1306
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=mid-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for turnover_band=mid",
+   "statement": "turnover_band=mid: meeting in 8.0% of calls (n=1119) vs 11.6% for other sellers (n=8538).",
+   "metric": "meeting",
+   "segment": {
+    "turnover_band": "mid"
+   },
+   "rate": 0.0795,
+   "k": 89,
+   "n": 1119,
+   "base_rate": 0.1158,
+   "base_k": 989,
+   "base_n": 8538,
+   "ci95": [
+    0.0651,
+    0.0969
+   ],
+   "p_value": 0.034295,
+   "strength": "moderate",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for pickup=low",
+   "statement": "pickup=low: early_drop in 49.1% of calls (n=6764) vs 40.3% for other sellers (n=2893).",
+   "metric": "early_drop",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.4907,
+   "k": 3319,
+   "n": 6764,
+   "base_rate": 0.4034,
+   "base_k": 1167,
+   "base_n": 2893,
+   "ci95": [
+    0.4788,
+    0.5026
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for pickup=low",
+   "statement": "pickup=low: busy in 9.4% of calls (n=6764) vs 9.4% for other sellers (n=2893).",
+   "metric": "busy",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.0937,
+   "k": 634,
+   "n": 6764,
+   "base_rate": 0.0937,
+   "base_k": 271,
+   "base_n": 2893,
+   "ci95": [
+    0.087,
+    0.1009
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for pickup=low",
+   "statement": "pickup=low: confused in 1.5% of calls (n=6764) vs 1.9% for other sellers (n=2893).",
+   "metric": "confused",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.0148,
+   "k": 100,
+   "n": 6764,
+   "base_rate": 0.0187,
+   "base_k": 54,
+   "base_n": 2893,
+   "ci95": [
+    0.0122,
+    0.0179
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for pickup=low",
+   "statement": "pickup=low: frustrated in 0.9% of calls (n=6764) vs 0.7% for other sellers (n=2893).",
+   "metric": "frustrated",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.0087,
+   "k": 59,
+   "n": 6764,
+   "base_rate": 0.0066,
+   "base_k": 19,
+   "base_n": 2893,
+   "ci95": [
+    0.0068,
+    0.0112
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for pickup=low",
+   "statement": "pickup=low: bot_question in 1.4% of calls (n=6764) vs 1.9% for other sellers (n=2893).",
+   "metric": "bot_question",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.0137,
+   "k": 93,
+   "n": 6764,
+   "base_rate": 0.0194,
+   "base_k": 56,
+   "base_n": 2893,
+   "ci95": [
+    0.0112,
+    0.0168
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for pickup=low",
+   "statement": "pickup=low: not_interested in 11.0% of calls (n=6764) vs 10.6% for other sellers (n=2893).",
+   "metric": "not_interested",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.1098,
+   "k": 743,
+   "n": 6764,
+   "base_rate": 0.1065,
+   "base_k": 308,
+   "base_n": 2893,
+   "ci95": [
+    0.1026,
+    0.1175
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=low-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for pickup=low",
+   "statement": "pickup=low: meeting in 9.7% of calls (n=6764) vs 14.6% for other sellers (n=2893).",
+   "metric": "meeting",
+   "segment": {
+    "pickup": "low"
+   },
+   "rate": 0.0971,
+   "k": 657,
+   "n": 6764,
+   "base_rate": 0.1455,
+   "base_k": 421,
+   "base_n": 2893,
+   "ci95": [
+    0.0903,
+    0.1044
+   ],
+   "p_value": 0.0,
+   "strength": "strong",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for business_age=new",
+   "statement": "business_age=new: early_drop in 45.6% of calls (n=4770) vs 47.3% for other sellers (n=4887).",
+   "metric": "early_drop",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.4562,
+   "k": 2176,
+   "n": 4770,
+   "base_rate": 0.4727,
+   "base_k": 2310,
+   "base_n": 4887,
+   "ci95": [
+    0.4421,
+    0.4703
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for business_age=new",
+   "statement": "business_age=new: busy in 9.0% of calls (n=4770) vs 9.8% for other sellers (n=4887).",
+   "metric": "busy",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.0897,
+   "k": 428,
+   "n": 4770,
+   "base_rate": 0.0976,
+   "base_k": 477,
+   "base_n": 4887,
+   "ci95": [
+    0.0819,
+    0.0982
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for business_age=new",
+   "statement": "business_age=new: confused in 1.5% of calls (n=4770) vs 1.7% for other sellers (n=4887).",
+   "metric": "confused",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.0151,
+   "k": 72,
+   "n": 4770,
+   "base_rate": 0.0168,
+   "base_k": 82,
+   "base_n": 4887,
+   "ci95": [
+    0.012,
+    0.019
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for business_age=new",
+   "statement": "business_age=new: frustrated in 0.9% of calls (n=4770) vs 0.8% for other sellers (n=4887).",
+   "metric": "frustrated",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.0086,
+   "k": 41,
+   "n": 4770,
+   "base_rate": 0.0076,
+   "base_k": 37,
+   "base_n": 4887,
+   "ci95": [
+    0.0063,
+    0.0116
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for business_age=new",
+   "statement": "business_age=new: bot_question in 1.5% of calls (n=4770) vs 1.6% for other sellers (n=4887).",
+   "metric": "bot_question",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.0153,
+   "k": 73,
+   "n": 4770,
+   "base_rate": 0.0156,
+   "base_k": 76,
+   "base_n": 4887,
+   "ci95": [
+    0.0122,
+    0.0192
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for business_age=new",
+   "statement": "business_age=new: not_interested in 10.2% of calls (n=4770) vs 11.5% for other sellers (n=4887).",
+   "metric": "not_interested",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.1021,
+   "k": 487,
+   "n": 4770,
+   "base_rate": 0.1154,
+   "base_k": 564,
+   "base_n": 4887,
+   "ci95": [
+    0.0938,
+    0.111
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_age=new-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for business_age=new",
+   "statement": "business_age=new: meeting in 12.4% of calls (n=4770) vs 10.0% for other sellers (n=4887).",
+   "metric": "meeting",
+   "segment": {
+    "business_age": "new"
+   },
+   "rate": 0.1237,
+   "k": 590,
+   "n": 4770,
+   "base_rate": 0.0999,
+   "base_k": 488,
+   "base_n": 4887,
+   "ci95": [
+    0.1146,
+    0.1333
+   ],
+   "p_value": 0.023862,
+   "strength": "moderate",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for turnover_band=small",
+   "statement": "turnover_band=small: early_drop in 48.5% of calls (n=1413) vs 46.1% for other sellers (n=8244).",
+   "metric": "early_drop",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.4848,
+   "k": 685,
+   "n": 1413,
+   "base_rate": 0.4611,
+   "base_k": 3801,
+   "base_n": 8244,
+   "ci95": [
+    0.4588,
+    0.5108
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for turnover_band=small",
+   "statement": "turnover_band=small: busy in 9.1% of calls (n=1413) vs 9.4% for other sellers (n=8244).",
+   "metric": "busy",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.0906,
+   "k": 128,
+   "n": 1413,
+   "base_rate": 0.0943,
+   "base_k": 777,
+   "base_n": 8244,
+   "ci95": [
+    0.0767,
+    0.1067
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for turnover_band=small",
+   "statement": "turnover_band=small: confused in 1.6% of calls (n=1413) vs 1.6% for other sellers (n=8244).",
+   "metric": "confused",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.0156,
+   "k": 22,
+   "n": 1413,
+   "base_rate": 0.016,
+   "base_k": 132,
+   "base_n": 8244,
+   "ci95": [
+    0.0103,
+    0.0235
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for turnover_band=small",
+   "statement": "turnover_band=small: frustrated in 0.7% of calls (n=1413) vs 0.8% for other sellers (n=8244).",
+   "metric": "frustrated",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.0071,
+   "k": 10,
+   "n": 1413,
+   "base_rate": 0.0082,
+   "base_k": 68,
+   "base_n": 8244,
+   "ci95": [
+    0.0038,
+    0.013
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for turnover_band=small",
+   "statement": "turnover_band=small: bot_question in 1.5% of calls (n=1413) vs 1.6% for other sellers (n=8244).",
+   "metric": "bot_question",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.0149,
+   "k": 21,
+   "n": 1413,
+   "base_rate": 0.0155,
+   "base_k": 128,
+   "base_n": 8244,
+   "ci95": [
+    0.0097,
+    0.0226
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for turnover_band=small",
+   "statement": "turnover_band=small: not_interested in 10.8% of calls (n=1413) vs 10.9% for other sellers (n=8244).",
+   "metric": "not_interested",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.1083,
+   "k": 153,
+   "n": 1413,
+   "base_rate": 0.1089,
+   "base_k": 898,
+   "base_n": 8244,
+   "ci95": [
+    0.0931,
+    0.1256
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-turnover_band=small-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for turnover_band=small",
+   "statement": "turnover_band=small: meeting in 9.7% of calls (n=1413) vs 11.4% for other sellers (n=8244).",
+   "metric": "meeting",
+   "segment": {
+    "turnover_band": "small"
+   },
+   "rate": 0.097,
+   "k": 137,
+   "n": 1413,
+   "base_rate": 0.1141,
+   "base_k": 941,
+   "base_n": 8244,
+   "ci95": [
+    0.0826,
+    0.1135
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for business_kind=service",
+   "statement": "business_kind=service: early_drop in 43.7% of calls (n=1421) vs 46.9% for other sellers (n=8236).",
+   "metric": "early_drop",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.437,
+   "k": 621,
+   "n": 1421,
+   "base_rate": 0.4693,
+   "base_k": 3865,
+   "base_n": 8236,
+   "ci95": [
+    0.4114,
+    0.4629
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for business_kind=service",
+   "statement": "business_kind=service: busy in 8.8% of calls (n=1421) vs 9.5% for other sellers (n=8236).",
+   "metric": "busy",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.088,
+   "k": 125,
+   "n": 1421,
+   "base_rate": 0.0947,
+   "base_k": 780,
+   "base_n": 8236,
+   "ci95": [
+    0.0743,
+    0.1038
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for business_kind=service",
+   "statement": "business_kind=service: confused in 1.7% of calls (n=1421) vs 1.6% for other sellers (n=8236).",
+   "metric": "confused",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.0169,
+   "k": 24,
+   "n": 1421,
+   "base_rate": 0.0158,
+   "base_k": 130,
+   "base_n": 8236,
+   "ci95": [
+    0.0114,
+    0.025
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for business_kind=service",
+   "statement": "business_kind=service: frustrated in 0.4% of calls (n=1421) vs 0.9% for other sellers (n=8236).",
+   "metric": "frustrated",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.0035,
+   "k": 5,
+   "n": 1421,
+   "base_rate": 0.0089,
+   "base_k": 73,
+   "base_n": 8236,
+   "ci95": [
+    0.0015,
+    0.0082
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for business_kind=service",
+   "statement": "business_kind=service: bot_question in 0.9% of calls (n=1421) vs 1.7% for other sellers (n=8236).",
+   "metric": "bot_question",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.0091,
+   "k": 13,
+   "n": 1421,
+   "base_rate": 0.0165,
+   "base_k": 136,
+   "base_n": 8236,
+   "ci95": [
+    0.0054,
+    0.0156
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for business_kind=service",
+   "statement": "business_kind=service: not_interested in 10.6% of calls (n=1421) vs 10.9% for other sellers (n=8236).",
+   "metric": "not_interested",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.1056,
+   "k": 150,
+   "n": 1421,
+   "base_rate": 0.1094,
+   "base_k": 901,
+   "base_n": 8236,
+   "ci95": [
+    0.0906,
+    0.1226
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=service-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for business_kind=service",
+   "statement": "business_kind=service: meeting in 14.1% of calls (n=1421) vs 10.7% for other sellers (n=8236).",
+   "metric": "meeting",
+   "segment": {
+    "business_kind": "service"
+   },
+   "rate": 0.1407,
+   "k": 200,
+   "n": 1421,
+   "base_rate": 0.1066,
+   "base_k": 878,
+   "base_n": 8236,
+   "ci95": [
+    0.1236,
+    0.1598
+   ],
+   "p_value": 0.019104,
+   "strength": "moderate",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for business_kind=retailer",
+   "statement": "business_kind=retailer: early_drop in 48.9% of calls (n=2674) vs 45.5% for other sellers (n=6983).",
+   "metric": "early_drop",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.4892,
+   "k": 1308,
+   "n": 2674,
+   "base_rate": 0.4551,
+   "base_k": 3178,
+   "base_n": 6983,
+   "ci95": [
+    0.4702,
+    0.5081
+   ],
+   "p_value": 0.319123,
+   "strength": "weak",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for business_kind=retailer",
+   "statement": "business_kind=retailer: busy in 9.3% of calls (n=2674) vs 9.4% for other sellers (n=6983).",
+   "metric": "busy",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.0927,
+   "k": 248,
+   "n": 2674,
+   "base_rate": 0.0941,
+   "base_k": 657,
+   "base_n": 6983,
+   "ci95": [
+    0.0823,
+    0.1043
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for business_kind=retailer",
+   "statement": "business_kind=retailer: confused in 1.2% of calls (n=2674) vs 1.7% for other sellers (n=6983).",
+   "metric": "confused",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.0123,
+   "k": 33,
+   "n": 2674,
+   "base_rate": 0.0173,
+   "base_k": 121,
+   "base_n": 6983,
+   "ci95": [
+    0.0088,
+    0.0173
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for business_kind=retailer",
+   "statement": "business_kind=retailer: frustrated in 0.5% of calls (n=2674) vs 0.9% for other sellers (n=6983).",
+   "metric": "frustrated",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.0052,
+   "k": 14,
+   "n": 2674,
+   "base_rate": 0.0092,
+   "base_k": 64,
+   "base_n": 6983,
+   "ci95": [
+    0.0031,
+    0.0088
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for business_kind=retailer",
+   "statement": "business_kind=retailer: bot_question in 2.0% of calls (n=2674) vs 1.4% for other sellers (n=6983).",
+   "metric": "bot_question",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.0202,
+   "k": 54,
+   "n": 2674,
+   "base_rate": 0.0136,
+   "base_k": 95,
+   "base_n": 6983,
+   "ci95": [
+    0.0155,
+    0.0263
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Segment asks if it's a bot: warmer, more human delivery; honest answer ready.",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for business_kind=retailer",
+   "statement": "business_kind=retailer: not_interested in 9.6% of calls (n=2674) vs 11.4% for other sellers (n=6983).",
+   "metric": "not_interested",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.0965,
+   "k": 258,
+   "n": 2674,
+   "base_rate": 0.1136,
+   "base_k": 793,
+   "base_n": 6983,
+   "ci95": [
+    0.0859,
+    0.1083
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-business_kind=retailer-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for business_kind=retailer",
+   "statement": "business_kind=retailer: meeting in 10.1% of calls (n=2674) vs 11.6% for other sellers (n=6983).",
+   "metric": "meeting",
+   "segment": {
+    "business_kind": "retailer"
+   },
+   "rate": 0.1013,
+   "k": 271,
+   "n": 2674,
+   "base_rate": 0.1156,
+   "base_k": 807,
+   "base_n": 6983,
+   "ci95": [
+    0.0905,
+    0.1134
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for region=south",
+   "statement": "region=south: early_drop in 50.2% of calls (n=317) vs 46.3% for other sellers (n=9340).",
+   "metric": "early_drop",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.5016,
+   "k": 159,
+   "n": 317,
+   "base_rate": 0.4633,
+   "base_k": 4327,
+   "base_n": 9340,
+   "ci95": [
+    0.4468,
+    0.5563
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Drop-prone segment: one-line personalised opening, get to the reason for calling fast.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for region=south",
+   "statement": "region=south: busy in 8.2% of calls (n=317) vs 9.4% for other sellers (n=9340).",
+   "metric": "busy",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.082,
+   "k": 26,
+   "n": 317,
+   "base_rate": 0.0941,
+   "base_k": 879,
+   "base_n": 9340,
+   "ci95": [
+    0.0566,
+    0.1175
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for region=south",
+   "statement": "region=south: confused in 0.6% of calls (n=317) vs 1.6% for other sellers (n=9340).",
+   "metric": "confused",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.0063,
+   "k": 2,
+   "n": 317,
+   "base_rate": 0.0163,
+   "base_k": 152,
+   "base_n": 9340,
+   "ci95": [
+    0.0017,
+    0.0227
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for region=south",
+   "statement": "region=south: frustrated in 0.3% of calls (n=317) vs 0.8% for other sellers (n=9340).",
+   "metric": "frustrated",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.0032,
+   "k": 1,
+   "n": 317,
+   "base_rate": 0.0082,
+   "base_k": 77,
+   "base_n": 9340,
+   "ci95": [
+    0.0006,
+    0.0177
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for region=south",
+   "statement": "region=south: bot_question in 1.3% of calls (n=317) vs 1.6% for other sellers (n=9340).",
+   "metric": "bot_question",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.0126,
+   "k": 4,
+   "n": 317,
+   "base_rate": 0.0155,
+   "base_k": 145,
+   "base_n": 9340,
+   "ci95": [
+    0.0049,
+    0.032
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for region=south",
+   "statement": "region=south: not_interested in 8.5% of calls (n=317) vs 11.0% for other sellers (n=9340).",
+   "metric": "not_interested",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.0852,
+   "k": 27,
+   "n": 317,
+   "base_rate": 0.1096,
+   "base_k": 1024,
+   "base_n": 9340,
+   "ci95": [
+    0.0592,
+    0.1211
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=south-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for region=south",
+   "statement": "region=south: meeting in 12.3% of calls (n=317) vs 11.1% for other sellers (n=9340).",
+   "metric": "meeting",
+   "segment": {
+    "region": "south"
+   },
+   "rate": 0.123,
+   "k": 39,
+   "n": 317,
+   "base_rate": 0.1112,
+   "base_k": 1039,
+   "base_n": 9340,
+   "ci95": [
+    0.0913,
+    0.1638
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for region=east",
+   "statement": "region=east: early_drop in 41.5% of calls (n=687) vs 46.8% for other sellers (n=8970).",
+   "metric": "early_drop",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.4148,
+   "k": 285,
+   "n": 687,
+   "base_rate": 0.4683,
+   "base_k": 4201,
+   "base_n": 8970,
+   "ci95": [
+    0.3786,
+    0.4521
+   ],
+   "p_value": 0.802234,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for region=east",
+   "statement": "region=east: busy in 10.9% of calls (n=687) vs 9.3% for other sellers (n=8970).",
+   "metric": "busy",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.1092,
+   "k": 75,
+   "n": 687,
+   "base_rate": 0.0925,
+   "base_k": 830,
+   "base_n": 8970,
+   "ci95": [
+    0.088,
+    0.1347
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Rush-prone segment: shorter turns, faster pace, offer slots early.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for region=east",
+   "statement": "region=east: confused in 2.3% of calls (n=687) vs 1.5% for other sellers (n=8970).",
+   "metric": "confused",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.0233,
+   "k": 16,
+   "n": 687,
+   "base_rate": 0.0154,
+   "base_k": 138,
+   "base_n": 8970,
+   "ci95": [
+    0.0144,
+    0.0375
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Confusion-prone segment: slower pace, simpler words, fewer English terms.",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for region=east",
+   "statement": "region=east: frustrated in 0.4% of calls (n=687) vs 0.8% for other sellers (n=8970).",
+   "metric": "frustrated",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.0044,
+   "k": 3,
+   "n": 687,
+   "base_rate": 0.0084,
+   "base_k": 75,
+   "base_n": 8970,
+   "ci95": [
+    0.0015,
+    0.0128
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for region=east",
+   "statement": "region=east: bot_question in 0.9% of calls (n=687) vs 1.6% for other sellers (n=8970).",
+   "metric": "bot_question",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.0087,
+   "k": 6,
+   "n": 687,
+   "base_rate": 0.0159,
+   "base_k": 143,
+   "base_n": 8970,
+   "ci95": [
+    0.004,
+    0.0189
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for region=east",
+   "statement": "region=east: not_interested in 10.3% of calls (n=687) vs 10.9% for other sellers (n=8970).",
+   "metric": "not_interested",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.1033,
+   "k": 71,
+   "n": 687,
+   "base_rate": 0.1093,
+   "base_k": 980,
+   "base_n": 8970,
+   "ci95": [
+    0.0827,
+    0.1284
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-region=east-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for region=east",
+   "statement": "region=east: meeting in 13.0% of calls (n=687) vs 11.0% for other sellers (n=8970).",
+   "metric": "meeting",
+   "segment": {
+    "region": "east"
+   },
+   "rate": 0.1295,
+   "k": 89,
+   "n": 687,
+   "base_rate": 0.1103,
+   "base_k": 989,
+   "base_n": 8970,
+   "ci95": [
+    0.1065,
+    0.1567
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-early_drop",
+   "kind": "segment_risk",
+   "title": "early_drop rate for pickup=high",
+   "statement": "pickup=high: early_drop in 32.5% of calls (n=234) vs 46.8% for other sellers (n=9423).",
+   "metric": "early_drop",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.3248,
+   "k": 76,
+   "n": 234,
+   "base_rate": 0.468,
+   "base_k": 4410,
+   "base_n": 9423,
+   "ci95": [
+    0.268,
+    0.3872
+   ],
+   "p_value": 0.001702,
+   "strength": "strong",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-busy",
+   "kind": "segment_risk",
+   "title": "busy rate for pickup=high",
+   "statement": "pickup=high: busy in 7.3% of calls (n=234) vs 9.4% for other sellers (n=9423).",
+   "metric": "busy",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.0726,
+   "k": 17,
+   "n": 234,
+   "base_rate": 0.0942,
+   "base_k": 888,
+   "base_n": 9423,
+   "ci95": [
+    0.0459,
+    0.1133
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-confused",
+   "kind": "segment_risk",
+   "title": "confused rate for pickup=high",
+   "statement": "pickup=high: confused in 0.9% of calls (n=234) vs 1.6% for other sellers (n=9423).",
+   "metric": "confused",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.0085,
+   "k": 2,
+   "n": 234,
+   "base_rate": 0.0161,
+   "base_k": 152,
+   "base_n": 9423,
+   "ci95": [
+    0.0023,
+    0.0306
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-frustrated",
+   "kind": "segment_risk",
+   "title": "frustrated rate for pickup=high",
+   "statement": "pickup=high: frustrated in 1.7% of calls (n=234) vs 0.8% for other sellers (n=9423).",
+   "metric": "frustrated",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.0171,
+   "k": 4,
+   "n": 234,
+   "base_rate": 0.0079,
+   "base_k": 74,
+   "base_n": 9423,
+   "ci95": [
+    0.0067,
+    0.0431
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Frustration-prone segment: acknowledge first, keep it short.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-bot_question",
+   "kind": "segment_risk",
+   "title": "bot_question rate for pickup=high",
+   "statement": "pickup=high: bot_question in 0.0% of calls (n=234) vs 1.6% for other sellers (n=9423).",
+   "metric": "bot_question",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.0,
+   "k": 0,
+   "n": 234,
+   "base_rate": 0.0158,
+   "base_k": 149,
+   "base_n": 9423,
+   "ci95": [
+    0.0,
+    0.0162
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-not_interested",
+   "kind": "segment_risk",
+   "title": "not_interested rate for pickup=high",
+   "statement": "pickup=high: not_interested in 11.1% of calls (n=234) vs 10.9% for other sellers (n=9423).",
+   "metric": "not_interested",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.1111,
+   "k": 26,
+   "n": 234,
+   "base_rate": 0.1088,
+   "base_k": 1025,
+   "base_n": 9423,
+   "ci95": [
+    0.077,
+    0.1578
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Low-intent segment: lead with value specific to their category.",
+   "causal": false
+  },
+  {
+   "id": "SEG-pickup=high-meeting",
+   "kind": "segment_outcome",
+   "title": "meeting rate for pickup=high",
+   "statement": "pickup=high: meeting in 14.5% of calls (n=234) vs 11.1% for other sellers (n=9423).",
+   "metric": "meeting",
+   "segment": {
+    "pickup": "high"
+   },
+   "rate": 0.1453,
+   "k": 34,
+   "n": 234,
+   "base_rate": 0.1108,
+   "base_k": 1044,
+   "base_n": 9423,
+   "ci95": [
+    0.1059,
+    0.1962
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Higher baseline intent: move to the meeting ask sooner.",
+   "causal": false
+  },
+  {
+   "id": "VAR-arrowhead",
+   "kind": "variant",
+   "title": "Bot version 'arrowhead' vs main_vani",
+   "statement": "Version 'arrowhead' fixed 9.7% meetings (n=1132) vs main_vani 11.3% (n=7427).",
+   "metric": "meeting",
+   "segment": {
+    "bot_version": "arrowhead"
+   },
+   "rate": 0.0972,
+   "k": 110,
+   "n": 1132,
+   "base_rate": 0.113,
+   "base_k": 839,
+   "base_n": 7427,
+   "ci95": [
+    0.0813,
+    0.1158
+   ],
+   "p_value": 0.344761,
+   "strength": "weak",
+   "implication": "Opens with a respectful 'Namaste ji, IndiaMART ki taraf se...' greeting.",
+   "causal": true
+  },
+  {
+   "id": "VAR-arrowhead-early_drop",
+   "kind": "variant",
+   "title": "Bot version 'arrowhead' early drops vs main_vani",
+   "statement": "Version 'arrowhead' lost 46.7% of calls in the first 20s (n=1132) vs main_vani 47.3% (n=7427).",
+   "metric": "early_drop",
+   "segment": {
+    "bot_version": "arrowhead"
+   },
+   "rate": 0.4673,
+   "k": 529,
+   "n": 1132,
+   "base_rate": 0.4729,
+   "base_k": 3512,
+   "base_n": 7427,
+   "ci95": [
+    0.4384,
+    0.4964
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Opens with a respectful 'Namaste ji, IndiaMART ki taraf se...' greeting.",
+   "causal": true
+  },
+  {
+   "id": "VAR-main",
+   "kind": "variant",
+   "title": "Bot version 'main' vs main_vani",
+   "statement": "Version 'main' fixed 13.8% meetings (n=188) vs main_vani 11.3% (n=7427).",
+   "metric": "meeting",
+   "segment": {
+    "bot_version": "main"
+   },
+   "rate": 0.1383,
+   "k": 26,
+   "n": 188,
+   "base_rate": 0.113,
+   "base_k": 839,
+   "base_n": 7427,
+   "ci95": [
+    0.0962,
+    0.1949
+   ],
+   "p_value": 0.839096,
+   "strength": "weak",
+   "implication": "Named branch-manager persona with a category-specific market line in the opening.",
+   "causal": true
+  },
+  {
+   "id": "VAR-main-early_drop",
+   "kind": "variant",
+   "title": "Bot version 'main' early drops vs main_vani",
+   "statement": "Version 'main' lost 44.1% of calls in the first 20s (n=188) vs main_vani 47.3% (n=7427).",
+   "metric": "early_drop",
+   "segment": {
+    "bot_version": "main"
+   },
+   "rate": 0.4415,
+   "k": 83,
+   "n": 188,
+   "base_rate": 0.4729,
+   "base_k": 3512,
+   "base_n": 7427,
+   "ci95": [
+    0.3724,
+    0.5129
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "Named branch-manager persona with a category-specific market line in the opening.",
+   "causal": true
+  },
+  {
+   "id": "VAR-last_met_d",
+   "kind": "variant",
+   "title": "Bot version 'last_met_d' vs main_vani",
+   "statement": "Version 'last_met_d' fixed 11.6% meetings (n=869) vs main_vani 11.3% (n=7427).",
+   "metric": "meeting",
+   "segment": {
+    "bot_version": "last_met_d"
+   },
+   "rate": 0.1162,
+   "k": 101,
+   "n": 869,
+   "base_rate": 0.113,
+   "base_k": 839,
+   "base_n": 7427,
+   "ci95": [
+    0.0966,
+    0.1392
+   ],
+   "p_value": 1.0,
+   "strength": "weak",
+   "implication": "References the seller's last interaction in the opening.",
+   "causal": true
+  },
+  {
+   "id": "VAR-last_met_d-early_drop",
+   "kind": "variant",
+   "title": "Bot version 'last_met_d' early drops vs main_vani",
+   "statement": "Version 'last_met_d' lost 39.5% of calls in the first 20s (n=869) vs main_vani 47.3% (n=7427).",
+   "metric": "early_drop",
+   "segment": {
+    "bot_version": "last_met_d"
+   },
+   "rate": 0.3947,
+   "k": 343,
+   "n": 869,
+   "base_rate": 0.4729,
+   "base_k": 3512,
+   "base_n": 7427,
+   "ci95": [
+    0.3627,
+    0.4276
+   ],
+   "p_value": 3.7e-05,
+   "strength": "strong",
+   "implication": "References the seller's last interaction in the opening.",
+   "causal": true
+  },
+  {
+   "id": "TRN-opening_length",
+   "kind": "transcript",
+   "title": "Early drop: short vs long first bot turn",
+   "statement": "Calls whose first bot line had < 10 words dropped within 20s in 18.2% of cases (n=214) vs 11.6% for longer openings (n=241).",
+   "metric": "early_drop",
+   "segment": {},
+   "rate": 0.1822,
+   "k": 39,
+   "n": 214,
+   "base_rate": 0.1162,
+   "base_k": 28,
+   "base_n": 241,
+   "ci95": [
+    0.1363,
+    0.2394
+   ],
+   "p_value": 0.047171,
+   "strength": "moderate",
+   "implication": "Opening length vs early hang-ups, from turn-level transcripts (directional).",
+   "causal": false
+  },
+  {
+   "id": "TRN-seller_language",
+   "kind": "transcript",
+   "title": "Meeting rate when the seller answers in English",
+   "statement": "Sellers who answered mostly in English fixed 0.0% meetings (n=5) vs 20.8% for Hinglish (n=414).",
+   "metric": "meeting",
+   "segment": {},
+   "rate": 0.0,
+   "k": 0,
+   "n": 5,
+   "base_rate": 0.2077,
+   "base_k": 86,
+   "base_n": 414,
+   "ci95": [
+    0.0,
+    0.4345
+   ],
+   "p_value": 0.252959,
+   "strength": "weak",
+   "implication": "Language follow-the-seller rule; sample is small, treat as directional.",
+   "causal": false
+  },
+  {
+   "id": "TRN-language_mix",
+   "kind": "descriptive",
+   "title": "What language sellers actually speak",
+   "statement": "99% of transcribed sellers answered in (mostly Roman) Hinglish, 1% in English (n=419 calls).",
+   "metric": "language",
+   "segment": {},
+   "rate": 0.9881,
+   "k": 414,
+   "n": 419,
+   "base_rate": 0.9881,
+   "base_k": 0,
+   "base_n": 0,
+   "ci95": [
+    0.9724,
+    0.9949
+   ],
+   "p_value": null,
+   "strength": "strong",
+   "implication": "Default to Hinglish; switch only when the seller does.",
+   "causal": false
+  }
+ ]
+}

@@ -52,7 +52,10 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         return JSONResponse({"detail": f"Sarvam: {exc}"}, status_code=502)
 
     def c(request: Request) -> Container:
-        return request.app.state.c
+        state = request.app.state
+        if not hasattr(state, "c"):        # serverless hosts may skip the lifespan: build on first request
+            state.c = container or Container.build(settings or get_settings())
+        return state.c
 
     v1 = "/api/v1"
 

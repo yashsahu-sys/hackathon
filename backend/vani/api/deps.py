@@ -37,7 +37,10 @@ class Container:
         else:
             log.warning("evidence book %s missing: run `python -m vani.evidence.miner`; using empty book", ev_path)
             evidence = EvidenceBook.empty()
-        generator = PersonaGenerator(evidence, settings.sarvam_tts_model, CategoryDemand.build(repo.iter_profiles()))
+        demand_file = settings.resolve(settings.demand_path) if settings.demand_path else None
+        demand = (CategoryDemand.load(demand_file) if demand_file and demand_file.exists()
+                  else CategoryDemand.build(repo.iter_profiles()))
+        generator = PersonaGenerator(evidence, settings.sarvam_tts_model, demand)
         store = SQLiteSessionStore(settings.resolve(settings.sessions_db_path))
         speech: SpeechAI = SarvamClient(settings) if settings.sarvam_enabled else OfflineSpeechAI()
         return cls(settings, repo, evidence, generator, store, speech,

@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     sessions_db_path: Path = Path("data/private/sessions.sqlite")
     onboarded_db_path: Path = Path("data/private/onboarded.sqlite")   # sellers added after the dataset snapshot
     evidence_path: Path = Path("data/private/evidence.json")
+    demand_path: Path | None = None   # precomputed category benchmarks (the public demo ships these as aggregates)
 
     reference_year: int = 2026   # dataset window ends Oct 2026
 
