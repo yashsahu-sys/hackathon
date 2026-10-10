@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 
 from vani.config import Settings
+from vani.data.onboarded import OnboardedSellerStore, OnboardingRepository
 from vani.data.repository import DuckDBSellerRepository, SellerRepository
 from vani.evidence.book import EvidenceBook
 from vani.evidence.global_context import render_global
@@ -26,7 +27,9 @@ class Container:
 
     @classmethod
     def build(cls, settings: Settings) -> "Container":
-        repo = DuckDBSellerRepository(settings.resolve(settings.warehouse_path), settings.reference_year)
+        repo = OnboardingRepository(
+            DuckDBSellerRepository(settings.resolve(settings.warehouse_path), settings.reference_year),
+            OnboardedSellerStore(settings.resolve(settings.onboarded_db_path)), settings.reference_year)
         ev_path = settings.resolve(settings.evidence_path)
         if ev_path.exists():
             evidence = EvidenceBook.load(ev_path)

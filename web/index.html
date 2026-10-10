@@ -37,6 +37,23 @@
         <input id="glid" type="text" placeholder="or enter seller glid" aria-label="Seller glid">
         <button id="load">Load</button>
       </div>
+      <details id="newseller" class="newseller">
+        <summary>＋ New seller (not in the dataset)</summary>
+        <form id="ns-form" class="ns-grid">
+          <label>Company<input name="company_name" type="text" placeholder="optional"></label>
+          <label>State*<select name="state" required></select></label>
+          <label>City<input name="city" type="text"></label>
+          <label>Main category*<input name="cat1" type="text" required placeholder="e.g. Cotton Sarees"></label>
+          <label>2nd category<input name="cat2" type="text" placeholder="optional"></label>
+          <label>Business<select name="nature_of_business"><option value="">not known</option></select></label>
+          <label>Turnover<select name="annual_turnover"><option value="">not known</option></select></label>
+          <label>Legal type<select name="business_type"><option value="">not known</option></select></label>
+          <label>GST year<input name="gst_registration_year" type="number" min="1950" max="2100" placeholder="e.g. 2025"></label>
+          <label>Enquiries (90 d)<input name="enquiries_90d" type="number" min="0" placeholder="optional"></label>
+          <button class="primary" type="submit">Add &amp; build persona</button>
+          <span id="ns-status" class="muted small"></span>
+        </form>
+      </details>
       <div class="row gap">
         <span class="label" style="margin:0">Bot voice</span>
         <div id="voice" class="seg" role="radiogroup" aria-label="Bot voice">

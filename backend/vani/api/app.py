@@ -15,7 +15,8 @@ from vani.persona.prompt import agent_variables, system_prompt
 from vani.runtime.service import CallClosed, NotFound, TurnResult
 
 from .deps import Container
-from .schemas import AgentEnd, AgentStart, AgentTurn, BatchPersonas, EndCall, StartCall, TTSRequest
+from .schemas import (LEGAL_TYPES, NATURES, TURNOVER_BANDS, AgentEnd, AgentStart, AgentTurn, BatchPersonas,
+                      EndCall, NewSeller, StartCall, TTSRequest)
 
 log = logging.getLogger(__name__)
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
@@ -69,6 +70,30 @@ def create_app(settings: Settings | None = None, container: Container | None = N
                 limit: int = Query(20, ge=1, le=200), ct: Container = Depends(c)):
         return [_seller_summary(p) for p in ct.repo.search(state=state, business_kind=business_kind,
                                                            with_transcripts=with_transcripts, limit=limit)]
+
+    @app.get(f"{v1}/onboarding/options")
+    def onboarding_options(ct: Container = Depends(c)):
+        """Choices for the new-seller form, taken from the real seller table."""
+        from vani.data.normalize import STATE_INFO
+        return {"states": sorted(x.title() for x in STATE_INFO), "nature_of_business": NATURES, "annual_turnover": TURNOVER_BANDS,
+                "business_type": LEGAL_TYPES}
+
+    @app.post(f"{v1}/sellers", status_code=201)
+    def add_seller(body: NewSeller, ct: Container = Depends(c)):
+        """Onboard a seller who isn't in the dataset; their persona is built from the same profile fields."""
+        store = getattr(ct.repo, "store", None)
+        if store is None:
+            raise HTTPException(501, "this repository can't store new sellers")
+        if body.glid and ct.repo.exists_in_base(body.glid):
+            raise HTTPException(409, f"seller {body.glid} already exists in the dataset")
+        glid = store.put(body.to_row())
+        ct.calls._ctx_cache.pop(glid, None)
+        p, profile = ct.calls.persona_for(glid)
+        return {"seller": _seller_summary(profile), "persona": p.model_dump(mode="json")}
+
+    @app.get(f"{v1}/sellers/onboarded")
+    def onboarded(ct: Container = Depends(c)):
+        return [_seller_summary(p) for p in getattr(ct.repo, "onboarded", lambda: [])()]
 
     @app.get(f"{v1}/sellers/{{glid}}")
     def seller(glid: str, ct: Container = Depends(c)):

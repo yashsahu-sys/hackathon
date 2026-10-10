@@ -16,6 +16,7 @@ from vani.evidence.book import EvidenceBook
 from vani.evidence.miner import age_band
 from vani.text.gender import detect_seller_gender
 from vani.text.slots import fill as fill_slots
+from vani.data.onboarded import NEW_SELLER_TYPE
 from vani.speech.voice_cues import FAST_WPS, SLOW_WPS
 from vani.text.language import detect
 
@@ -93,7 +94,8 @@ class PersonaGenerator:
             {"hinglish": "Hinglish", "english": "English", "gujarati": "Gujarati",
              "regional": f"{ACCENT.get(code, code)}-first"}[style],
             formality.capitalize(),
-            {"history": "Follow-up", "enquiries": "Enquiry-led", "cold": "Category-led", "brief": "One-breath"}[
+            {"history": "Follow-up", "enquiries": "Enquiry-led", "cold": "Category-led", "brief": "One-breath",
+             "welcome": "Welcome"}[
                 d["plan.opening"].value],
         ])
         return PersonaSpec(
@@ -372,7 +374,10 @@ class PersonaGenerator:
         bare = self.ev.usable("TRN-opening_length", "moderate")
         ids = [f["id"] for f in (last_met, bare) if f]
         hist = None
-        if rushy and not talked_before:
+        if p.customer_type == NEW_SELLER_TYPE and not talked_before:
+            kind, why = "welcome", ("Seller joined after the data snapshot and has never spoken to VANI: welcome them and "
+                                    "offer help getting started; there is no history to reference.")
+        elif rushy and not talked_before:
             kind, why = "brief", "Rush-prone seller: one-breath opening that still says who and why."
         elif talked_before:
             kind = "history"

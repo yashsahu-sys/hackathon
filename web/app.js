@@ -65,6 +65,32 @@ async function init() {
 }
 
 // ---------------------------------------------------------------- sellers
+// ------------------------------------------------------------- new seller
+async function initNewSeller() {
+  const o = await api("/onboarding/options");
+  const f = $("ns-form");
+  const fill = (name, items) => items.forEach((v) => f[name].insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`));
+  fill("state", o.states); fill("nature_of_business", o.nature_of_business);
+  fill("annual_turnover", o.annual_turnover); fill("business_type", o.business_type);
+  f.state.value = "Delhi";
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    const v = (k) => f[k].value.trim() || null, n = (k) => (f[k].value ? +f[k].value : null);
+    const body = { company_name: v("company_name"), state: v("state"), city: v("city"),
+      categories: [v("cat1"), v("cat2")].filter(Boolean), nature_of_business: v("nature_of_business"),
+      annual_turnover: v("annual_turnover"), business_type: v("business_type"),
+      gst_registration_year: n("gst_registration_year"), enquiries_90d: n("enquiries_90d") };
+    $("ns-status").textContent = "Saving…";
+    try {
+      const r = await post("/sellers", body);
+      $("ns-status").textContent = `Saved as ${r.seller.glid}. Persona built from profile + similar sellers.`;
+      $("glid").value = r.seller.glid;
+      await loadSeller(r.seller.glid);
+    } catch (err) { $("ns-status").textContent = "⚠ " + err.message; }
+  };
+}
+initNewSeller().catch(() => $("newseller").classList.add("hidden"));
+
 $("load").onclick = () => $("glid").value.trim() && loadSeller($("glid").value.trim());
 $("glid").onkeydown = (e) => { if (e.key === "Enter") $("load").onclick(); };
 

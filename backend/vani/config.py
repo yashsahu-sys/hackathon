@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     raw_data_dir: Path = Path("data/private/raw/gc")
     warehouse_path: Path = Path("data/private/warehouse.duckdb")
     sessions_db_path: Path = Path("data/private/sessions.sqlite")
+    onboarded_db_path: Path = Path("data/private/onboarded.sqlite")   # sellers added after the dataset snapshot
     evidence_path: Path = Path("data/private/evidence.json")
 
     reference_year: int = 2026   # dataset window ends Oct 2026

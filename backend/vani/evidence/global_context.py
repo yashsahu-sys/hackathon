@@ -47,6 +47,13 @@ def render_seller_brief(ctx: SellerContext, max_calls: int = 2) -> str:
     for c in summaries:
         when = c.started_at.strftime("%d %b") if c.started_at else "earlier"
         out.append(f"- Past call ({when}, {c.disposition or 'unknown outcome'}): {c.summary[:240]}")
+    if p.customer_type and p.customer_type.startswith("New seller"):
+        out.append("- NEW SELLER: joined IndiaMART recently, never spoken to VANI. Welcome them, assume they don't know "
+                   "how IndiaMART works yet, explain simply and patiently, never refer to past calls.")
+    facts = [f"category {', '.join(p.categories[:2])}" if p.categories else "", f"city {p.city}" if p.city else "",
+             f"{int(p.engagement.enquiries_90d)} enquiries in 90 days" if p.engagement.enquiries_90d is not None else ""]
+    if any(facts):
+        out.append("- Facts you may use: " + "; ".join(f for f in facts if f) + ".")
     h = p.bot_history
     if h.in_touch_with_executive:
         out.append("- Already in touch with an IndiaMART executive.")
