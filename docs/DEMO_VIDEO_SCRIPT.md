@@ -1,184 +1,222 @@
-# VANI Persona Engine: demo video script (5 to 6 minutes)
+# VANI Persona Engine: demo video script
 
-Deck: `Echotech.pptx` (12 slides). Three presenters. Total about **5:45**.
+**Length:** about 6:30. Most of it (4 minutes) is the live demo.
 
-| Who | Role in the video | Slides | Time |
-|---|---|---|---|
-| **Presenter 1** (Lead / storyteller) | Opens, the problem, closes with the ask | 1-4, 11-12 | ~2:00 |
-| **Presenter 2** (Product) | The solution and how it adapts | 5-8 | ~1:30 |
-| **Presenter 3** (Demo) | Live demo of three sellers, proof | 9-10 + screen | ~2:15 |
+This follows the host's structure:
 
-Speak slowly, smile, look at the camera on the **bold** lines. Every number below is from the real dataset or our tests.
+| Part | Time | Who speaks |
+|---|---|---|
+| 1. Problem | 0:00 to 0:45 | Speaker A |
+| 2. Live demo | 0:45 to 4:45 | Speaker B (shows the screen), Speaker C (plays the seller on the mic) |
+| 3. Outputs | 4:45 to 5:45 | Speaker A |
+| 4. Results | 5:45 to 6:30 | Speaker B |
 
----
+**The three people:**
+- **Speaker A** opens and closes. Talks about the problem, outputs and results.
+- **Speaker B** runs the laptop and explains what is happening on screen.
+- **Speaker C** is the seller. Speaks the seller lines into the mic, in Hindi, Hinglish, English and Gujarati, so judges hear a real conversation. Speaker C can be our non-tech member.
 
-## PART 1: Presenter 1 (0:00 to 1:20)
-
-**[Slide 1, title. Presenter 1 on camera.]**
-
-> Good morning. We are Team Echotech.
->
-> **Every big seller on IndiaMART, the one with a warehouse today, started with one phone call.**
->
-> Our project is about making that first call count.
-
-**[Slide 2, the seven-step journey. Point to step 1.]**
-
-> This is the journey IndiaMART takes a seller on. A first call, a meeting, a better listing, more enquiries, an upgrade, a warehouse, and finally sales across India.
->
-> But look at step one. If that call fails, nothing after it ever happens. No listing, no enquiries, no growth.
->
-> Today, VANI makes that call. So we asked one question: **how good is that first call?**
-
-**[Slide 3, the numbers.]**
-
-> We studied 9,657 real VANI calls.
->
-> Only 11.2 percent fix a meeting. And 46 percent are over in twenty seconds. Those almost never convert.
->
-> Here is the part that stayed with us. When a seller is busy, only 5 percent book. When a seller is confused, 2.6 percent. But when a seller's question gets answered, about the visit for example, 62 percent book.
->
-> **So the seller is not the problem. The way we talk to them is.**
-
-**[Slide 4, one script for everyone.]**
-
-> Today every seller hears the same call. Same voice, same pace, same Hinglish, same pitch.
->
-> But a Chennai manufacturer, a busy trader in Uttar Pradesh and a new shop owner in Surat are not the same person. Their language, their time and their history are different.
->
-> Over to my colleague, who will show you what we built.
+Speak slowly. Short sentences. Pause after each number.
 
 ---
 
-## PART 2: Presenter 2 (1:20 to 2:55)
+## PART 1. PROBLEM (0:00 to 0:45). Speaker A
 
-**[Slide 5, the four parts of a persona.]**
+**[Screen: slide 1, then slide 3 (the numbers).]**
 
-> Thank you. We built the **VANI Persona Engine**. Before every call, it builds a persona for that one seller.
+> Hello. We are Team Echotech. We picked **problem 4: Persona Design.**
 >
-> Four things. The **voice**: Payal or Arjun, the pace, how expressive. The **language**: Hinglish, English or Gujarati, and how formally to speak. The **tone**: how warm, how many words. And the **plan**: an opening built from how the last call ended, and meeting times sellers actually accept.
+> Today VANI talks to every seller in the same way. Same voice. Same speed. Same Hinglish. Same pitch.
 >
-> **And every choice comes with its reason and the evidence behind it. Nothing is a black box.**
-
-**[Slide 6, how it works.]**
-
-> Here is how it works. We take the seller's profile and their past calls. We mine 140 findings from 9,657 calls, and every finding is tested statistically before we use it. The engine builds the persona. Then, during the call, Sarvam does the talking. Saaras listens, the Sarvam LLM understands, and Bulbul speaks.
+> But sellers are different. Some are busy. Some are confused. Some speak English or Gujarati.
 >
-> Underneath, there are hard safety rules. If a seller says "don't call me again", the call ends, always. And a meeting is booked only on a clear yes with a day and a time.
-
-**[Slide 7, the switch table.]**
-
-> And the persona does not stay fixed. **It listens, and changes in the middle of the call.**
+> This costs VANI a lot. We looked at 9,657 real VANI calls.
+> Only **11 percent** end with a meeting.
+> **46 percent** end in the first 20 seconds.
+> When the seller is busy, only 5 percent book. When the seller is confused, less than 3 percent.
 >
-> Busy seller? VANI gets to the point with one real benefit, but stays calm. Short means fewer words, not faster words. Irritated? A sincere sorry, and it never pushes a booking. Confused? It slows down and uses simpler words. The seller switches language? VANI follows from that very turn. Asks for a manager? It becomes formal and books a real callback from a senior person.
-
-**[Slide 8, human and honest.]**
-
-> Two things we refused to compromise on.
+> So we built one thing: **a persona for every seller, that also changes during the call.**
 >
-> First, **real benefits**. VANI tells a seller what top sellers in their category actually get, from the data. Nothing is invented.
->
-> Second, **honesty**. VANI introduces itself by name. If a seller asks "are you a bot?", it says yes, it is IndiaMART's AI assistant, in one warm line. It never pretends to be human.
->
-> Let's see it live.
+> Let's see it working.
 
 ---
 
-## PART 3: Presenter 3 (2:55 to 5:10)
+## PART 2. LIVE DEMO (0:45 to 4:45). Speaker B and Speaker C
 
-**[Slide 9 for three seconds, then switch to the screen: the VANI app, Live call tab.]**
+**[Screen: the VANI app, "Live call" tab. Keep the switch log on the right visible the whole time.]**
 
-> Thank you. Same product, same scenario, three very different sellers. Watch the switch log on the right. Every change shows up there, with the reason.
-
-### Seller 1: Quick, Hinglish, busy trader (about 40 seconds)
-
-**[Type glid `241920440`, click Load. Show the persona panel: "Quick · Hinglish · Formal · One-breath". Click Start call.]**
-
-> Seller one cuts calls short. His history says so. So VANI opens in one breath: name, IndiaMART, one minute.
-
-**[Mic or type, as the seller:]** *"Haan bolo."*
-**[VANI pitches the free meeting.]**
-
-**[Seller:]** *"Abhi busy hoon, jaldi batao."*
-
-> Watch this. He's busy. VANI does not speed up and race through. It gives him one real benefit: top sellers on IndiaMART get nine-plus enquiries in three months. Then it offers two times. Rush is now on the switch log.
-
-**[Seller:]** *"Theek hai, kal 5 baje."*
-
-> **Meeting fixed, tomorrow 5 PM. Under thirty seconds.**
-
-### Seller 2: Patient, English, Chennai (about 50 seconds)
-
-**[Type glid `112087076`, click Load (Chennai). Persona: "Patient · English · Formal". Start call.]**
-
-> Seller two is in Chennai and never spoke Hindi on past calls. So VANI opens in simple English, at a slower pace.
-
-**[Seller:]** *"Yes, tell me."*
-
-**[Seller, switching to Hindi:]** *"Abhi busy hoon, baad mein call karna."*
-
-> Now the seller switched to Hindi. And VANI says: "ji zaroor, Hindi mein baat karte hain." It switched language **and** handled the rush in the same turn. Two cards on the switch log.
-
-**[Seller:]** *"Matlab? Samjha nahi."*
-
-> Confused. The pace drops to 0.85, the words get simpler.
-
-**[Seller:]** *"Kya fayda hoga?"*
-
-> A sceptical question. It answers with real numbers from his own category, and doesn't push the slot yet.
-
-**[Seller:]** *"Theek hai, kal 11 baje aa jaiye."*
-
-> **Three persona changes in one call, and a meeting fixed.**
-
-### Seller 3: A new seller, Gujarati (about 45 seconds)
-
-**[Open "+ New seller". Fill in: Surat, Gujarat, Cotton Sarees, Wholesaler, GST year 2025. Click Add. Start call.]**
-
-> Seller three joined IndiaMART last week. There is no history at all. So VANI builds the persona from similar sellers, and opens with "Kem cho", and a welcome.
-
-**[Seller:]** *"Gujarati ma vaat karo ne, Hindi nathi aavdtu."*
-
-> He wants Gujarati. From this turn, VANI speaks Gujarati. Native lines, Gujarati voice.
-
-**[Seller:]** *"Kale free nathi, somvare savare 11 vage rakho."*
-
-> He said: not tomorrow, Monday 11 AM. VANI takes **his** time, not ours, and reads it back.
-
-**[Seller:]** *"Haa saru che."*
-
-> **Meeting fixed, Monday 11 AM, in Gujarati.**
-
-**[Slide 10, built and tested.]**
-
-> All of this is tested. 355 automated tests, and 17 full browser scenarios that cover every switch. Testing caught real bugs. A frustrated seller was being booked. Now never. "Eleven nahi, five baje" booked eleven. Now it's five, the seller's time.
+**Speaker B:**
+> This is our app. It uses Sarvam for everything. Saaras listens, the Sarvam LLM understands, Bulbul speaks.
+> On the right is the **switch log**. Every time VANI changes, it shows what changed, and why.
+> We will call three very different sellers.
 
 ---
 
-## PART 4: Presenter 1 (5:10 to 5:45)
+### Seller 1: busy trader, Hinglish (about 1 minute)
 
-**[Slide 11, what this means.]**
+**[Speaker B types glid `241920440`, clicks Load. Points at the persona panel.]**
 
-> So what does this mean for IndiaMART?
+**Speaker B:**
+> First seller. A trader who often cuts calls short. Look at his persona: **Quick, Hinglish, Formal.**
+> Next to every choice, there is a reason. It comes from his past calls.
+
+**[Click "Start call". VANI speaks the opening.]**
+
+**Speaker C (seller, on mic):**
+> "Haan bolo."
+
+**[VANI explains the free meeting.]**
+
+**Speaker C:**
+> "Abhi busy hoon, jaldi batao."
+
+**Speaker B:**
+> He is busy. Look, **"rush"** on the switch log.
+> VANI does not talk faster. It stays calm and goes to the point.
+> It gives one real benefit from our data, and then two meeting times.
+
+**Speaker C:**
+> "Theek hai, kal 5 baje."
+
+**Speaker B:**
+> **Meeting fixed. Tomorrow, 5 PM.** In under 30 seconds.
+
+---
+
+### Seller 2: Chennai seller, English, then Hindi (about 1.5 minutes)
+
+**[Type glid `112087076`, click Load.]**
+
+**Speaker B:**
+> Second seller. He is in Chennai. On past calls, he never spoke Hindi.
+> So his persona is different: **Patient, English, slower voice.**
+
+**[Start call. VANI opens in English.]**
+
+**Speaker C:**
+> "Yes, tell me."
+
+**[VANI explains the meeting in English.]**
+
+**Speaker C (switch to Hindi):**
+> "Abhi busy hoon, baad mein call karna."
+
+**Speaker B:**
+> The seller changed to Hindi. Listen. VANI says *"ji zaroor, Hindi mein baat karte hain."*
+> It **changed the language**, and it also handled the rush. Two cards on the switch log.
+
+**Speaker C:**
+> "Matlab? Samjha nahi."
+
+**Speaker B:**
+> Now he is confused. VANI **slows down**. Simpler words. One idea at a time.
+
+**Speaker C:**
+> "Kya fayda hoga?"
+
+**Speaker B:**
+> A doubtful question. VANI answers it first, with real numbers for his category. It does not push the meeting yet.
+
+**Speaker C:**
+> "Theek hai, kal 11 baje aa jaiye."
+
+**Speaker B:**
+> **Meeting fixed.** One call, three changes: language, rush and confusion.
+
+---
+
+### Seller 3: a new seller, Gujarati (about 1.5 minutes)
+
+**[Click "+ New seller". Fill in: State Gujarat, City Surat, Category Cotton Sarees, Business Wholesaler, GST year 2025. Click "Add & build persona".]**
+
+**Speaker B:**
+> Third seller. He joined IndiaMART last week. He has **no history at all.**
+> So VANI builds his persona from sellers like him. And it starts with a welcome.
+
+**[Start call. VANI: "Kem cho... IndiaMART par aapka swagat hai!"]**
+
+**Speaker C:**
+> "Haan, maine abhi join kiya hai."
+
+**Speaker C (switch to Gujarati):**
+> "Gujarati ma vaat karo ne, Hindi nathi aavdtu."
+
+**Speaker B:**
+> He wants Gujarati. From now on, **VANI speaks Gujarati.**
+
+**Speaker C:**
+> "Buyers kevi rite male?"
+
+**Speaker B:**
+> He asks how buyers find him. VANI explains first, in Gujarati.
+
+**Speaker C:**
+> "Kale free nathi, somvare savare 11 vage rakho."
+
+**Speaker B:**
+> He said: not tomorrow, Monday 11 AM. VANI takes **his** time, and checks it with him.
+
+**Speaker C:**
+> "Haa saru che."
+
+**Speaker B:**
+> **Meeting fixed. Monday, 11 AM. In Gujarati.**
+> Three sellers. Three different personas. Three meetings.
+
+---
+
+## PART 3. OUTPUTS (4:45 to 5:45). Speaker A
+
+**[Screen: move through the app tabs as you speak.]**
+
+> Problem 4 asked for these outputs. Here is what we delivered.
+
+**[Persona panel of any seller.]**
+> **One: a persona for each seller.** Voice, language, tone and a call plan. Every choice has a reason and a confidence level. ✅
+
+**[Click the "Evidence" tab.]**
+> **Two: proof from past calls.** We found 140 patterns in real VANI calls. Each one is checked with statistics before we use it. ✅
+
+**[Back to "Live call". Point at the switch log. Click "Export JSON".]**
+> **Three: changes during the call, with a switch log.** Busy, irritated, confused, language change, asking for a manager. Each change is saved with the reason. ✅
+
+**[Click "Compare personas". Click "Play all openings".]**
+> **Four: a voice demo on Sarvam, with contrasting sellers, in more than two languages.** Hinglish, English and Gujarati. ✅
 >
-> Fewer calls lost in the first twenty seconds. Busy and confused sellers handled, not lost. And trust: honest, respectful, in the seller's own language.
->
-> Our ask is simple. **Let us A/B test this against today's bot**, on meeting rate and early drops. The data will tell us.
+> We also added two more things. Honesty: if a seller asks "are you a bot?", VANI says yes, it is an AI assistant. And respect: if a seller says "don't call me", the call ends. Always.
 
-**[Slide 12, closing. Presenter 1 on camera.]**
+---
 
-> IndiaMART is the growth partner at every stage. **VANI Persona Engine makes sure the first stage, the first call, actually happens.**
+## PART 4. RESULTS (5:45 to 6:30). Speaker B
+
+**[Screen: slide 10, "Built and tested".]**
+
+> How do we know it works?
 >
+> **355 automated tests pass.**
+> **17 out of 17 browser tests pass.** Each one is a full call: busy, irritated, confused, language change, manager request, and more.
+> Every persona field has a reason. Every change during the call is in the switch log.
+>
+> Testing also found real bugs, and we fixed them.
+> An irritated seller was getting a meeting booked. Now this never happens.
+> When a seller said "11 nahi, 5 baje", VANI booked 11. Now it books 5, the seller's time.
+>
+> One honest point. We cannot prove more meetings in a lab. So our next step is an **A/B test against today's VANI**, on meeting rate and early drops.
+
+**[Screen: slide 12. Speaker A on camera.]**
+
+**Speaker A:**
+> Every big seller on IndiaMART started with one phone call.
+> **VANI Persona Engine makes that first call count.**
 > Thank you.
 
 ---
 
-## Shooting checklist
+## Before recording
 
-- **Run the three calls once before recording.** The live LLM phrases things a little differently each time; the flow and the switch cards stay the same.
-- **Say the seller lines exactly as written** (or type them). They are tested to trigger each switch.
-- **Zoom the screen to the chat and switch log**, not the browser chrome. Keep the switch log visible while VANI speaks.
-- **Privacy:** the seller card shows real company names and the glid box shows IDs. Crop or blur them in the edit, or keep the camera on the chat and persona panel. No CSV data on screen.
-- **Audio:** record Bulbul's voice from the app (not through the room mic) so it is clear. Use a headset mic for the seller lines.
-- **Backup:** if the network fails, the app still runs on rules; record that take too, just in case.
-- **Timing guide:** Part 1 ~1:20, Part 2 ~1:35, Part 3 ~2:15, Part 4 ~0:35. If you run long, cut Seller 2's "Kya fayda hoga?" step first.
+- **Do one full practice run.** The Sarvam LLM uses slightly different words each time. The changes and the results stay the same.
+- **Speaker C: say the seller lines exactly as written.** They are tested.
+- **Use a headset mic for Speaker C.** Record VANI's voice from the laptop, not through the room.
+- **Hide private data.** The seller card shows real company names, and the glid box shows IDs. Blur them in the edit. No CSV data on screen.
+- **Too long?** Cut Seller 2's "Kya fayda hoga?" step first (saves about 15 seconds).
+- **If the internet fails**, the app still works with its rules. Record a backup take.
