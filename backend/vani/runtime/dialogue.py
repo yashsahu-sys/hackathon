@@ -20,6 +20,7 @@ OBJECTION_TEXT = {k: re.compile(p, re.I) for k, p in {
     "visit_details": r"\bkahan\b|\bkidhar\b|kitne der|kitna time|\bonline\b|address|kaise aayeng|कहाँ|कितनी देर",
     "call_later": r"(baad|bad) (me|mein) (call|phone|baat)|call (me )?later|शाम को|kal (call|phone|baat)",
 }.items()}
+WHO = {"manager": "senior manager", "executive": "executive"}
 NEGATIVE = {T.frustration, T.refusal, T.rush, T.confusion, T.slow_down, T.end_call, T.do_not_call}
 # A seller asking about the offer (not about us, not a time). Answer first; ask for the meeting later.
 INFO_QUESTION = re.compile(
@@ -63,6 +64,8 @@ class Ctx:
 
     def line(self, key: str) -> str:
         text = self.raw(key)
+        if "{who}" in text:
+            text = text.replace("{who}", WHO.get(self.s.escalation or "executive", "executive"))
         if "{benefit}" in text:
             text = text.replace("{benefit}", benefit_line(self.style, self.s.persona.plan.benefit_facts))
         return fill(_gender_forms(text, self.gender), self.style, self.offer, self.agreed)
@@ -95,6 +98,10 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
 
     blocked = types & (NEGATIVE - {T.slow_down, T.rush})   # a rushed "haan 5 baje theek hai" is still a yes
     if T.agreement in types and not blocked:
+        if c.agreed and c.agreed.complete and session.escalation:
+            return c.move("escalation_confirm", f"Seller accepted a callback from our {session.escalation} at "
+                          f"{render(c.agreed, 'english')}. Confirm it warmly; no meeting pitch.", "done",
+                          outcome=Outcome.callback, end_call=True)
         if c.agreed and c.agreed.complete:
             return c.move("meeting_confirm", f"Seller agreed to {render(c.agreed, 'english')}. Confirm it.", "done",
                           outcome=Outcome.meeting_fixed, end_call=True)
@@ -106,6 +113,10 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
         c.offer = [proposed] + [o for o in c.offer if (o.day, o.hour) != (proposed.day, proposed.hour)]
         return c.move("confirm_proposed", f"Seller proposed {render(proposed, 'english')}. Read it back and ask to fix it.",
                       "ask")
+    if session.escalation and not types & {T.refusal, T.end_call, T.do_not_call} and not new_unavailable \
+            and session.persona.tone.strategy == strategy_used:
+        # they asked for a person: keep arranging that callback, never slide back into the meeting pitch
+        return c.move("handoff_followup", "Seller wants a person. Respectfully arrange the callback time; no pitch.", "ask")
     if new_unavailable:
         return c.move("reschedule", f"Seller can't do {', '.join(sorted(new_unavailable))}. Offer the other slots.", "ask")
 
@@ -123,7 +134,15 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
     if curious:
         topic = next((k for k, rx in INFO_TOPIC if rx.search(text)), "general")
         info = INFO.get(c.style, INFO["english"])
-        answer = _gender_forms(info[topic], c.gender)
+        facts = session.persona.plan.benefit_facts
+        if topic == "results" and facts.get("top_enquiries_90d"):   # "kya fayda?" -> real numbers, positively
+            answer = _gender_forms(benefit_line(c.style, facts), c.gender)
+        else:
+            answer = _gender_forms(info[topic], c.gender)
+        if session.escalation:            # they're waiting for a person: answer, then the callback, not the meeting
+            return Move("explain", f"{answer} {c.line('handoff_followup')}", f"Seller asked about '{topic}' while waiting "
+                        f"for our {session.escalation}. Answer, then confirm the callback time.", "ask",
+                        offered=c.offers_in("handoff_followup"))
         if session.info_turns < INFO_TURNS_BEFORE_ASK:
             return Move("explain", f"{answer} {info['more']}",
                         f"Seller is curious about '{topic}'. Answer it properly in 2-3 short sentences using their own "
@@ -141,6 +160,9 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
     if strategy != strategy_used and strategy in ("end", "handoff", "direct", "reassure", "rush", "clarify", "close"):
         if strategy == "end":
             return c.move("end_close", "End the call politely.", "done", outcome=Outcome.declined, end_call=True)
+        if session.escalation and (strategy in ("close", "rush", "direct")
+                                   or strategy == "handoff" and session.line_uses.get("handoff")):
+            return c.move("handoff_followup", "Seller is waiting for a person: stay on the callback, never the meeting.", "ask")
         hint, nxt = {
             "handoff": ("Seller wants a person. Offer an executive callback at a fixed slot.", "ask"),
             "direct": ("Seller is irritated. Acknowledge briefly, then one line: free 20-minute meeting, one slot.", "ask"),

@@ -489,3 +489,27 @@ async def test_dead_end_llm_reply_is_replaced_by_positive_line(repo):
     s, _ = await svc.start("1001")
     r = await svc.seller_turn(s.session_id, "Haan bolo, kaun kaun competitor hai?")
     assert "मेरे पास नहीं" not in r.bot.text and any("dead end" in w for w in r.warnings)
+
+
+async def test_manager_request_gets_real_escalation_not_more_pitch(repo):
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), OfflineSpeechAI())
+    s, _ = await svc.start("1001", voice_gender="male")
+    await svc.seller_turn(s.session_id, "Haan bolo")
+    r = await svc.seller_turn(s.session_id, "Mujhe aapse baat nahi karni, aap apne manager ko bula ke lao")
+    p = r.session.persona
+    assert r.move == "handoff" and "senior manager" in r.bot.text and "meeting" not in r.bot.text.lower()
+    assert p.language.formality == "formal" and p.voice.pace <= 0.95 and p.tone.strategy == "handoff"
+    assert p.voice.speaker == s.persona.voice.speaker                       # same voice: no pretend new person
+    r = await svc.seller_turn(s.session_id, "hmm")
+    assert "meeting" not in r.bot.text.lower() and "senior manager" in r.bot.text
+    r = await svc.seller_turn(s.session_id, "Theek hai kal 5 baje call karwa dijiye")
+    assert r.session.outcome == Outcome.callback and "manager" in r.session.meeting_slot and "5 PM" in r.session.meeting_slot
+
+
+async def test_who_are_you_gets_name_and_bot_question_gets_honest_answer(repo):
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), OfflineSpeechAI())
+    s, _ = await svc.start("1001", voice_gender="male")
+    r = await svc.seller_turn(s.session_id, "Aap kaun bol rahe ho?")
+    assert "Arjun" in r.bot.text and "assistant" not in r.bot.text.lower()
+    r = await svc.seller_turn(s.session_id, "Aap manager ho ya assistant?")
+    assert "AI assistant Arjun" in r.bot.text and "का AI" in r.bot.text

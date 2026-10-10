@@ -5,6 +5,8 @@ point when rushed, follow the seller's language, de-escalate frustration,
 move to the ask on interest. A confidence threshold and a per-signal cooldown
 stop the bot from flip-flopping on one irritated sentence.
 """
+import re
+
 from vani.domain.live import CallSession, FieldChange, Signal, SignalType, SwitchEvent
 from vani.domain.persona import Confidence, Decision, PersonaSpec, Source
 from vani.persona.generator import _gender_forms
@@ -30,7 +32,8 @@ REASONS = {
     T.confusion: "Seller didn't follow: slow down, simpler words, fewer English terms, one idea per sentence.",
     T.rush: "Seller is busy: stay calm (never race), get to the point: one real benefit for their business, then two slots.",
     T.interest: "Seller is leaning in: answer briefly, then propose the meeting now.",
-    T.human_request: "Seller wants a person: offer the executive callback, which is the call's goal anyway.",
+    T.human_request: "Seller wants a person / someone senior: stop pitching, become more formal, slower and calmer, and "
+                     "arrange a real callback from that person. Same VANI, no pretending to be someone else.",
     T.bot_question: "Seller asked if this is a bot: answer honestly, warmer and more human, then continue.",
     T.language_switch: "Seller changed language: follow them; the meeting matters more than our script.",
     T.do_not_call: "Seller asked not to be called: stop pitching, apologise, confirm, end the call.",
@@ -129,11 +132,24 @@ class PersonaAdapter:
             m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 22))   # to the point, still complete
             m.strategy("rush")
         elif sig.type == T.interest:
-            m.set("tone.energy", "high")
             m.set("tone.max_words_per_turn", max(p.tone.max_words_per_turn, 30))   # engaged seller: fuller answers
-            m.set("voice.temperature", TEMP["lively"])
-            m.strategy("close")
+            if not session.escalation:            # after "manager bulao" the voice stays formal and calm
+                m.set("tone.energy", "high")
+                m.set("voice.temperature", TEMP["lively"])
+                m.strategy("close")
         elif sig.type == T.human_request:
+            # Trust, not theatre: the same VANI, audibly more formal, slower and calmer, stops pitching and
+            # arranges a REAL senior callback. It never changes voice to pretend someone else came on the line.
+            senior = bool(re.search(r"manager|senior|supervisor|charge|boss|मैनेजर|सीनियर|adhikari|sahab|higher|upar",
+                                    sig.trigger or "", re.I))
+            session.escalation = "manager" if senior or session.escalation == "manager" else "executive"
+            m.set("language.formality", "formal")
+            m.set("voice.pace", clamp_pace(min(p.voice.pace, 0.95)))
+            m.set("voice.temperature", TEMP["clear"])
+            m.set("tone.empathy", "high")
+            m.set("tone.warmth", "high")
+            m.set("tone.energy", "calm")
+            m.set("tone.max_words_per_turn", min(max(p.tone.max_words_per_turn, 18), 22))
             m.strategy("handoff")
         elif sig.type == T.bot_question:
             m.set("tone.warmth", "high")

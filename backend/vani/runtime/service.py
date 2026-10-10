@@ -31,7 +31,7 @@ from vani.speech.voice_cues import analyze as analyze_voice, raised
 from vani.text.gender import detect_seller_gender
 from vani.text.slots import Slot, parse_slot, render, suggest, unavailable_days
 
-from .dialogue import Move, next_move
+from .dialogue import INFO_QUESTION, Move, next_move
 from .store import SessionStore
 
 log = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ NEGATIVE_REPLY = re.compile(r"(मेरे|mere) (पास|paas) (नहीं
                             r"\bI can'?t\b|नहीं बता सकती|नहीं बता सकता|nahi bata sakt", re.I)
 CLAIMS_BOOKED = re.compile(r"fix (है|हो गई|हो गयी|kar di|ho gayi|ho gai)|meeting (fix|pakki|confirm)\w* (है|ho|hai)|"
                            r"confirmed|पक्की|पक्का|booked|book (kar|ho) (di|diya|gayi)", re.I)
-TEMPLATE_ONLY = {"meeting_confirm", "end_close", "dnc_close", "close_no"}   # outcome lines are never improvised
+TEMPLATE_ONLY = {"meeting_confirm", "end_close", "dnc_close", "close_no", "escalation_confirm"}   # outcome lines are never improvised
 
 
 class NotFound(LookupError):
@@ -194,7 +194,8 @@ class CallService:
             first_pitch = sum(t.role == Role.bot for t in session.transcript) == 1      # only the opening so far
             switched = [e.signal for e in switches]
             text_ack, ack = with_expression(bot.text, session.persona.language.style, switched, move.key,
-                                            session.expressions_used, first_pitch, session.seller_glid)
+                                            session.expressions_used, first_pitch, session.seller_glid,
+                                            question=bool(INFO_QUESTION.search(text)))
             if ack:
                 bot.text = _gender_forms(text_ack, session.persona.voice.gender)
                 session.expressions_used.append(ack)
@@ -322,6 +323,9 @@ class CallService:
             session.outcome = move.outcome
         if move.key == "call_later" and session.outcome == Outcome.unknown:
             session.outcome = Outcome.callback
+        if move.key == "escalation_confirm" and session.agreed_slot:
+            session.meeting_slot = (f"callback from our {session.escalation} "
+                                    + render(Slot.from_dict(session.agreed_slot), "english"))
         if move.outcome == Outcome.meeting_fixed and session.agreed_slot:
             session.meeting_slot = render(Slot.from_dict(session.agreed_slot), "english")
 

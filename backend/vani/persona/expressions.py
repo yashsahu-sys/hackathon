@@ -21,6 +21,7 @@ EXPRESSIONS = {
         "interest": ["अच्छा जी, बहुत बढ़िया!", "वाह, यह सुनकर अच्छा लगा!"],
         "language_switch": ["जी ज़रूर, हिंदी में बात करते हैं।", "जी बिल्कुल, हिंदी में ही बताती हूँ।"],
         "thanks": ["जी, शुक्रिया।", "जी धन्यवाद।"],
+        "question": ["बहुत अच्छा सवाल है जी।", "जी, ज़रूर बताती हूँ।"],
     },
     "english": {
         "frustration": ["I'm really sorry, I won't take much of your time.", "I understand, repeated calls are annoying.",
@@ -30,6 +31,7 @@ EXPRESSIONS = {
         "interest": ["Oh, that's great to hear!", "Wonderful!"],
         "language_switch": ["Sure, I'll speak in English.", "Of course, let's continue in English."],
         "thanks": ["Thank you.", "Thanks for your time."],
+        "question": ["That's a good question.", "Sure, let me explain."],
     },
     "gujarati": {
         "frustration": ["માફ કરજો, હું તમારો વધારે સમય નહીં લઉં.", "સમજી શકું છું, વારંવાર call આવે તો હેરાનગતિ થાય.", "માફ કરજો."],
@@ -38,6 +40,7 @@ EXPRESSIONS = {
         "interest": ["વાહ, ખૂબ સરસ!", "સરસ, સાંભળીને આનંદ થયો!"],
         "language_switch": ["ચોક્કસ, ગુજરાતીમાં વાત કરીએ.", "હા, ગુજરાતીમાં જ વાત કરીએ."],
         "thanks": ["આભાર.", "તમારો આભાર."],
+        "question": ["સરસ સવાલ છે.", "ચોક્કસ, સમજાવું."],
     },
 }
 # Strongest feeling first: one acknowledgement per turn.
@@ -49,22 +52,23 @@ LEADING_ACK = re.compile(r"^(जी( बिल्कुल| ज़रूर)?,\s
                          r"(मैं आसान शब्दों में बताती हूँ।\s*|Let me put it simply\.\s*|હું સરળ શબ્દોમાં કહું\.\s*)?")
 
 
-def situation(switched: list[T], move_key: str, first_pitch: bool) -> str | None:
+def situation(switched: list[T], move_key: str, first_pitch: bool, question: bool = False) -> str | None:
     for sig in PRIORITY:
         if sig in switched:
-            return sig.value
+            # "kya fayda hoga?" is a question (often a sceptical one), not delight: no "wah, sunkar achha laga"
+            return "question" if sig == T.interest and question else sig.value
     if move_key == "pitch" and first_pitch:
         return "thanks"
     return None
 
 
 def with_expression(text: str, style: str, switched: list[T], move_key: str, used: list[str],
-                    first_pitch: bool = False, seed: str = "") -> tuple[str, str | None]:
+                    first_pitch: bool = False, seed: str = "", question: bool = False) -> tuple[str, str | None]:
     """(text with an acknowledgement in front, the acknowledgement used) or the text unchanged."""
     bank = EXPRESSIONS.get(style)
     if bank is None or move_key in OWN_FEELING and T.language_switch not in switched:
         return text, None
-    sit = situation(switched, move_key, first_pitch)
+    sit = situation(switched, move_key, first_pitch, question)
     if sit is None:
         return text, None
     fresh = [e for e in bank[sit] if e not in used]

@@ -14,7 +14,7 @@ const SC = [
   { name: 'S1 rush -> faster pace, 2 slots', turns: ['Haan bolo', 'Abhi busy hoon, jaldi bolo'], expect: { signal: 'rush', field: 'voice.pace' } },
   { name: 'S2 frustration -> calm, direct, never booked', turns: ['Haan bolo', 'Kitni baar call karoge, pareshan kar diya, theek hai kal 11 baje'], expect: { ack: ['माफ़ी', 'माफ़ कीजिए', 'समझ सकती'], signal: 'frustration', notBooked: true } },
   { name: 'S3 confusion -> slower, simpler', turns: ['Haan bolo', 'Samajh nahi aaya, kya bol rahe ho'], expect: { ack: ['माफ़ कीजिए', 'ओह', 'फिर से'], signal: 'confusion', field: 'voice.pace' } },
-  { name: 'S4 interest -> close', turns: ['Haan bolo', 'Accha, interesting hai, aur batao kitne buyers milenge'], expect: { ack: ['बढ़िया', 'वाह'], signal: 'interest' } },
+  { name: 'S4 interest -> close', turns: ['Haan bolo', 'Accha, interesting hai, aur batao kitne buyers milenge'], expect: { ack: ['बढ़िया', 'वाह', 'अच्छा सवाल', 'ज़रूर बताती'], signal: 'interest' } },
   { name: 'S5 language -> English', turns: ['Sorry, can you speak in English please'], expect: { ack: ['in English'], signal: 'language_switch', lang: 'en-IN' } },
   { name: 'S6 language -> Gujarati + slot', turns: ['Gujarati ma vaat karo ne, Hindi nathi aavdtu', 'kale free nathi, somvare savare 11 vage rakho', 'haa saru che'], expect: { ack: ['ગુજરાતીમાં'], signal: 'language_switch', lang: 'gu-IN', booked: true } },
   { name: 'S7 slow down', turns: ['Haan bolo', 'Thoda dheere boliye please'], expect: { ack: ['आराम से', 'धीरे-धीरे'], signal: 'slow_down', field: 'voice.pace' } },
@@ -26,6 +26,7 @@ const SC = [
   { name: 'S13 two refusals', turns: ['Nahi chahiye', 'Bola na interest nahi hai'], expect: { ended: 'declined' } },
   { name: 'S14 multi-switch: rush then confusion then English', turns: ['Abhi busy hoon', 'Samajh nahi aaya', 'Please speak in English, I am from Chennai', 'Okay, tomorrow at 5 PM works'], expect: { minSwitches: 3, booked: true } },
   { name: 'S16 curious seller: answers first, meeting after', turns: ['Haan bolo', 'Accha, ye buyers kaise milte hain?', 'Aur executive aakar kya karenge?', 'Iska kuch paisa lagega kya?', 'Theek hai samajh gaya, kal 5 baje aa jaiye'], expect: { booked: true, slot: '5 PM', explains: 3 } },
+  { name: 'S17 manager request: formal, real callback, no pitch', voice: 'male', turns: ['Haan bolo', 'Aap kaun bol rahe ho?', 'Mujhe aapse baat nahi karni, aap apne manager ko bula ke lao', 'Theek hai kal 5 baje call karwa dijiye'], expect: { signal: 'human_request', field: 'voice.pace', ended: 'callback', slot: 'manager' } },
   { name: 'S15 male voice + seller gender', voice: 'male', turns: ['Haan bol raha hoon, batao', 'Theek hai main free hoon kal'], expect: { signal: 'seller_gender' } },
 ];
 (async () => {

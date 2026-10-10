@@ -218,7 +218,7 @@ function outcome(o, slot) {
   const el = document.createElement("div");
   el.className = "outcome " + (o === "meeting_fixed" ? "ok" : "no");
   el.textContent = { meeting_fixed: `✅ Meeting fixed: ${slot || "slot confirmed"}`, declined: "Call closed politely: seller declined",
-                     callback: "Callback requested", dropped: "Call ended" }[o] || o;
+                     callback: slot ? `📞 Callback fixed: ${slot}` : "Callback requested", dropped: "Call ended" }[o] || o;
   $("log").prepend(el);
 }
 

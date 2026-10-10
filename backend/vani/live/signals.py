@@ -74,6 +74,7 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
         r"\b(ai|a\.i\.)\s*(ho|hai|hain)\b", r"\bbot\b", r"robot", r"recording (hai|chal)", r"machine (hai|ho)",
         r"computer (hai|se)", r"real (person|insaan)", r"are you (a )?(bot|human|real|robot|ai)",
         r"रोबोट", r"मशीन", r"असली इंसान",
+        r"(manager|insaan|human|aadmi|असली) ho ya", r"\b(assistant|insaan|human) ho\b", r"ladki ho ya",
     ),
     T.identity: _rx(
         r"\bk(a|au)u?n bol rah", r"\bkaun\??$", r"\bkon\b.*\?", r"kahan se bol", r"kis company se",
@@ -82,6 +83,11 @@ LEXICON: dict[SignalType, list[re.Pattern]] = {
     T.human_request: _rx(
         r"insaan se", r"kisi (aadmi|bande|insaan) se", r"executive se baat", r"manager se baat", r"senior se baat",
         r"इंसान से", r"executive से बात", r"(talk|speak) to (a )?(human|person|executive|manager)",
+        # someone senior: the seller asking US for one (not "mere boss bahar hain")
+        r"(manager|senior|supervisor|in-?charge|boss|मैनेजर|सीनियर)\w*\s+(ko\s+|se\s+)?(bula|bulao|bulaiye|lao|le ke|leke|"
+        r"de do|dijiye|karao|karwao|karvao|connect|transfer|baat|बुला|लाओ|से बात)",
+        r"(baat|connect|transfer)\w*\s+(karao|karwao|kar)?\s*(apne|aapke|kisi)?\s*(manager|senior|supervisor)",
+        r"(higher|upar wale|bade) (adhikari|sahab|person|level)",
     ),
     T.interest: _rx(
         r"kitn(a|e|i) (ka|ki|ke|der|time|lag|charge|paisa)", r"kaise (hoga|milega|aayeng|kaam|karenge)",
