@@ -3,6 +3,7 @@ import logging
 from dataclasses import dataclass
 
 from vani.config import Settings
+from vani.evidence.demand import CategoryDemand
 from vani.data.onboarded import OnboardedSellerStore, OnboardingRepository
 from vani.data.repository import DuckDBSellerRepository, SellerRepository
 from vani.evidence.book import EvidenceBook
@@ -36,7 +37,7 @@ class Container:
         else:
             log.warning("evidence book %s missing: run `python -m vani.evidence.miner`; using empty book", ev_path)
             evidence = EvidenceBook.empty()
-        generator = PersonaGenerator(evidence, settings.sarvam_tts_model)
+        generator = PersonaGenerator(evidence, settings.sarvam_tts_model, CategoryDemand.build(repo.iter_profiles()))
         store = SQLiteSessionStore(settings.resolve(settings.sessions_db_path))
         speech: SpeechAI = SarvamClient(settings) if settings.sarvam_enabled else OfflineSpeechAI()
         return cls(settings, repo, evidence, generator, store, speech,

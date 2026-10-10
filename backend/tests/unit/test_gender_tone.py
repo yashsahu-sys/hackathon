@@ -4,7 +4,7 @@ import pytest
 from vani.domain.live import CallSession, Channel, Role, Signal, SignalType as T, TurnRecord
 from vani.domain.seller import CallTurn
 from vani.evidence.book import EvidenceBook
-from vani.live.adapter import FRUSTRATION_PACE, RUSH_PACE, SLOW_PACE, TEMP, PersonaAdapter
+from vani.live.adapter import FRUSTRATION_PACE, RUSH_PACE_MAX, RUSH_PACE_MIN, SLOW_PACE, TEMP, PersonaAdapter
 from vani.live.signals import SignalDetector
 from vani.persona.generator import PersonaGenerator
 from vani.persona.prompt import agent_variables, system_prompt
@@ -102,16 +102,17 @@ def test_initial_temperature_by_register():
     assert GEN.generate(ctx("73", **casual)).voice.temperature == 0.55
 
 
-def test_frustration_is_audibly_calmer_and_quicker():
+def test_frustration_is_calm_and_even_paced():
     s = session()
     fire(s, T.frustration)
-    assert s.persona.voice.pace >= FRUSTRATION_PACE and s.persona.voice.temperature == TEMP["calm"]
+    assert s.persona.voice.pace == FRUSTRATION_PACE and s.persona.voice.temperature == TEMP["calm"]
 
 
-def test_rush_jumps_to_rush_pace():
+def test_rush_is_crisp_but_never_racing():
     s = session()
     fire(s, T.rush)
-    assert s.persona.voice.pace >= RUSH_PACE
+    assert RUSH_PACE_MIN <= s.persona.voice.pace <= RUSH_PACE_MAX
+    assert s.persona.tone.max_words_per_turn >= 20          # short = fewer ideas, not a clipped line
 
 
 def test_confusion_and_slow_down_drop_pace_and_steady_voice():

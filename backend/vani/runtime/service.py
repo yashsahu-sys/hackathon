@@ -16,6 +16,7 @@ from vani.domain.live import (CallSession, CallStatus, Channel, Outcome, Role, S
 from vani.domain.persona import PersonaSpec
 from vani.integrations.sarvam.client import SarvamError, SpeechAI
 from vani.live.adapter import MIN_CONFIDENCE, PersonaAdapter
+from vani.evidence.demand import benefit_line
 from vani.evidence.global_context import render_seller_brief
 from vani.live.brain import BrainResult, LLMBrain, contextual_merge
 from vani.live.llm_assist import LLMSignalAssist, merge
@@ -35,6 +36,9 @@ from .store import SessionStore
 
 log = logging.getLogger(__name__)
 BANNED = re.compile(r"(?<![ऀ-ॿ])(यार|अरे|देखो)(?![ऀ-ॿ])")
+# Dead ends a sales call never says; the template line (positive, with a real benefit) is used instead.
+NEGATIVE_REPLY = re.compile(r"(मेरे|mere) (पास|paas) (नहीं|nahi|nahin)|पता नहीं|pata nahi|\bI (don'?t|do not) (have|know)\b|"
+                            r"\bI can'?t\b|नहीं बता सकती|नहीं बता सकता|nahi bata sakt", re.I)
 CLAIMS_BOOKED = re.compile(r"fix (है|हो गई|हो गयी|kar di|ho gayi|ho gai)|meeting (fix|pakki|confirm)\w* (है|ho|hai)|"
                            r"confirmed|पक्की|पक्का|booked|book (kar|ho) (di|diya|gayi)", re.I)
 TEMPLATE_ONLY = {"meeting_confirm", "end_close", "dnc_close", "close_no"}   # outcome lines are never improvised
@@ -133,7 +137,8 @@ class CallService:
             switch_to = next((x.detail.get("to") for x in signals
                               if x.type == SignalType.language_switch and x.confidence >= 0.75), None)
             brain = await self.brain.think(session, ctx, text, [x.type.value for x in signals] + voice_hints,
-                                           render_seller_brief(ctx), switch_to)
+                                           render_seller_brief(ctx, benefit=benefit_line(
+                                               "english", session.persona.plan.benefit_facts)), switch_to)
             if brain is None:
                 warnings.append("LLM brain unavailable: rules only this turn")
             else:
@@ -331,6 +336,9 @@ class CallService:
             return None
         if BANNED.search(reply):
             warnings.append("LLM reply rejected by guardrail filter (banned filler); template used")
+            return None
+        if NEGATIVE_REPLY.search(reply):
+            warnings.append("LLM reply was a dead end ('I don't have'); positive template used")
             return None
         if CLAIMS_BOOKED.search(reply) and session.outcome != Outcome.meeting_fixed:
             warnings.append("LLM reply claimed a booked meeting that the policy did not confirm; template used")

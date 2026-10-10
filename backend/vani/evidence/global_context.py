@@ -40,7 +40,7 @@ def render_global(book: EvidenceBook) -> str:
     return "\n".join(lines)
 
 
-def render_seller_brief(ctx: SellerContext, max_calls: int = 2) -> str:
+def render_seller_brief(ctx: SellerContext, max_calls: int = 2, benefit: str = "") -> str:
     p = ctx.profile
     out = []
     summaries = [c for c in ctx.calls if c.summary][:max_calls]
@@ -55,6 +55,8 @@ def render_seller_brief(ctx: SellerContext, max_calls: int = 2) -> str:
     if any(facts):
         out.append("- Facts you may use: " + "; ".join(f for f in facts if f) + ".")
     h = p.bot_history
+    if benefit:
+        out.append("- Benefit you may quote (real numbers, say it positively): " + benefit)
     if h.in_touch_with_executive:
         out.append("- Already in touch with an IndiaMART executive.")
     if h.do_not_call:

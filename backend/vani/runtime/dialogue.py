@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from vani.domain.live import CallSession, Outcome, Role, SignalType as T
 from vani.persona.generator import _gender_forms
+from vani.evidence.demand import benefit_line
 from vani.persona.lines import INFO, lines_for, variant
 from vani.text.slots import Slot, fill, parse_slot, render, suggest
 
@@ -61,7 +62,10 @@ class Ctx:
         return variant(self.style, key, base, self.s.seller_glid, self.s.line_uses.get(key, 0))
 
     def line(self, key: str) -> str:
-        return fill(_gender_forms(self.raw(key), self.gender), self.style, self.offer, self.agreed)
+        text = self.raw(key)
+        if "{benefit}" in text:
+            text = text.replace("{benefit}", benefit_line(self.style, self.s.persona.plan.benefit_facts))
+        return fill(_gender_forms(text, self.gender), self.style, self.offer, self.agreed)
 
     def offers_in(self, key: str) -> list[Slot]:
         raw = self.raw(key)

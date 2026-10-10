@@ -159,7 +159,7 @@ async def test_agent_channel_returns_directives_without_speech(repo):
     assert fake.tts_calls == [] and fake.chat_calls == []       # no speech, no reply phrasing
     assert len(fake.classify_calls) == 1                         # but the LLM second opinion still runs
     d = svc.agent_directives(r.session, r.move)
-    assert d["persona_mode"] == "direct" and d["persona_version"] == "2" and float(d["pace"]) > 1.0
+    assert d["persona_mode"] == "direct" and d["persona_version"] == "2" and float(d["pace"]) == 1.0   # calm, not racing
 
 
 async def test_live_call_learns_seller_gender_and_tone_reaches_tts(repo):
@@ -173,7 +173,7 @@ async def test_live_call_learns_seller_gender_and_tone_reaches_tts(repo):
     fake.labels = "frustration"                     # the LLM reads frustration on the next turn
     r = await svc.seller_turn(s.session_id, "Aap baar baar call kyun karte ho")
     assert "The seller is a man" in fake.classify_calls[-1][0]["content"]   # next turn's brain knows
-    assert fake.tts_calls[-1]["temperature"] < temp0 and fake.tts_calls[-1]["pace"] >= 1.15
+    assert fake.tts_calls[-1]["temperature"] < temp0 and fake.tts_calls[-1]["pace"] == 1.0
 
 
 async def test_start_with_male_voice(repo):
@@ -439,7 +439,7 @@ async def test_seller_voice_speed_switches_persona(repo):
     s, _ = await svc.start("1001")
     r = await svc.seller_turn(s.session_id, audio=b.getvalue())
     assert r.voice["band"] == "fast" and r.voice["words_per_s"] >= 3.4
-    assert any(e.signal == T.seller_pace for e in r.switches) and r.session.persona.voice.pace >= 1.15
+    assert any(e.signal == T.seller_pace for e in r.switches) and 1.05 <= r.session.persona.voice.pace <= 1.1
     assert "voice_fast" in fake.classify_calls[-1][0]["content"]
 
 
@@ -469,3 +469,23 @@ async def test_doubled_transcript_is_collapsed(repo):
     s, _ = await svc.start("1001")
     r = await svc.seller_turn(s.session_id, audio=b"RIFF")
     assert r.seller_text == "Bahut saari ke meeting fix karo" and any("twice" in w for w in r.warnings)
+
+
+async def test_busy_seller_gets_calm_benefit_led_reply(repo):
+    from vani.evidence.demand import CategoryDemand
+    gen = PersonaGenerator(EvidenceBook.empty(), demand=CategoryDemand.build(repo.iter_profiles()))
+    svc = CallService(repo, gen, MemorySessionStore(), OfflineSpeechAI())
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "Haan bolo")
+    r = await svc.seller_turn(s.session_id, "yaar mai busy hu jaldi btao")
+    assert r.move == "rush" and r.session.persona.voice.pace <= 1.1
+    assert "IndiaMART" in r.bot.text or "listing" in r.bot.text.lower()        # a benefit, not just "10 seconds"
+    assert "बजे" in r.bot.text                                                    # and the slots
+
+
+async def test_dead_end_llm_reply_is_replaced_by_positive_line(repo):
+    fake = FakeSpeech(reply="जी, अभी exact competitors की list मेरे पास नहीं है।")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, "Haan bolo, kaun kaun competitor hai?")
+    assert "मेरे पास नहीं" not in r.bot.text and any("dead end" in w for w in r.warnings)

@@ -26,16 +26,15 @@ def sig(t, conf=0.8, **detail):
 A = PersonaAdapter()
 
 
-def test_frustration_speeds_up_shortens_and_goes_direct(session):
-    pace0 = session.persona.voice.pace
+def test_frustration_calms_down_and_goes_direct(session):
     seller_says(session)
     ev = A.adapt(session, [sig(T.frustration)], 1000)
     p = session.persona
-    assert len(ev) == 1 and p.voice.pace > pace0 and p.tone.max_words_per_turn <= 12
+    assert len(ev) == 1 and p.voice.pace == 1.0 and p.tone.max_words_per_turn <= 18
     assert p.tone.strategy == "direct" and p.tone.empathy == "high" and p.version == 2
     e = ev[0]
     assert e.signal == T.frustration and e.trigger == "<frustration>" and e.from_version == 1 and e.to_version == 2
-    assert {c.field for c in e.changes} >= {"voice.pace", "tone.strategy"} and e.reason
+    assert {c.field for c in e.changes} >= {"voice.temperature", "tone.strategy"} and e.reason
 
 
 def test_confusion_slows_down_and_simplifies(session):
@@ -91,6 +90,7 @@ def test_cooldown_blocks_flip_flop_then_releases(session):
     seller_says(session)
     assert A.adapt(session, [sig(T.frustration)], 0) == []            # next turn: cooled down
     seller_says(session, COOLDOWN_TURNS)
+    session.persona = session.initial_persona.model_copy(deep=True)   # (calm again, so a new switch has changes)
     assert A.adapt(session, [sig(T.frustration)], 0)                   # later: allowed again
 
 

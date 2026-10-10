@@ -17,16 +17,18 @@ MIN_CONFIDENCE = 0.6
 COOLDOWN_TURNS = 2
 PACE_CAP, PACE_FLOOR = 1.4, 0.8
 # Targets, not small nudges: a switch must be audible on the call.
-RUSH_PACE, FRUSTRATION_PACE, SLOW_PACE = 1.2, 1.15, 0.85
+# A busy or angry seller gets a CALM, to-the-point VANI, not a racing one: a touch brisker at most for busy
+# (1.05-1.1x), back to an even 1.0x when irritated. Short means fewer words, not faster words.
+RUSH_PACE_MIN, RUSH_PACE_MAX, FRUSTRATION_PACE, SLOW_PACE = 1.05, 1.1, 1.0, 0.85
 TEMP = {"calm": 0.35, "clear": 0.45, "warm": 0.65, "lively": 0.75}   # bulbul v3/v4 expressiveness
 
 # Highest wins when several land on one turn.
 STRATEGY_PRIORITY = ["end", "handoff", "direct", "reassure", "rush", "clarify", "close", "standard"]
 
 REASONS = {
-    T.frustration: "Seller is irritated: acknowledge, cut the pitch, short sentences, go straight to the slot.",
+    T.frustration: "Seller is irritated: calm even voice (1.0x), sincere acknowledgement, one real benefit, then the slot.",
     T.confusion: "Seller didn't follow: slow down, simpler words, fewer English terms, one idea per sentence.",
-    T.rush: "Seller is short on time: skip the pitch, offer two concrete slots.",
+    T.rush: "Seller is busy: stay calm (never race), get to the point: one real benefit for their business, then two slots.",
     T.interest: "Seller is leaning in: answer briefly, then propose the meeting now.",
     T.human_request: "Seller wants a person: offer the executive callback, which is the call's goal anyway.",
     T.bot_question: "Seller asked if this is a bot: answer honestly, warmer and more human, then continue.",
@@ -35,8 +37,8 @@ REASONS = {
     T.slow_down: "Seller asked us to slow down: drop the pace, simple words, one idea per sentence.",
     T.end_call: "Seller wants to end the call: apologise briefly and hang up; never push for the meeting.",
     T.seller_gender: "Seller's own words show their gender: address them correctly from now on.",
-    T.seller_pace: "Mirror the seller's own speed (measured from their voice): a fast talker gets a quicker, shorter "
-                   "VANI; a slow, deliberate speaker gets a calmer one. Real sellers speak 2.6 words/s on median.",
+    T.seller_pace: "Follow the seller's own speed (measured from their voice): a fast talker gets a crisper, shorter "
+                   "VANI (never racing, max 1.1x); a slow, deliberate speaker gets a calmer one. Real sellers speak 2.6 words/s on median.",
 }
 ADDRESS = {("male", "hinglish"): "सर", ("female", "hinglish"): "मैडम", ("male", "english"): "Sir",
            ("female", "english"): "Ma'am", ("male", "regional"): "Sir", ("female", "regional"): "Ma'am",
@@ -108,9 +110,9 @@ class PersonaAdapter:
     def _apply(m: Mutation, sig: Signal, session: CallSession) -> None:
         p = m.p
         if sig.type == T.frustration:
-            m.set("voice.pace", clamp_pace(min(PACE_CAP, max(p.voice.pace + 0.1, FRUSTRATION_PACE))))
+            m.set("voice.pace", clamp_pace(FRUSTRATION_PACE))
             m.set("voice.temperature", TEMP["calm"])
-            m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 12))
+            m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 18))
             m.set("tone.energy", "calm")
             m.set("tone.empathy", "high")
             m.strategy("direct")
@@ -123,8 +125,8 @@ class PersonaAdapter:
                 m.set("language.english_mix", min(p.language.english_mix, 0.1))
             m.strategy("clarify")
         elif sig.type == T.rush:
-            m.set("voice.pace", clamp_pace(min(PACE_CAP, max(p.voice.pace + 0.1, RUSH_PACE))))
-            m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 12))
+            m.set("voice.pace", clamp_pace(min(RUSH_PACE_MAX, max(p.voice.pace, RUSH_PACE_MIN))))
+            m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 22))   # to the point, still complete
             m.strategy("rush")
         elif sig.type == T.interest:
             m.set("tone.energy", "high")
@@ -143,8 +145,8 @@ class PersonaAdapter:
         elif sig.type == T.seller_pace:
             band = sig.detail.get("band")
             if band == "fast":
-                m.set("voice.pace", clamp_pace(min(PACE_CAP, max(p.voice.pace, 1.15))))
-                m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 14))
+                m.set("voice.pace", clamp_pace(min(RUSH_PACE_MAX, max(p.voice.pace, RUSH_PACE_MIN))))
+                m.set("tone.max_words_per_turn", min(p.tone.max_words_per_turn, 22))
             elif band == "slow":
                 m.set("voice.pace", clamp_pace(max(PACE_FLOOR, min(p.voice.pace, 0.9))))
                 m.set("tone.warmth", "high")

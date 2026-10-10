@@ -17,6 +17,7 @@ from vani.evidence.miner import age_band
 from vani.text.gender import detect_seller_gender
 from vani.text.slots import fill as fill_slots
 from vani.data.onboarded import NEW_SELLER_TYPE
+from vani.evidence.demand import CategoryDemand
 from vani.speech.voice_cues import FAST_WPS, SLOW_WPS
 from vani.text.language import detect
 
@@ -49,9 +50,10 @@ def _conf(strength: str) -> Confidence:
 
 
 class PersonaGenerator:
-    def __init__(self, evidence: EvidenceBook, tts_model: str = "bulbul:v3"):
+    def __init__(self, evidence: EvidenceBook, tts_model: str = "bulbul:v3", demand: CategoryDemand | None = None):
         self.ev = evidence
         self.tts_model = tts_model
+        self.demand = demand or CategoryDemand.empty()
 
     # ------------------------------------------------------------------ public
     def generate(self, ctx: SellerContext, voice_gender: str | None = None) -> PersonaSpec:
@@ -478,6 +480,7 @@ class PersonaGenerator:
             objection_playbook=playbook,
             escalation_rules=escalation,
             guardrails=GUARDRAILS,
+            benefit_facts=self.demand.facts(p),
         )
 
 

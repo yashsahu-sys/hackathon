@@ -64,6 +64,7 @@ class ConversationPlan(BaseModel):
     objection_playbook: dict[str, str]
     escalation_rules: list[str]
     guardrails: list[str]
+    benefit_facts: dict = {}       # real numbers VANI may quote (own enquiries, category top-10%), see evidence/demand.py
 
 
 class PersonaSpec(BaseModel):
