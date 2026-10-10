@@ -1,0 +1,8 @@
+attempt_id,fk_glusr_usr_id,redis_bucket,lead_bot_version,call_attempt_count,call_start_time,lead_call_duration,lead_call_summary,call_recording_url,disposition_label,meeting_fixed,has_turn_transcript,has_evaluator_output
+9000000101,90000001,DEMO,main_vani,1,2026-08-04 11:20:00,11,The seller said he was busy at the shop and asked to be called later.,,Call Later / Busy,0,1,0
+9000000102,90000001,DEMO,main_vani,2,2026-09-02 12:05:00,9,"The seller cut the call short, saying he would talk later.",,Call Later / Busy,0,1,0
+9000000201,90000002,DEMO,main_vani,1,2026-08-20 15:10:00,45,"The seller spoke in English, asked what the meeting is about, and said he would think about it.",,General (talked),0,1,0
+9000000401,90000004,DEMO,main_vani,1,2026-09-10 16:40:00,38,The seller was interested but asked to be called back next week.,,Call Later / Busy,0,1,0
+9000000501,90000005,DEMO,main_vani,1,2026-08-28 17:15:00,30,The seller said he did not need IndiaMART services right now.,,Not Interested,0,1,0
+9000000601,90000006,DEMO,main_vani,1,2026-08-12 15:30:00,70,The seller agreed to a meeting with the executive at his factory.,,Meeting Fixed,1,1,0
+9000000801,90000008,DEMO,main_vani,1,2026-09-15 14:20:00,25,The seller listened and asked for details on WhatsApp.,,General (talked),0,1,0

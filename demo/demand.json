@@ -1,0 +1,102 @@
+{
+ "Vegetables, Fruits, Grains, Dairy Products & Other FMCG and Grocery Items": {
+  "sellers": 103,
+  "top_enquiries_90d": 12,
+  "top_buyer_calls_90d": 15
+ },
+ "Metals, Minerals, Ores & Alloys": {
+  "sellers": 39,
+  "top_enquiries_90d": 6,
+  "top_buyer_calls_90d": 5
+ },
+ "Mechanical Components & Parts": {
+  "sellers": 63,
+  "top_enquiries_90d": 5,
+  "top_buyer_calls_90d": 5
+ },
+ "Kitchen Containers, Utensils, Stove, Cookware, Tableware and Food Choppers": {
+  "sellers": 56,
+  "top_enquiries_90d": 10,
+  "top_buyer_calls_90d": 5
+ },
+ "Building Construction Material, Equipment, Civil Engineering and Real Estate": {
+  "sellers": 201,
+  "top_enquiries_90d": 5,
+  "top_buyer_calls_90d": 4
+ },
+ "Consumer Electronics &  Household Appliances": {
+  "sellers": 104,
+  "top_enquiries_90d": 12,
+  "top_buyer_calls_90d": 7
+ },
+ "Automobiles, Spare Parts and Accessories": {
+  "sellers": 60,
+  "top_enquiries_90d": 14,
+  "top_buyer_calls_90d": 10
+ },
+ "Industrial Plants, Machinery & Equipment": {
+  "sellers": 58,
+  "top_enquiries_90d": 5,
+  "top_buyer_calls_90d": 8
+ },
+ "Packaging Material, Supplies & Machines": {
+  "sellers": 72,
+  "top_enquiries_90d": 14,
+  "top_buyer_calls_90d": 9
+ },
+ "Cosmetics, Toiletries & Personal Care Products": {
+  "sellers": 72,
+  "top_enquiries_90d": 11,
+  "top_buyer_calls_90d": 9
+ },
+ "Chemicals, Dyes & Allied Products": {
+  "sellers": 32,
+  "top_enquiries_90d": 8,
+  "top_buyer_calls_90d": 8
+ },
+ "Gems, Jewellery, Precious Stones, Vaastu & Astrology": {
+  "sellers": 36,
+  "top_enquiries_90d": 7,
+  "top_buyer_calls_90d": 7
+ },
+ "Industrial & Engineering Products, Spares and Supplies": {
+  "sellers": 66,
+  "top_enquiries_90d": 4,
+  "top_buyer_calls_90d": 3
+ },
+ "Apparel, Clothing & Garments": {
+  "sellers": 105,
+  "top_enquiries_90d": 8,
+  "top_buyer_calls_90d": 4
+ },
+ "Electrical Equipment and Supplies": {
+  "sellers": 70,
+  "top_enquiries_90d": 14,
+  "top_buyer_calls_90d": 8
+ },
+ "Fertilizers, Seeds, Plants, Agro Machines & Tools, Poultry & Animal Husbandry": {
+  "sellers": 63,
+  "top_enquiries_90d": 7,
+  "top_buyer_calls_90d": 5
+ },
+ "Pharmaceutical Drugs, Medicines, Vitamins and Other Healthcare Products": {
+  "sellers": 41,
+  "top_enquiries_90d": 11,
+  "top_buyer_calls_90d": 6
+ },
+ "Housewares, Home Appliances, Household Decorations & Consumables": {
+  "sellers": 79,
+  "top_enquiries_90d": 13,
+  "top_buyer_calls_90d": 10
+ },
+ "Gifts, Crafts, Antiques & Handmade Decoratives": {
+  "sellers": 48,
+  "top_enquiries_90d": 18,
+  "top_buyer_calls_90d": 16
+ },
+ "": {
+  "sellers": 1814,
+  "top_enquiries_90d": 9,
+  "top_buyer_calls_90d": 7
+ }
+}

@@ -1,0 +1,29 @@
+attempt_id,fk_glusr_usr_id,turn_no,speaker,start_sec,end_sec,text
+9000000101,90000001,1,bot,0,4,"Namaste ji, main IndiaMART se Payal bol rahi hoon."
+9000000101,90000001,2,seller,4.5,6.5,Haan bolo jaldi
+9000000101,90000001,3,bot,7,9,Aapke business ke liye ek free meeting...
+9000000101,90000001,4,seller,9.2,11,Abhi busy hoon baad mein karna
+9000000102,90000001,1,bot,0,4,"Namaste ji, IndiaMART se Payal."
+9000000102,90000001,2,seller,4.2,6.2,Haan ji baad mein baat karte hain
+9000000201,90000002,1,bot,0,5,"Namaste ji, main IndiaMART se Payal bol rahi hoon."
+9000000201,90000002,2,seller,5.5,9,"Sorry, I don't understand Hindi, please speak in English"
+9000000201,90000002,3,bot,9.5,15,Sure. Our executive can help improve your listing.
+9000000201,90000002,4,seller,15.5,22,"Okay, what exactly will the executive do for my plywood business"
+9000000201,90000002,5,bot,22.5,30,They fix your catalogue so the right buyers find you.
+9000000201,90000002,6,seller,30.5,36,"Alright, let me think about it and get back to you"
+9000000401,90000004,1,bot,0,5,"Namaste ji, IndiaMART se Payal bol rahi hoon."
+9000000401,90000004,2,seller,5.5,8,Haan ji boliye kya baat hai
+9000000401,90000004,3,bot,8.5,15,Aapki listing ke liye ek free meeting...
+9000000401,90000004,4,seller,15.5,21,Achha theek hai lekin agle hafte call kijiye abhi time nahi hai
+9000000501,90000005,1,bot,0,5,"Namaste ji, IndiaMART se Payal bol rahi hoon."
+9000000501,90000005,2,seller,5.5,9,Haan ji kya hai
+9000000501,90000005,3,bot,9.5,15,Free meeting ke baare mein...
+9000000501,90000005,4,seller,15.5,19,Nahi ji abhi zaroorat nahi hai
+9000000601,90000006,1,bot,0,5,"Namaskar ji, main IndiaMART se Payal bol rahi hoon."
+9000000601,90000006,2,seller,5.5,9,"Haan ji boliye, main sun raha hoon"
+9000000601,90000006,3,bot,9.5,16,Hamare executive aapki listing ke liye...
+9000000601,90000006,4,seller,16.5,22,"Theek hai, kal shaam paanch baje factory aa jaiye"
+9000000801,90000008,1,bot,0,5,"Namaste ji, IndiaMART se Payal bol rahi hoon."
+9000000801,90000008,2,seller,5.5,8.5,Haan bolo
+9000000801,90000008,3,bot,9,15,Free meeting...
+9000000801,90000008,4,seller,15.5,20,Details WhatsApp par bhej dijiye

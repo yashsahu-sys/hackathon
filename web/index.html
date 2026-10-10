@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VANI Persona Engine</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo" aria-hidden="true">◉</span>
+    <div>
+      <h1>VANI Persona Engine</h1>
+      <p class="sub">A persona per seller, backed by past calls, adapted live</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-view="call" role="tab">Live call</button>
+    <button class="tab" data-view="compare" role="tab">Compare personas</button>
+    <button class="tab" data-view="evidence" role="tab">Evidence</button>
+  </nav>
+  <div class="status">
+    <span id="mode" class="badge">…</span>
+    <span id="baseline" class="muted small"></span>
+  </div>
+</header>
+
+<!-- ============================ LIVE CALL ============================ -->
+<main id="view-call" class="view grid3">
+  <section class="panel">
+    <h2>Seller <span id="pver" class="badge ghost"></span></h2>
+    <div class="scroll">
+      <div class="label">Demo trio <span class="muted small">(most contrasting real sellers)</span></div>
+      <div id="trio" class="chips"><span class="muted small">loading…</span></div>
+      <div class="row gap">
+        <input id="glid" type="text" placeholder="or enter seller glid" aria-label="Seller glid">
+        <button id="load">Load</button>
+      </div>
+      <details id="newseller" class="newseller">
+        <summary>＋ New seller (not in the dataset)</summary>
+        <form id="ns-form" class="ns-grid">
+          <label>Company<input name="company_name" type="text" placeholder="optional"></label>
+          <label>State*<select name="state" required></select></label>
+          <label>City<input name="city" type="text"></label>
+          <label>Main category*<input name="cat1" type="text" required placeholder="e.g. Cotton Sarees"></label>
+          <label>2nd category<input name="cat2" type="text" placeholder="optional"></label>
+          <label>Business<select name="nature_of_business"><option value="">not known</option></select></label>
+          <label>Turnover<select name="annual_turnover"><option value="">not known</option></select></label>
+          <label>Legal type<select name="business_type"><option value="">not known</option></select></label>
+          <label>GST year<input name="gst_registration_year" type="number" min="1950" max="2100" placeholder="e.g. 2025"></label>
+          <label>Enquiries (90 d)<input name="enquiries_90d" type="number" min="0" placeholder="optional"></label>
+          <button class="primary" type="submit">Add &amp; build persona</button>
+          <span id="ns-status" class="muted small"></span>
+        </form>
+      </details>
+      <div class="row gap">
+        <span class="label" style="margin:0">Bot voice</span>
+        <div id="voice" class="seg" role="radiogroup" aria-label="Bot voice">
+          <button data-g="female" class="on" role="radio" aria-checked="true">Female · Payal</button>
+          <button data-g="male" role="radio" aria-checked="false">Male · Arjun</button>
+        </div>
+      </div>
+      <div id="seller" class="seller-card muted small">Pick a seller.</div>
+      <div id="persona"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Live call <span id="stage" class="badge ghost"></span><span class="grow"></span>
+      <button id="start" class="primary" disabled>Start call</button>
+      <button id="end" disabled>End</button>
+    </h2>
+    <div class="scroll"><div id="chat" class="chat"><p class="empty">Load a seller, then start a call. You play the seller: speak or type.</p></div></div>
+    <div class="controls">
+      <div id="quick" class="chips"></div>
+      <div class="row gap">
+        <button id="mic" class="mic" disabled title="Hold to talk">🎙 Hold to talk</button>
+        <input id="say" type="text" placeholder="…or type what the seller says" disabled aria-label="Seller says">
+        <button id="send" disabled>Send</button>
+      </div>
+      <div id="status" class="muted small" role="status"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Switch log <span class="grow"></span><button id="export" class="small-btn" disabled>Export JSON</button></h2>
+    <div id="log" class="scroll"><p class="empty">Every mid-call persona switch appears here: signal → change → reason.</p></div>
+  </section>
+</main>
+
+<!-- ============================ COMPARE ============================ -->
+<main id="view-compare" class="view hidden">
+  <section class="panel full">
+    <h2>Same scenario, three sellers <span id="cmp-dist" class="badge ghost"></span><span class="grow"></span>
+      <div id="cmp-voice" class="seg" role="radiogroup" aria-label="Compare voice">
+        <button data-g="female" class="on" role="radio" aria-checked="true">Female</button>
+        <button data-g="male" role="radio" aria-checked="false">Male</button>
+      </div>
+      <button id="play-all" class="primary">▶ Play all openings</button></h2>
+    <div id="compare" class="compare scroll"><p class="empty">loading…</p></div>
+  </section>
+</main>
+
+<!-- ============================ EVIDENCE ============================ -->
+<main id="view-evidence" class="view hidden">
+  <section class="panel full">
+    <h2>Evidence from past VANI calls <span class="grow"></span>
+      <select id="ev-strength" aria-label="Minimum strength">
+        <option value="moderate">moderate +</option><option value="strong">strong only</option><option value="weak">all</option>
+      </select>
+      <select id="ev-kind" aria-label="Kind">
+        <option value="">all kinds</option><option value="outcome_driver">outcome drivers</option>
+        <option value="segment_risk">segment risks</option><option value="segment_outcome">segment outcomes</option>
+        <option value="variant">bot variants (A/B)</option><option value="transcript">transcripts</option>
+        <option value="descriptive">descriptive</option>
+      </select>
+    </h2>
+    <div class="scroll">
+      <ul id="caveats" class="caveats"></ul>
+      <table class="ev-table"><thead><tr><th>Strength</th><th>Finding</th><th>Rate</th><th>vs</th><th>n</th><th>Implication</th></tr></thead>
+        <tbody id="ev-body"></tbody></table>
+    </div>
+  </section>
+</main>
+
+<dialog id="finding-dlg"><form method="dialog"><div id="finding-body"></div><button>Close</button></form></dialog>
+<script src="/static/app.js"></script>
+</body>
+</html>
