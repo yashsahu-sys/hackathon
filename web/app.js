@@ -298,7 +298,9 @@ async function startRec() {
     rec.recog = new SR();
     rec.recog.lang = S.persona?.language?.code || "hi-IN";
     rec.recog.onresult = (e) => sellerSays(e.results[0][0].transcript);
-    rec.recog.onerror = (e) => status("Mic: " + e.error);
+    rec.recog.onerror = (e) => status("Mic: " + (e.error === "network"
+      ? "browser speech recognition needs Google Chrome and internet; or add SARVAM_API_KEY to use Sarvam" : e.error));
+    rec.recog.onend = () => { rec.recog = null; micToggle = false; $("mic").textContent = "🎙 Hold to talk"; $("mic").classList.remove("rec"); };
     rec.recog.start();
     $("mic").classList.add("rec"); status("Listening…");
     return;
@@ -320,6 +322,7 @@ async function startRec() {
 }
 function stopRec() {
   $("mic").classList.remove("rec");
+  micToggle = false; $("mic").textContent = "🎙 Hold to talk";
   if (rec.recog) { rec.recog.stop(); rec.recog = null; return; }
   if (rec.starting) { rec.wantStop = true; return; }   // released before the mic opened
   if (!rec.ctx) return;
@@ -341,8 +344,28 @@ function wav(chunks, len, rate) {
   }
   return new Blob([buf], { type: "audio/wav" });
 }
-$("mic").onpointerdown = (e) => { e.preventDefault(); startRec().catch((err) => status("Mic: " + err.message)); };
-$("mic").onpointerup = $("mic").onpointerleave = () => stopRec();
+// Hold to talk, or click once to start and click again to send (easier while screen-recording).
+let micDownAt = 0, micToggle = false;
+const micBusy = () => rec.ctx || rec.recog || rec.starting;
+$("mic").onpointerdown = (e) => {
+  e.preventDefault();
+  if (micToggle && micBusy()) { micToggle = false; $("mic").textContent = "🎙 Hold to talk"; stopRec(); return; }
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+    status("Mic blocked: open the app at http://127.0.0.1:8001 or http://localhost:8001 (not an IP address)."); return;
+  }
+  micDownAt = Date.now();
+  startRec().catch((err) => status("Mic: " + (err.name === "NotAllowedError"
+    ? "permission denied. Click the lock icon in the address bar and allow the microphone." :
+    err.name === "NotFoundError" ? "no microphone found. Check Ubuntu Settings > Sound > Input." : err.message)));
+};
+$("mic").onpointerup = $("mic").onpointerleave = (e) => {
+  if (micToggle) return;
+  if (e.type === "pointerup" && Date.now() - micDownAt < 400) {      // a quick click: keep recording until the next click
+    micToggle = true; $("mic").textContent = "⏺ Recording… click to send"; status("Listening… click the mic again to send");
+    return;
+  }
+  stopRec();
+};
 
 // ----------------------------------------------------------------- compare
 async function loadCompare() {
