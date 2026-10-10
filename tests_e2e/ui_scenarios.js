@@ -1,7 +1,12 @@
 // PS04 UI scenarios: every mid-call persona switch, driven through the real web UI.
 // Run (server must be up):  node tests_e2e/ui_scenarios.js http://127.0.0.1:8001
 // Needs: npm i -D playwright  (then: npx playwright install chromium)
-let chromium; try { ({ chromium } = require('playwright')); } catch { ({ chromium } = require('/opt/node-tools/node_modules/playwright')); }
+// playwright may be installed in the repo root, backend/ or wherever you run this from
+const path = require('path');
+const where = [process.cwd(), __dirname, path.join(__dirname, '..'), path.join(__dirname, '..', 'backend'), '/opt/node-tools'];
+let chromium;
+try { ({ chromium } = require(require.resolve('playwright', { paths: where }))); }
+catch { console.error('playwright not found. Run:  npm i -D playwright  (in the repo root)'); process.exit(1); }
 const BASE = process.argv[2] || 'http://127.0.0.1:8001';
 const OUT = require('path').join(__dirname, 'out'); require('fs').mkdirSync(OUT, { recursive: true });
 const G = '241920440';
