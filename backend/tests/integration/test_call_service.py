@@ -441,3 +441,31 @@ async def test_seller_voice_speed_switches_persona(repo):
     assert r.voice["band"] == "fast" and r.voice["words_per_s"] >= 3.4
     assert any(e.signal == T.seller_pace for e in r.switches) and r.session.persona.voice.pace >= 1.15
     assert "voice_fast" in fake.classify_calls[-1][0]["content"]
+
+
+async def test_curious_seller_gets_answers_before_the_meeting_ask(svc):
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "Haan bolo")
+    r = await svc.seller_turn(s.session_id, "Accha, ye buyers kaise milte hain?")
+    assert r.move == "explain" and "search" in r.bot.text and "बजे" not in r.bot.text       # answer, no slot push
+    r = await svc.seller_turn(s.session_id, "Aur executive aakar kya karenge?")
+    assert r.move == "explain" and "photos" in r.bot.text and "बजे" not in r.bot.text
+    r = await svc.seller_turn(s.session_id, "Iska kuch paisa lagega kya?")
+    assert r.move == "explain" and "free" in r.bot.text and "बजे" in r.bot.text          # third answer comes with the ask
+    r = await svc.seller_turn(s.session_id, "Theek hai samajh gaya, kal 5 baje aa jaiye")
+    assert r.session.outcome == Outcome.meeting_fixed and "5 PM" in r.session.meeting_slot
+
+
+async def test_when_question_goes_straight_to_the_slot(svc):
+    s, _ = await svc.start("1001")
+    await svc.seller_turn(s.session_id, "Haan bolo")
+    r = await svc.seller_turn(s.session_id, "Kab aa sakte ho?")
+    assert r.move == "meeting_ask"
+
+
+async def test_doubled_transcript_is_collapsed(repo):
+    fake = FakeSpeech(transcript="Bahut bahut saari saari ke ke meeting meeting fix fix karo karo")
+    svc = CallService(repo, PersonaGenerator(EvidenceBook.empty()), MemorySessionStore(), fake)
+    s, _ = await svc.start("1001")
+    r = await svc.seller_turn(s.session_id, audio=b"RIFF")
+    assert r.seller_text == "Bahut saari ke meeting fix karo" and any("twice" in w for w in r.warnings)

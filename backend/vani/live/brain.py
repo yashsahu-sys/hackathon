@@ -88,6 +88,10 @@ Sound like a warm human caller, not a script: start the reply with ONE short nat
 moment (annoyed -> a sincere one-line apology; confused -> "sorry, let me put it simply"; asked to slow down -> "sure,
 slowly"; interested -> "achha ji, bahut badhiya!"; switched language -> say you'll continue in it). Never reuse an
 acknowledgement already said in this call. No fillers (yaar, arre), no fake laughs or sound words.
+CURIOUS SELLER: if they ask about buyers, results, cost, the process or the meeting, answer properly (2-3 short
+sentences, concrete, using SELLER BRIEF facts like their category, city or enquiries) and do NOT push a slot in that
+reply; end by checking if they want to know more. Propose the meeting once they seem satisfied, say "theek hai" /
+"samajh gaya", or after about {info_left} more answers. Never invent numbers or promise results.
 Mood calibration: a question, even a blunt one ("no no, just tell me the purpose"), is NOT frustration or rush.
 Label frustration only for complaints, insults or anger; rush only when they say they're busy or want it quick.
 LANGUAGE: {language_rule}
@@ -168,7 +172,8 @@ class LLMBrain:
         sys += ("\n\nWHAT REAL VANI CALLS TELL US ABOUT SELLERS:\n" + (self.global_context or "- (no data loaded)")
                 + "\n\nTHIS SELLER:\n" + brief + "\n\nCALL STATE:\n" + state
                 + INSTRUCTIONS.replace("{hints}", ", ".join(hints) or "nothing").replace("{language_rule}", language_rule(
-                    session.persona.language.code, switch_to))
+                    session.persona.language.code, switch_to)).replace(
+                    "{info_left}", str(max(0, 2 - session.info_turns)))
                 + "\nReturn ONLY the JSON object.")
         msgs = [{"role": "system", "content": sys}]
         for t in session.transcript[-14:]:

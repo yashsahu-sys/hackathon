@@ -251,3 +251,36 @@ def variant(style: str, key: str, base: str, seed: str, uses: int = 0) -> str:
     import zlib
     options = [base] + VARIANTS.get(style, {}).get(key, [])
     return options[(zlib.crc32(f"{seed}:{key}".encode()) + uses) % len(options)]
+
+
+# A curious seller gets real answers before the meeting ask (what a good caller does). Only claims VANI can
+# stand behind: no buyer counts, no guaranteed results.
+INFO = {
+    "hinglish": {
+        "buyers": "IndiaMART पर buyers अपनी ज़रूरत का product search करते हैं। जब आपकी listing सही category, साफ़ photos और price के साथ होती है, तो वही buyers सीधे आपको enquiry भेजते हैं या call करते हैं।",
+        "process": "Executive आपके साथ बैठकर आपके products की photos, price और details ठीक से डालते हैं, सही category चुनते हैं, और बताते हैं कि enquiry का जल्दी जवाब कैसे दें, ताकि order बने।",
+        "results": "सच कहूँ तो result आपकी listing और enquiry का जवाब कितनी जल्दी देते हैं, उस पर depend करता है। Executive आपकी category के हिसाब से बताएँगे कि क्या उम्मीद रखें।",
+        "cost": "यह meeting बिल्कुल free है। अगर बाद में कोई paid plan लेना हो, तो वह पूरी तरह आपका फ़ैसला है, executive पहले सब समझा देंगे।",
+        "meeting": "Executive 20 मिनट के लिए आपके office आते हैं, या online भी हो सकता है। आपको कुछ तैयार नहीं करना, बस अपने products के बारे में बताना है।",
+        "general": "आसान भाषा में: आपकी listing जितनी अच्छी होगी, उतने सही buyers आपको ढूँढ पाएँगे। Executive यही ठीक करने में मदद करते हैं, free में।",
+        "more": "और कुछ जानना चाहेंगे, या मैं meeting का time देख लूँ?",
+    },
+    "english": {
+        "buyers": "Buyers search IndiaMART for what they need. When your listing has the right category, clear photos and prices, those buyers send you enquiries or call you directly.",
+        "process": "The executive sits with you, puts up your products with proper photos, prices and details, picks the right category, and shows you how to answer enquiries fast so they turn into orders.",
+        "results": "Honestly, results depend on your listing and how quickly you answer enquiries. The executive will tell you what to expect in your category.",
+        "cost": "The meeting is completely free. Whether you take a paid plan later is entirely your decision, and the executive explains everything first.",
+        "meeting": "The executive visits your office for twenty minutes, or meets you online. Nothing to prepare, just tell them about your products.",
+        "general": "Simply put: the better your listing, the more of the right buyers find you. The executive helps you fix exactly that, for free.",
+        "more": "Anything else you'd like to know, or shall I find a meeting time?",
+    },
+    "gujarati": {
+        "buyers": "IndiaMART પર buyers પોતાની જરૂરિયાતનું product search કરે છે. તમારી listing સાચી category, સાફ photos અને price સાથે હોય, તો એ જ buyers સીધા તમને enquiry મોકલે છે કે call કરે છે.",
+        "process": "Executive તમારી સાથે બેસીને તમારા products ના photos, price અને details સરખી રીતે મૂકે છે, સાચી category પસંદ કરે છે, અને enquiry નો જલ્દી જવાબ કેવી રીતે આપવો એ બતાવે છે.",
+        "results": "સાચું કહું તો result તમારી listing અને enquiry નો જવાબ કેટલો જલ્દી આપો છો એના પર આધાર રાખે છે. Executive તમારી category પ્રમાણે સમજાવશે.",
+        "cost": "આ meeting બિલકુલ free છે. પછી કોઈ paid plan લેવો કે નહીં, એ સંપૂર્ણ તમારો નિર્ણય છે.",
+        "meeting": "Executive 20 મિનિટ માટે તમારી office આવે છે, અથવા online પણ થઈ શકે. કંઈ તૈયારી નથી કરવાની.",
+        "general": "સરળ ભાષામાં: તમારી listing જેટલી સારી, એટલા સાચા buyers તમને શોધી શકશે. Executive એ જ free માં સરખું કરી આપે છે.",
+        "more": "બીજું કંઈ જાણવું છે, કે હું meeting નો time જોઈ લઉં?",
+    },
+}

@@ -128,6 +128,7 @@ class PersonaAdapter:
             m.strategy("rush")
         elif sig.type == T.interest:
             m.set("tone.energy", "high")
+            m.set("tone.max_words_per_turn", max(p.tone.max_words_per_turn, 30))   # engaged seller: fuller answers
             m.set("voice.temperature", TEMP["lively"])
             m.strategy("close")
         elif sig.type == T.human_request:

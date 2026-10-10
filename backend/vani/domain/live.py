@@ -111,6 +111,7 @@ class CallSession(BaseModel):
     offered_slots: list[dict] = Field(default_factory=list)   # what VANI has proposed, in order
     unavailable_days: list[str] = Field(default_factory=list)  # days the seller ruled out
     expressions_used: list[str] = Field(default_factory=list)  # acknowledgements already spoken (never twice)
+    info_turns: int = 0                       # seller questions answered without pushing the meeting
     line_uses: dict[str, int] = Field(default_factory=dict)    # how often each line key was spoken (rotates variants)
     voice_baseline: list[float] = Field(default_factory=list)  # seller's loudness on their first turns (dBFS)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

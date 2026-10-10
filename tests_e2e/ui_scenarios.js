@@ -25,6 +25,7 @@ const SC = [
   { name: 'S12 slot negotiation 5 vs 11', turns: ['Haan bolo', 'Theek hai', '11 baje nahi, 5 baje karte hai', 'haan theek hai'], expect: { booked: true, slot: '5 PM' } },
   { name: 'S13 two refusals', turns: ['Nahi chahiye', 'Bola na interest nahi hai'], expect: { ended: 'declined' } },
   { name: 'S14 multi-switch: rush then confusion then English', turns: ['Abhi busy hoon', 'Samajh nahi aaya', 'Please speak in English, I am from Chennai', 'Okay, tomorrow at 5 PM works'], expect: { minSwitches: 3, booked: true } },
+  { name: 'S16 curious seller: answers first, meeting after', turns: ['Haan bolo', 'Accha, ye buyers kaise milte hain?', 'Aur executive aakar kya karenge?', 'Iska kuch paisa lagega kya?', 'Theek hai samajh gaya, kal 5 baje aa jaiye'], expect: { booked: true, slot: '5 PM', explains: 3 } },
   { name: 'S15 male voice + seller gender', voice: 'male', turns: ['Haan bol raha hoon, batao', 'Theek hai main free hoon kal'], expect: { signal: 'seller_gender' } },
 ];
 (async () => {
@@ -60,6 +61,7 @@ const SC = [
     if (e.notBooked && resps.some((r) => r.outcome === 'meeting_fixed')) fails.push('BOOKED');
     if (e.slot && !(last.meeting_slot || '').includes(e.slot)) fails.push(`slot ${last.meeting_slot}`);
     if (e.ack && !resps.some((r) => e.ack.some((w) => r.bot.text.includes(w)))) fails.push(`no ack ${e.ack}`);
+    if (e.explains && resps.filter((r) => r.move === 'explain').length < e.explains) fails.push('did not explain');
     if (e.ended && last.outcome !== e.ended) fails.push(`outcome ${last.outcome}`);
     if (e.minSwitches && resps.flatMap((r) => r.switches).length < e.minSwitches) fails.push('too few switches');
     const logCards = await p.$$eval('#log .event', (x) => x.length);

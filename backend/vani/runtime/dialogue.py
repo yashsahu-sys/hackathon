@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 from vani.domain.live import CallSession, Outcome, Role, SignalType as T
 from vani.persona.generator import _gender_forms
-from vani.persona.lines import lines_for, variant
+from vani.persona.lines import INFO, lines_for, variant
 from vani.text.slots import Slot, fill, parse_slot, render, suggest
 
 OBJECTION_TEXT = {k: re.compile(p, re.I) for k, p in {
@@ -20,6 +20,20 @@ OBJECTION_TEXT = {k: re.compile(p, re.I) for k, p in {
     "call_later": r"(baad|bad) (me|mein) (call|phone|baat)|call (me )?later|शाम को|kal (call|phone|baat)",
 }.items()}
 NEGATIVE = {T.frustration, T.refusal, T.rush, T.confusion, T.slow_down, T.end_call, T.do_not_call}
+# A seller asking about the offer (not about us, not a time). Answer first; ask for the meeting later.
+INFO_QUESTION = re.compile(
+    r"\?|\b(kya|kaise|kaisa|kitn\w*|kyun|kyon|kahan|kaun sa|batao|bataiye|batayiye|samjhao|samjhaiye|detail\w*|"
+    r"how|what|which|why|tell me|explain|more about)\b|क्या|कैसे|कितन|क्यों|बताइए|બતાવો|શું|કેવી રીતે|કેટલ", re.I)
+INFO_TOPIC = [
+    ("cost", re.compile(r"paisa|paise|पैसे|charge|kitne ka|cost|fees?|kharcha|price|free|paid|પૈસા|ફી", re.I)),
+    ("results", re.compile(r"result|kitne din|kab tak|guarantee|fayda|फ़ायदा|फायदा|benefit|faayda|ફાયદો", re.I)),
+    ("buyers", re.compile(r"buyer|lead|enquir|inquir|customer|grahak|ग्राहक|order|ખરીદ", re.I)),
+    ("meeting", re.compile(r"meeting|visit|aayenge|kitni der|kitna time|online|office|મીટિંગ", re.I)),
+    ("process", re.compile(r"kaise|how|process|kya karenge|kya karte|executive|kaam|work|કેવી રીતે", re.I)),
+]
+# "Kab aa sakte ho?" is a seller ready for the meeting, not a curious one.
+READY_QUESTION = re.compile(r"\bkab\b|\bwhen\b|kitne baje|kis din|kaunsa din|kaun sa din|time kya|कब|ક્યારે|કયારે", re.I)
+INFO_TURNS_BEFORE_ASK = 2       # answer up to two questions freely, then pair the answer with the meeting ask
 
 
 @dataclass
@@ -98,6 +112,21 @@ def next_move(session: CallSession, text: str, types: set[T], strategy_used: str
         key = next((k for k in ("other_platform", "already_in_touch", "price") if OBJECTION_TEXT[k].search(text)),
                    "value" if re.search(r"fayda|फ़ायदा|फायदा", text, re.I) else "not_interested")
         return c.combo(key, f"Seller declined once ({key}). One playbook line, then ask for the meeting.")
+    curious = (INFO_QUESTION.search(text) and not blocked and not types & {T.agreement, T.rush, T.identity,
+               T.bot_question, T.human_request} and stage != "opening" and not OBJECTION_TEXT["call_later"].search(text))
+    if curious and READY_QUESTION.search(text):
+        return c.move("meeting_ask", "Seller asked when: they are ready. Offer the slot.", "ask")
+    if curious:
+        topic = next((k for k, rx in INFO_TOPIC if rx.search(text)), "general")
+        info = INFO.get(c.style, INFO["english"])
+        answer = _gender_forms(info[topic], c.gender)
+        if session.info_turns < INFO_TURNS_BEFORE_ASK:
+            return Move("explain", f"{answer} {info['more']}",
+                        f"Seller is curious about '{topic}'. Answer it properly in 2-3 short sentences using their own "
+                        "situation; no slot yet, then check if they want to know more.", stage if stage != "opening" else "pitch")
+        ask = c.line("meeting_ask")
+        return Move("explain", f"{answer} {ask}", f"Seller asked about '{topic}' again. Answer, then ask for the meeting.",
+                    "ask", offered=c.offers_in("meeting_ask"))
     if T.identity in types:
         nxt = "pitch" if stage == "opening" else stage
         follow = c.line("pitch") if stage == "opening" else c.line("meeting_ask")

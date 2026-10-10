@@ -253,8 +253,18 @@ function speak(bot) {
 
 // --------------------------------------------------------------- listening
 // Live: 16 kHz mono WAV to Saaras. Offline: the browser's own speech recognition.
-const rec = { ctx: null, node: null, src: null, stream: null, chunks: [], recog: null };
+// One recording at a time. The bug this guards: a quick press released while the mic was still opening
+// left a recorder running, so the next press ran two recorders into the same buffer and every word was
+// sent twice ("bahut bahut saari saari").
+const rec = { ctx: null, node: null, src: null, stream: null, chunks: [], recog: null, starting: false, wantStop: false };
+function teardownRec() {
+  try { rec.node?.disconnect(); rec.src?.disconnect(); } catch {}
+  rec.stream?.getTracks().forEach((t) => t.stop());
+  rec.ctx?.close().catch(() => {});
+  rec.ctx = rec.node = rec.src = rec.stream = null;
+}
 async function startRec() {
+  if (rec.starting || rec.ctx || rec.recog || S.busy) return;
   stopAudio();
   if (S.mode !== "live") {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -267,24 +277,31 @@ async function startRec() {
     $("mic").classList.add("rec"); status("Listening…");
     return;
   }
-  rec.stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+  rec.starting = true; rec.wantStop = false;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
+  } finally { rec.starting = false; }
+  if (rec.wantStop) { stream.getTracks().forEach((t) => t.stop()); status("Hold the button while you speak."); return; }
+  rec.stream = stream;
   rec.ctx = new AudioContext({ sampleRate: 16000 });
   rec.src = rec.ctx.createMediaStreamSource(rec.stream);
   rec.node = rec.ctx.createScriptProcessor(4096, 1, 1);
-  rec.chunks = [];
-  rec.node.onaudioprocess = (e) => rec.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  const chunks = rec.chunks = [];                 // this recorder writes only to its own buffer
+  rec.node.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
   rec.src.connect(rec.node); rec.node.connect(rec.ctx.destination);
   $("mic").classList.add("rec"); status("Listening… release to send");
 }
 function stopRec() {
   $("mic").classList.remove("rec");
   if (rec.recog) { rec.recog.stop(); rec.recog = null; return; }
+  if (rec.starting) { rec.wantStop = true; return; }   // released before the mic opened
   if (!rec.ctx) return;
-  rec.node.disconnect(); rec.src.disconnect(); rec.stream.getTracks().forEach((t) => t.stop());
-  const rate = rec.ctx.sampleRate; rec.ctx.close(); rec.ctx = null;
-  const len = rec.chunks.reduce((n, c) => n + c.length, 0);
+  const rate = rec.ctx.sampleRate, chunks = rec.chunks;
+  teardownRec();
+  const len = chunks.reduce((n, c) => n + c.length, 0);
   if (len < rate * 0.3) { status("Too short: hold the button while you speak."); return; }
-  sellerSays(null, wav(rec.chunks, len, rate));
+  sellerSays(null, wav(chunks, len, rate));
 }
 function wav(chunks, len, rate) {
   const buf = new ArrayBuffer(44 + len * 2), v = new DataView(buf);

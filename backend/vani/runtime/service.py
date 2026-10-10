@@ -24,6 +24,7 @@ from vani.persona.expressions import with_expression
 from vani.persona.generator import PersonaGenerator, _gender_forms
 from vani.persona.prompt import agent_variables, system_prompt
 from vani.speech.language_guard import ensure_language
+from vani.speech.stt_clean import collapse_doubled
 from vani.speech.tts_text import for_bulbul
 from vani.speech.voice_cues import analyze as analyze_voice, raised
 from vani.text.gender import detect_seller_gender
@@ -114,6 +115,9 @@ class CallService:
         if audio is not None:
             stt = await self.speech.stt(audio)          # errors propagate: the caller should ask to repeat
             text, stt_lang = stt["transcript"], stt.get("language_code")
+            text, doubled = collapse_doubled(text)
+            if doubled:
+                warnings.append("transcript had every word twice (audio sent twice?); repeats collapsed")
         text = (text or "").strip()
         if not text:
             raise ValueError("empty seller turn")
@@ -155,6 +159,8 @@ class CallService:
         move = next_move(session, text, types, session.strategy_used, new_unavailable)
         self._apply_move(session, move, types)
         session.line_uses[move.key] = session.line_uses.get(move.key, 0) + 1
+        if move.key == "explain":
+            session.info_turns += 1
 
         bot = BotUtterance(text=move.text, language_code=session.persona.language.code,
                            speaker=session.persona.voice.speaker, pace=session.persona.voice.pace,
